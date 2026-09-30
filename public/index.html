@@ -1158,7 +1158,7 @@
       <div id="onlineWait" class="hidden">
         <div class="room-code-label">部屋コード</div>
         <div class="room-code" id="roomCodeShow">----</div>
-        <div class="online-wait-text">相手にこのコードを伝えてください。<br>相手の入室を待っています…</div>
+        <div class="online-wait-text">相手にこのコードを伝えてください。<br>相手の入室を待っています…<br>※対戦が終わるまで、このページを閉じないでください</div>
       </div>
       <div class="online-status" id="onlineStatus"></div>
       <button class="btn secondary" id="onlineBackBtn">戻る</button>
@@ -1274,7 +1274,7 @@
     カード効果：現在、1〜8のどのカードにも数字比較以外の特殊効果はありません（検討中）。<br><br>
     色の役(自分の捨て札の色構成で常時判定)：<b>色トリプル</b>(同色3枚以上)。成立すると捨て札が光り、タップで確認できます。<b>赤</b>(攻め)＝JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）／<b>青</b>(守り)＝ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ）／<b>緑</b>(安定)＝THROUGH(通常勝利)時、ポッドに溜まっていれば1🪙回収できる／<b>ピンク</b>＝相手のデッキの底が見える／<b>黄</b>＝手札選択中に相手がブーストするかどうかだけ見える(枚数は伏せる)。<br><br>
     色：各カードには赤・青・黄・緑・ピンクいずれかの色がある（デッキ構築時に選択）。現時点では色トリプル以外の効果条件には未使用。<br><br>
-    オンライン対戦：「部屋を作る」で表示される4桁のコードを相手に伝え、相手が入室したら準備フェイズ（それぞれ非公開でデッキを組む）へ進み、両者の準備が終わると対戦開始。手札のカードをタップした時点でそのラウンドの手が確定し、両者が確定したら一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになると手札からランダムに1枚、ブースト0で自動的に出す。黄の役は、相手が確定した時点でブーストの有無が見える。対戦相手もclaude.aiにサインインし、このアーティファクトに書き込める権限（編集者として招待されている等）が必要。途中で抜けても、同じ部屋コードで入り直せば続きから再開できる。<br><br>
+    オンライン対戦：「部屋を作る」で表示される4桁のコードを相手に伝え、相手が入室したら準備フェイズ（それぞれ非公開でデッキを組む）へ進み、両者の準備が終わると対戦開始。手札のカードをタップした時点でそのラウンドの手が確定し、両者が確定したら一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになると手札からランダムに1枚、ブースト0で自動的に出す。黄の役は、相手が確定した時点でブーストの有無が見える。通信はブラウザ同士の直接通信で、部屋を作った人のブラウザが対戦データを持つため、対戦中はそのページを閉じないこと。途中で抜けても、同じブラウザから同じ部屋コードで入り直せば続きから再開できる。<br><br>
     画面：カードを選ぶ時は「手札選択」画面、カードを出すと「バトル場」画面に自動で切り替わり、決着後にまた手札選択へ戻ります。
   </div>
   </div>
@@ -1290,6 +1290,7 @@
   </div>
 </div>
 
+<script src="vendor/peerjs.min.js"></script>
 <script src="net-shim.js"></script>
 <script>
 (function() {
@@ -1603,7 +1604,7 @@
   }
   function handleNetError(e) {
     const code = e && e.code;
-    if (code === 'invalid_argument') netNotice('サーバーに書き込みが拒否されました。ページを再読み込みしてからもう一度お試しください', true);
+    if (code === 'invalid_argument') netNotice('相手のブラウザに書き込みが拒否されました。ページを再読み込みしてからもう一度お試しください', true);
     else if (code === 'quota_exceeded') netNotice('保存容量の上限に達したため、データを保存できませんでした', true);
     else if (code === 'revoked') netNotice('アクセス権が変更されたため、通信できなくなりました', true);
     else netNotice('通信エラーが発生しました（' + (code || 'unknown') + '）。自動で再読み込みを続けます');
@@ -1736,6 +1737,7 @@
     net.pollTimer = null;
     stopTurnTimer();
     if (net.namedRoom) { net.namedRoom.leave().catch(() => {}); net.namedRoom = null; }
+    if (window.NumberDuelNet) window.NumberDuelNet.close();
     Object.assign(net, {
       active: false, role: null, code: null, gameId: null, oppId: null,
       match: null, seats: { host: null, guest: null }, priv: null, mySeat: null,
@@ -1778,19 +1780,19 @@
     setOnlineStatus('接続を確認しています…');
     const caps = await loadCaps();
     net.db = caps.db; net.user = caps.user; net.room = caps.room;
-    if (!net.db || !net.user) {
-      setOnlineStatus('サーバーに接続できないため、オンライン対戦を使えません。');
+    if (!net.db || !net.user || !window.NumberDuelNet || !window.NumberDuelNet.isAvailable()) {
+      setOnlineStatus('このブラウザではオンライン対戦を使えません（WebRTC非対応、または通信ライブラリを読み込めませんでした）。');
       return;
     }
     try { net.uid = await net.user.id(); } catch (e) { net.uid = null; }
     if (!net.uid) {
-      setOnlineStatus('サーバーに接続できないため、オンライン対戦を使えません（通信状態を確認してください）。');
+      setOnlineStatus('プレイヤーIDを用意できないため、オンライン対戦を使えません（ブラウザの保存設定を確認してください）。');
       return;
     }
     let canWrite = null;
     try { canWrite = await net.user.can('data.write'); } catch (e) {}
     if (canWrite === false) {
-      setOnlineStatus('サーバーへの書き込みが許可されていないため対戦できません。');
+      setOnlineStatus('書き込みが許可されていないため対戦できません。');
       return;
     }
     setOnlineButtonsDisabled(false);
@@ -1807,13 +1809,12 @@
     setOnlineButtonsDisabled(true);
     setOnlineStatus('部屋を作成中…');
     try {
+      // 空いている部屋コードを探して、その部屋のホストになる（このブラウザが対戦データを持つ）
       let code = null;
       for (let i = 0; i < 12 && !code; i++) {
         const c = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-        const snap = await net.db.doc('matches/' + c).get();
-        const d = snap.exists ? snap.data() : null;
-        const free = !d || d.status === 'over' || (Date.now() - (d.updatedAt || 0)) > 12 * 3600 * 1000;
-        if (free) code = c;
+        try { await window.NumberDuelNet.hostRoom(c); code = c; }
+        catch (e) { if (!e || e.code !== 'taken') throw e; }
       }
       if (!code) throw { msg: '空いている部屋コードが見つかりませんでした。もう一度お試しください。' };
       net.code = code;
@@ -1829,7 +1830,8 @@
       await enterMatch();
     } catch (e) {
       net.code = null; net.role = null; net.gameId = null; net.match = null;
-      setOnlineStatus(e && e.msg ? e.msg : '部屋を作れませんでした（' + ((e && e.code) || 'unknown') + '）。通信状態を確認してください。');
+      window.NumberDuelNet.close();
+      setOnlineStatus(e && e.msg ? e.msg : '部屋を作れませんでした（' + ((e && e.code) || 'unknown') + '）。通信状態を確認して、もう一度お試しください。');
       setOnlineButtonsDisabled(false);
     }
   }
@@ -1839,6 +1841,12 @@
     setOnlineButtonsDisabled(true);
     setOnlineStatus('入室中…');
     try {
+      // 相手（ホスト）のブラウザに直接接続する。自分がホストだった部屋なら開き直す
+      try { await window.NumberDuelNet.openRoom(code); }
+      catch (e) {
+        if (e && e.code === 'not_found') throw { msg: 'その部屋コードの部屋は見つかりませんでした。部屋を作った人がページを開いたままか確認してください。' };
+        throw e;
+      }
       const ref = net.db.doc('matches/' + code);
       let snap = await ref.get();
       if (!snap.exists) throw { msg: 'その部屋コードの部屋は見つかりませんでした。' };
@@ -1864,7 +1872,8 @@
       await enterMatch();
     } catch (e) {
       net.code = null; net.role = null; net.gameId = null; net.match = null;
-      setOnlineStatus(e && e.msg ? e.msg : '入室できませんでした（' + ((e && e.code) || 'unknown') + '）。');
+      window.NumberDuelNet.close();
+      setOnlineStatus(e && e.msg ? e.msg : '入室できませんでした（' + ((e && e.code) || 'unknown') + '）。通信状態を確認して、もう一度お試しください。');
       setOnlineButtonsDisabled(false);
     }
   }
