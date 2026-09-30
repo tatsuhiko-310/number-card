@@ -1,0 +1,24 @@
+{
+  "name": "number-duel",
+  "version": "1.0.0",
+  "description": "ナンバーデュエル：1〜8のカードとチップで駆け引きする2人対戦カードゲーム（Webアプリ）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tatsuhiko-310/number-card.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tatsuhiko-310/number-card/issues"
+  },
+  "homepage": "https://github.com/tatsuhiko-310/number-card#readme",
+  "dependencies": {
+    "ws": "^8.22.0"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,3635 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ナンバーデュエル</title>
+<meta name="description" content="1〜8のカードとチップで駆け引きする2人対戦カードゲーム">
+<meta name="theme-color" content="#ff3b8d">
+<link rel="icon" href="assets/icon-pink.png">
+<style>
+  :root {
+    --bg: #eef6ff;
+    --bg2: #ffffff;
+    --text: #1c1830;
+    --text-dim: #6d7290;
+    --accent: #ff3b8d;
+    --accent2: #1e90ff;
+    --gold: #ffcc00;
+    --card-bg: #ffffff;
+    --card-border: #dbe4f5;
+    --card-back-1: #2a1b5e;
+    --card-back-2: #7a1e8a;
+    --win: #22c774;
+    --lose: #ff4757;
+    --tie: #ffab00;
+    --shadow: rgba(30, 40, 80, 0.14);
+    --glow: rgba(255, 59, 141, 0.5);
+    --color-red: #ff4d4d;
+    --color-blue: #2f8fff;
+    --color-yellow: #ffd400;
+    --color-green: #2ed17a;
+    --color-pink: #ff5cb3;
+    --icon-red: url("assets/icon-red.png");
+    --icon-blue: url("assets/icon-blue.png");
+    --icon-yellow: url("assets/icon-yellow.png");
+    --icon-green: url("assets/icon-green.png");
+    --card-back-img: url("assets/card-back.png");
+    --icon-pink: url("assets/icon-pink.png");
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d0a1f;
+      --bg2: #1a1433;
+      --text: #f5f2ff;
+      --text-dim: #b3a8d9;
+      --accent: #ff5ba0;
+      --accent2: #4fa8ff;
+      --gold: #ffda4d;
+      --card-bg: #241a44;
+      --card-border: #4a3a70;
+      --card-back-1: #2a1b5e;
+      --card-back-2: #7a1e8a;
+      --win: #4ee08a;
+      --lose: #ff6b7a;
+      --tie: #ffcb5c;
+      --shadow: rgba(0, 0, 0, 0.55);
+      --glow: rgba(255, 91, 160, 0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d0a1f;
+    --bg2: #1a1433;
+    --text: #f5f2ff;
+    --text-dim: #b3a8d9;
+    --accent: #ff5ba0;
+    --accent2: #4fa8ff;
+    --gold: #ffda4d;
+    --card-bg: #241a44;
+    --card-border: #4a3a70;
+    --card-back-1: #2a1b5e;
+    --card-back-2: #7a1e8a;
+    --win: #4ee08a;
+    --lose: #ff6b7a;
+    --tie: #ffcb5c;
+    --shadow: rgba(0, 0, 0, 0.55);
+    --glow: rgba(255, 91, 160, 0.6);
+  }
+
+  * { box-sizing: border-box; }
+  :root {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(ellipse at 50% -10%, var(--glow) 0%, transparent 45%),
+      var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Sans", "Yu Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+    padding: 16px;
+  }
+  .wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+  }
+  /* ライト/ダークモード切替：どの画面でも右上に固定表示 */
+  .theme-toggle-btn {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    right: 12px;
+    z-index: 50;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--card-border);
+    background: var(--bg2);
+    box-shadow: 0 2px 8px var(--shadow);
+    font-size: 1.2rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+  }
+  .theme-toggle-btn:active { transform: scale(0.92); }
+  h1 {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 900;
+    margin: 4px 0 14px;
+    letter-spacing: 0.04em;
+    background: linear-gradient(100deg, var(--accent), var(--gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 2px 12px var(--glow);
+  }
+  .goal {
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    letter-spacing: 0.02em;
+  }
+
+  .section-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    margin: 6px 2px 8px;
+    padding-left: 10px;
+    position: relative;
+    letter-spacing: 0.03em;
+  }
+  .section-label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) skewX(-15deg);
+    width: 4px;
+    height: 0.9em;
+    background: linear-gradient(var(--accent), var(--gold));
+    border-radius: 1px;
+  }
+
+  /* ===== 対戦画面：上(相手)・中(バトル場/手札選択)・下(自分)の3ゾーン ===== */
+  .board {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 32px);
+    height: calc(100dvh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    min-height: 560px;
+    max-height: 800px;
+    background: var(--bg2);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    box-shadow: 0 2px 10px var(--shadow);
+    overflow: hidden;
+  }
+  .zone-side {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    padding: 12px;
+    flex-shrink: 0;
+  }
+  .zone-side.op { border-bottom: 1px solid var(--card-border); }
+  .zone-side.me {
+    align-items: end;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    border-top: 1px solid var(--card-border);
+  }
+  .side-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    align-items: flex-start;
+  }
+  /* 自分側は上下反転：チップが体力の上に来る */
+  .zone-side.me .side-col {
+    flex-direction: column-reverse;
+    align-items: flex-end;
+    text-align: right;
+  }
+  .side-head {
+    align-self: stretch;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  .side-col .num {
+    font-size: clamp(3.5rem, 26vw, 8rem);
+    font-weight: 900;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+  }
+  .zone-side.me .num { color: var(--accent); text-shadow: 0 0 10px var(--glow); }
+  .zone-side.op .num { color: var(--accent2); }
+  .discard-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .discard-col .discard-grid { width: 100%; max-width: 210px; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 4px; }
+  .zone-side.me .tag-row { justify-content: flex-end; }
+  .tag-row:empty, .tag-row .status-badges:empty { display: none; }
+  .zone-side.me .side-head { justify-content: flex-end; }
+  .zone-side .status-badges { justify-content: flex-start; margin-top: 0; }
+  .zone-side.me .side-col .status-badges { justify-content: flex-end; }
+
+  .zone-mid {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+  }
+  .board[data-mode="battle"] .select-panel { display: none; }
+  .board[data-mode="select"] .battle-panel { display: none; }
+  .pod-display {
+    position: absolute;
+    top: 42%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 0;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .pod-display #podValue {
+    font-size: clamp(11rem, 78vw, 21rem);
+    font-weight: 900;
+    line-height: 1;
+    color: var(--text-dim);
+    opacity: 0.28;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 18px var(--shadow);
+  }
+  @keyframes podPop {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.22); }
+    100% { transform: scale(1); }
+  }
+  .pod-display #podValue.pop { animation: podPop 0.45s ease; }
+  @keyframes podJackpot {
+    0% { transform: scale(1); color: var(--text-dim); text-shadow: 0 0 18px var(--shadow); }
+    35% { transform: scale(1.55); color: var(--gold); text-shadow: 0 0 30px var(--gold), 0 0 60px var(--gold); }
+    70% { transform: scale(0.92); color: var(--gold); }
+    100% { transform: scale(1); color: var(--text-dim); text-shadow: 0 0 18px var(--shadow); }
+  }
+  .pod-display #podValue.jackpot { animation: podJackpot 0.75s ease; }
+  @keyframes podGrow {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.12); color: var(--lose); }
+    100% { transform: scale(1); }
+  }
+  .pod-display #podValue.grow { animation: podGrow 0.4s ease; }
+  .pod-mini {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 2px 8px var(--shadow);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-dim);
+  }
+  .pod-mini #podValueMini {
+    font-size: 0.95rem;
+    font-weight: 900;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .pod-mini #podValueMini.pop { animation: podMiniPop 0.4s ease; }
+  @keyframes podMiniPop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.35); color: var(--gold); }
+    100% { transform: scale(1); }
+  }
+  .pod-mini #podValueMini.jackpot { animation: podMiniJackpot 0.7s ease; }
+  @keyframes podMiniJackpot {
+    0% { transform: scale(1); color: var(--accent); }
+    35% { transform: scale(1.6); color: var(--gold); text-shadow: 0 0 10px var(--gold); }
+    70% { transform: scale(0.9); color: var(--gold); }
+    100% { transform: scale(1); color: var(--accent); }
+  }
+  .pod-mini #podValueMini.grow { animation: podMiniGrow 0.4s ease; }
+  @keyframes podMiniGrow {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.3); color: var(--lose); }
+    100% { transform: scale(1); }
+  }
+  @keyframes numGain {
+    0% { transform: scale(1); color: var(--text); }
+    40% { transform: scale(1.4); color: var(--gold); text-shadow: 0 0 14px var(--gold); }
+    100% { transform: scale(1); color: var(--text); }
+  }
+  .num.gain-flash { animation: numGain 0.6s ease; }
+  @keyframes numPay {
+    0% { transform: scale(1); color: var(--text); }
+    40% { transform: scale(0.82); color: var(--lose); }
+    100% { transform: scale(1); color: var(--text); }
+  }
+  .num.pay-flash { animation: numPay 0.6s ease; }
+  @keyframes panelIn {
+    0% { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .battle-panel, .select-panel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: panelIn 0.22s ease;
+  }
+  .battle-panel { gap: 10px; }
+  .select-panel { gap: 16px; }
+  .select-prompt {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    letter-spacing: 0.03em;
+  }
+  .wrap.in-game > h1 { display: none; }
+
+  .status-badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3px;
+    margin-top: 3px;
+    min-height: 0;
+  }
+  .status-badge {
+    font-size: 0.6rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .status-badge.awaken {
+    color: #3a2a00;
+    background: linear-gradient(120deg, #ffe066, var(--gold));
+    animation: awakenGlow 1.6s ease-in-out infinite;
+  }
+  .status-badge.serious {
+    color: #fff;
+    background: linear-gradient(120deg, var(--lose), #ff8a3d);
+    box-shadow: 0 0 6px rgba(229, 103, 74, 0.6);
+    animation: seriousPulse 1.1s ease-in-out infinite;
+  }
+  @keyframes seriousPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+  @keyframes awakenGlow {
+    0%, 100% { box-shadow: 0 0 6px rgba(255, 214, 64, 0.55); }
+    50% { box-shadow: 0 0 14px rgba(255, 214, 64, 1), 0 0 22px rgba(255, 214, 64, 0.6); }
+  }
+  .side-col .num.serious-active {
+    animation: electricFlicker 0.9s linear infinite;
+  }
+  @keyframes electricFlicker {
+    0%, 100% { text-shadow: 0 0 6px #fff, 0 0 12px #8fd9ff, 0 0 2px #fff; transform: translate(0, 0); }
+    8%  { text-shadow: 0 0 12px #fff, 0 0 20px #ffe97c, -1px 0 6px #8fd9ff; transform: translate(-1px, 0); }
+    18% { text-shadow: 0 0 4px #fff, 0 0 8px #8fd9ff; transform: translate(1px, 0); }
+    27% { text-shadow: 0 0 16px #fff, 0 0 26px #ffe97c, 1px 0 8px #8fd9ff; transform: translate(0, -1px); }
+    41% { text-shadow: 0 0 5px #fff, 0 0 10px #8fd9ff; transform: translate(0, 0); }
+    55% { text-shadow: 0 0 18px #fff, 0 0 28px #ffe97c; transform: translate(-1px, 1px); }
+    68% { text-shadow: 0 0 6px #fff, 0 0 12px #8fd9ff; transform: translate(1px, 0); }
+    82% { text-shadow: 0 0 14px #fff, 0 0 22px #ffe97c; transform: translate(0, 0); }
+    91% { text-shadow: 0 0 6px #fff, 0 0 12px #8fd9ff; transform: translate(-1px, 0); }
+  }
+  .chip-selector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+  }
+  .chip-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .chip-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--card-border);
+    background: var(--bg2);
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .chip-btn:disabled { opacity: 0.35; cursor: default; }
+  .chip-value {
+    min-width: 22px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--accent);
+  }
+  .field-slot { position: relative; z-index: 1; }
+  .field-slot .boost {
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    font-size: 0.68rem;
+    color: var(--accent);
+    font-weight: 700;
+    min-height: 1.1em;
+  }
+
+  .card-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+  .hand-card-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 76px;
+  }
+  .card-effect-label {
+    font-size: 0.58rem;
+    line-height: 1.25;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  .card {
+    width: 56px;
+    height: 78px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 900;
+    border: 2px solid var(--accent);
+    background: linear-gradient(160deg, var(--card-bg), var(--bg2));
+    color: var(--text);
+    box-shadow: 0 2px 8px var(--shadow), 0 0 0 1px var(--card-border) inset;
+    flex-shrink: 0;
+    position: relative;
+    isolation: isolate;
+  }
+  .card.back {
+    background: var(--card-back-img) center / 100% 100% no-repeat;
+    color: #6a3fa0;
+    border-color: transparent;
+    font-size: 1.1rem;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+  }
+
+  .select-panel .card-row { gap: 16px; flex-wrap: nowrap; }
+  .select-panel .hand-card-wrap { width: min(132px, 38vw); gap: 8px; }
+  .select-panel .card-effect-label { font-size: 0.66rem; min-height: 1.3em; }
+  .select-panel button.card {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 5 / 7;
+    font-size: 3.2rem;
+    border-radius: 14px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px var(--shadow), 0 0 18px var(--glow);
+    transition: transform 0.12s ease;
+  }
+  .select-panel button.card:active { transform: scale(0.94); }
+  .select-panel button.card:disabled { opacity: 0.4; cursor: default; }
+
+  .role-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: flex-start;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .zone-side.me .role-list { align-items: flex-end; }
+  .hand-effect-card {
+    border-radius: 6px;
+    padding: 2px 6px;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    color: #fff;
+  }
+  .hand-effect-name { display: inline; font-size: 0.56rem; font-weight: 900; }
+  .hand-effect-desc { display: inline; font-size: 0.5rem; margin-left: 4px; opacity: 0.92; }
+  .hand-effect-card.red { background: linear-gradient(120deg, #ff6b6b, var(--color-red)); }
+  .hand-effect-card.blue { background: linear-gradient(120deg, #5b9bff, var(--color-blue)); }
+  .hand-effect-card.yellow { background: linear-gradient(120deg, #ffe066, var(--color-yellow)); }
+  .hand-effect-card.yellow .hand-effect-name,
+  .hand-effect-card.yellow .hand-effect-desc { color: #3a2a00; }
+  .hand-effect-card.green { background: linear-gradient(120deg, #6fcf7f, var(--color-green)); }
+  .hand-effect-card.pink { background: linear-gradient(120deg, #ff9fc7, var(--color-pink)); }
+  .field-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .field-slot .who { font-size: 0.7rem; color: var(--text-dim); }
+  .field-vs { font-size: 0.9rem; color: var(--text-dim); }
+
+  .flying-card {
+    position: fixed;
+    border-radius: 10px;
+    background:
+      var(--card-back-img) center / 100% 100% no-repeat,
+      linear-gradient(160deg, var(--card-back-1), var(--card-back-2));
+    border: none;
+    box-shadow: 0 6px 18px var(--shadow), 0 0 14px var(--glow);
+    z-index: 999;
+    transition: transform 0.3s cubic-bezier(0.3, 0.1, 0.2, 1);
+    pointer-events: none;
+  }
+
+  .flip-card {
+    width: 84px;
+    height: 118px;
+    perspective: 500px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    border: none;
+  }
+  .flip-card.placed,
+  .flip-card.flipped {
+    border-color: transparent;
+  }
+  .flip-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+  .flip-card.pop .flip-inner {
+    animation: dropIn 0.25s ease;
+  }
+  .flip-card.flipped .flip-inner {
+    transform: rotateY(180deg);
+  }
+  .flip-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    box-shadow: 0 2px 6px var(--shadow);
+    opacity: 1;
+  }
+  /* 場のカードは常に裏面を不透明で表示し、背後の巨大なポッド数字が透けて見えないようにする。
+     画像自体に透過部分があっても透けないよう、下地の不透明グラデーションを重ねる */
+  .flip-back {
+    background:
+      var(--card-back-img) center / 100% 100% no-repeat,
+      linear-gradient(160deg, var(--card-back-1), var(--card-back-2));
+    border: none;
+  }
+  .flip-front {
+    background: linear-gradient(160deg, var(--card-bg), var(--bg2));
+    color: var(--text);
+    border: 2px solid var(--accent);
+    font-weight: 900;
+    font-size: 2.4rem;
+    transform: rotateY(180deg);
+    box-shadow: 0 0 10px var(--glow);
+  }
+  .flip-front.ticking {
+    animation: numberTick 0.2s ease;
+  }
+  @keyframes numberTick {
+    0% { transform: rotateY(180deg) scale(1.35); color: var(--gold); }
+    100% { transform: rotateY(180deg) scale(1); }
+  }
+  @keyframes dropIn {
+    0% { transform: translateY(-10px) scale(0.85); opacity: 0.4; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .result-msg {
+    display: none; /* 勝敗テキストは一旦廃止（別の表現方法を検討中）。JS側の代入は残してある */
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    min-height: 1.3em;
+  }
+  .result-msg.win { color: var(--win); }
+  .result-msg.lose { color: var(--lose); }
+  .result-msg.draw { color: var(--tie); }
+  .effect-msg {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 6px;
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--accent);
+    font-weight: 700;
+    min-height: 1.2em;
+  }
+
+  .discard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+    max-width: 220px;
+    margin: 0 auto;
+  }
+  .discard-slot {
+    aspect-ratio: 3 / 4;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 800;
+    border: 1.5px dashed var(--card-border);
+    color: var(--text-dim);
+    background: transparent;
+    transition: all 0.25s ease;
+  }
+  .discard-slot.filled {
+    border: 1.5px solid var(--accent);
+    background: var(--card-bg);
+    color: var(--text);
+    font-weight: 900;
+    box-shadow: 0 2px 6px var(--shadow);
+  }
+  .discard-slot { position: relative; }
+  .discard-slot.red { --gc: var(--color-red); }
+  .discard-slot.blue { --gc: var(--color-blue); }
+  .discard-slot.yellow { --gc: var(--color-yellow); }
+  .discard-slot.green { --gc: var(--color-green); }
+  .discard-slot.pink { --gc: var(--color-pink); }
+  /* 役の発動トリガーになっている捨て札は、その色で光る */
+  .discard-slot.filled.glow {
+    z-index: 1;
+    animation: slotGlow 1.5s ease-in-out infinite;
+  }
+  @keyframes slotGlow {
+    0%, 100% { box-shadow: 0 0 4px var(--gc), 0 0 8px var(--gc); }
+    50% { box-shadow: 0 0 9px var(--gc), 0 0 20px var(--gc), 0 0 3px #fff inset; }
+  }
+  .discard-slot .peek-eye {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 22px;
+    height: 22px;
+    color: var(--color-pink);
+    filter: drop-shadow(0 0 3px var(--color-pink));
+    pointer-events: none;
+    z-index: 2;
+    animation: peekEyeBlink 1.8s ease-in-out infinite;
+  }
+  @keyframes peekEyeBlink {
+    0%, 80%, 100% { opacity: 1; }
+    90% { opacity: 0.35; }
+  }
+  .discard-col .discard-grid { cursor: pointer; }
+  /* 捨て札が山札へ戻る演出：自分は下へ、相手は上へフェードアウト（1枚ずつ少しずらす） */
+  /* 空枠は元の位置に残し、その上のカードだけが動く */
+  .discard-slot > .discard-slot { position: absolute; inset: -1.5px; z-index: 1; }
+  /* 空枠の番号は、カードが離れるころに浮かび上がる（二重に見えないように） */
+  .discard-slot.has-ret {
+    animation: emptyNumIn 0.2s linear both;
+    animation-delay: calc(var(--d, 0ms) + 0.22s);
+  }
+  @keyframes emptyNumIn {
+    0%   { color: transparent; }
+    100% { color: var(--text-dim); }
+  }
+  .discard-slot.returning {
+    transition: none;
+    animation: discardFallDown 0.26s ease-in both;
+    animation-delay: var(--d, 0ms);
+    pointer-events: none;
+  }
+  .discard-slot.returning.up { animation-name: discardFallUp; }
+  @keyframes discardFallDown {
+    0%   { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(16px); }
+  }
+  @keyframes discardFallUp {
+    0%   { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-16px); }
+  }
+
+  .color-info-hint {
+    margin-top: 4px;
+    font-size: 0.68rem;
+    line-height: 1.3;
+    text-align: center;
+    color: var(--text-dim);
+  }
+
+  /* 初回だけ出す操作ヒント（絶対配置：レイアウトの高さには影響しない） */
+  /* 上の区切り線の上に乗せるラベル。横位置は相手の捨て札の中央に合わせる（JSで調整） */
+  .role-hint {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: calc(100% - 24px);
+    padding: 0 6px;
+    line-height: 1.2;
+    background: var(--bg2);
+    text-align: center;
+    font-size: 0.64rem;
+    color: var(--text-dim);
+    opacity: 0.85;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .role-hint.gone { opacity: 0; }
+
+  /* 捨て札タップで出る「発動中の役」パネル */
+  .role-panel {
+    display: none;
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    z-index: 5;
+    background: var(--bg2);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px var(--shadow);
+    padding: 10px 12px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .role-panel.show { display: block; animation: panelIn 0.18s ease; }
+  .role-panel.op { top: 8px; }
+  .role-panel.me { bottom: 8px; }
+  .role-panel-title { font-size: 0.74rem; font-weight: 800; color: var(--text-dim); margin-bottom: 4px; }
+  .role-row { display: flex; gap: 8px; align-items: flex-start; padding: 7px 0; border-top: 1px solid var(--card-border); }
+  .role-dot { width: 12px; height: 12px; border-radius: 50%; margin-top: 3px; flex-shrink: 0; }
+  .role-dot.red { background: var(--color-red); box-shadow: 0 0 6px var(--color-red); }
+  .role-dot.blue { background: var(--color-blue); box-shadow: 0 0 6px var(--color-blue); }
+  .role-dot.yellow { background: var(--color-yellow); box-shadow: 0 0 6px var(--color-yellow); }
+  .role-dot.green { background: var(--color-green); box-shadow: 0 0 6px var(--color-green); }
+  .role-dot.pink { background: var(--color-pink); box-shadow: 0 0 6px var(--color-pink); }
+  .role-name { font-size: 0.85rem; font-weight: 800; }
+  .role-desc { font-size: 0.72rem; color: var(--text-dim); line-height: 1.4; }
+  .role-empty { font-size: 0.75rem; color: var(--text-dim); padding: 6px 0 2px; border-top: 1px solid var(--card-border); }
+
+  .controls { text-align: center; margin-top: 16px; }
+  .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 22px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn.secondary {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--card-border);
+    margin-left: 8px;
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 10;
+  }
+  .overlay.show { display: flex; }
+  .overlay-card {
+    background: var(--bg2);
+    border-radius: 18px;
+    padding: 28px 24px;
+    text-align: center;
+    max-width: 320px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  }
+  .overlay-card h2 { margin-top: 0; font-size: 1.4rem; }
+  .rules {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-top: 18px;
+    padding: 0 4px;
+  }
+
+  .hidden { display: none !important; }
+
+  .debug-panel {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: var(--bg2);
+    border: 1px dashed var(--card-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .debug-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--text-dim);
+    opacity: 0.8;
+  }
+  .debug-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .btn.small {
+    font-size: 0.68rem;
+    padding: 6px 10px;
+    opacity: 0.85;
+  }
+  .board.hide-hand .select-panel #myHand { display: none; }
+
+  .start-panel, .prep-panel {
+    background: var(--bg2);
+    border-radius: 16px;
+    padding: 20px 16px;
+    box-shadow: 0 2px 10px var(--shadow);
+    border: 1px solid var(--card-border);
+    text-align: center;
+  }
+  .start-desc {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin: 10px 0 18px;
+  }
+  .prep-progress {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    letter-spacing: 0.03em;
+  }
+  .prep-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    max-width: 340px;
+    margin: 4px auto 18px;
+  }
+  .prep-slot {
+    aspect-ratio: 5 / 7;
+    border-radius: 10px;
+    border: 2px dashed var(--card-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-dim);
+    opacity: 0.5;
+    background: var(--bg);
+    position: relative;
+    transition: opacity 0.2s ease;
+  }
+  /* 今まさに選んでいる枠：グレーで軽く塗って強調（ワイヤーフレーム準拠） */
+  .prep-slot.active {
+    border-style: solid;
+    border-color: var(--text-dim);
+    background: var(--card-border);
+    color: var(--text);
+    opacity: 1;
+    animation: prepActivePulse 1.4s ease-in-out infinite;
+  }
+  @keyframes prepActivePulse {
+    0%, 100% { box-shadow: 0 0 0 rgba(0,0,0,0); }
+    50% { box-shadow: 0 0 10px var(--shadow); }
+  }
+  /* 選択済みの枠：その色で塗って番号を表示 */
+  .prep-slot.filled {
+    border-style: solid;
+    opacity: 1;
+    color: var(--text);
+    background: linear-gradient(160deg, var(--card-bg), var(--bg2));
+  }
+  .prep-slot.filled.red { border-color: var(--color-red); box-shadow: 0 0 8px rgba(217, 58, 58, 0.45); }
+  .prep-slot.filled.blue { border-color: var(--color-blue); box-shadow: 0 0 8px rgba(47, 111, 224, 0.45); }
+  .prep-slot.filled.yellow { border-color: var(--color-yellow); box-shadow: 0 0 8px rgba(224, 180, 32, 0.45); }
+  .prep-slot.filled.green { border-color: var(--color-green); box-shadow: 0 0 8px rgba(63, 160, 80, 0.45); }
+  .prep-slot.filled.pink { border-color: var(--color-pink); box-shadow: 0 0 8px rgba(227, 92, 160, 0.45); }
+  .prep-slot.just-landed { animation: prepLandPop 0.28s ease; }
+  @keyframes prepLandPop {
+    0% { transform: scale(1.28); }
+    100% { transform: scale(1); }
+  }
+  /* 選んだ選択肢が枠へ飛んでいく間だけ使うクローン */
+  .prep-flying {
+    position: fixed;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    color: var(--text);
+    background: linear-gradient(160deg, var(--card-bg), var(--bg2));
+    border: 3px solid var(--card-border);
+    z-index: 999;
+    pointer-events: none;
+    transition: transform 0.32s cubic-bezier(0.3, 0.1, 0.2, 1), opacity 0.32s ease;
+    transform-origin: 0 0;
+  }
+  .prep-flying.red { border-color: var(--color-red); box-shadow: 0 0 10px rgba(217, 58, 58, 0.55); }
+  .prep-flying.blue { border-color: var(--color-blue); box-shadow: 0 0 10px rgba(47, 111, 224, 0.55); }
+  .prep-flying.yellow { border-color: var(--color-yellow); box-shadow: 0 0 10px rgba(224, 180, 32, 0.55); }
+  .prep-flying.green { border-color: var(--color-green); box-shadow: 0 0 10px rgba(63, 160, 80, 0.55); }
+  .prep-flying.pink { border-color: var(--color-pink); box-shadow: 0 0 10px rgba(227, 92, 160, 0.55); }
+  .prep-instruction {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin: 4px 0 16px;
+  }
+  .prep-choices {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .prep-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 108px;
+  }
+  .prep-option-effects {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg2);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .prep-effect-row {
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--text);
+    padding: 6px 6px;
+    line-height: 1.3;
+    text-align: center;
+  }
+  .prep-effect-row.empty {
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+  .prep-effect-divider {
+    height: 1px;
+    background: var(--card-border);
+  }
+  .prep-choice-btn {
+    width: 76px;
+    height: 106px;
+    border-radius: 10px;
+    border: 3px solid var(--card-border);
+    cursor: pointer;
+    font-size: 2.1rem;
+    font-weight: 900;
+    color: var(--text);
+    background: linear-gradient(160deg, var(--card-bg), var(--bg2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 10px var(--shadow);
+    transition: transform 0.12s ease;
+  }
+  .prep-choice-btn { position: relative; isolation: isolate; }
+  .prep-choice-btn:active { transform: scale(0.94); }
+  .prep-choice-btn.red { border-color: var(--color-red); box-shadow: 0 0 10px rgba(217, 58, 58, 0.55); }
+  .prep-choice-btn.blue { border-color: var(--color-blue); box-shadow: 0 0 10px rgba(47, 111, 224, 0.55); }
+  .prep-choice-btn.yellow { border-color: var(--color-yellow); box-shadow: 0 0 10px rgba(224, 180, 32, 0.55); }
+  .prep-choice-btn.green { border-color: var(--color-green); box-shadow: 0 0 10px rgba(63, 160, 80, 0.55); }
+  .prep-choice-btn.pink { border-color: var(--color-pink); box-shadow: 0 0 10px rgba(227, 92, 160, 0.55); }
+
+
+  .card.red, .flip-front.red, .discard-slot.filled.red {
+    border-color: var(--color-red);
+    border-width: 3px;
+    box-shadow: 0 0 8px rgba(217, 58, 58, 0.5);
+  }
+  .card.blue, .flip-front.blue, .discard-slot.filled.blue {
+    border-color: var(--color-blue);
+    border-width: 3px;
+    box-shadow: 0 0 8px rgba(47, 111, 224, 0.5);
+  }
+  .card.yellow, .flip-front.yellow, .discard-slot.filled.yellow {
+    border-color: var(--color-yellow);
+    border-width: 3px;
+    box-shadow: 0 0 8px rgba(224, 180, 32, 0.5);
+  }
+  .card.green, .flip-front.green, .discard-slot.filled.green {
+    border-color: var(--color-green);
+    border-width: 3px;
+    box-shadow: 0 0 8px rgba(63, 160, 80, 0.5);
+  }
+  .card.pink, .flip-front.pink, .discard-slot.filled.pink {
+    border-color: var(--color-pink);
+    border-width: 3px;
+    box-shadow: 0 0 8px rgba(227, 92, 160, 0.5);
+  }
+  /* カード表面の色アイコン（透かしデザイン）：手札・場のカード・デッキ構築の色選択カードのみ。捨て札には付けない */
+  .card.red::before, .card.blue::before, .card.yellow::before, .card.green::before, .card.pink::before,
+  .flip-front.red::before, .flip-front.blue::before, .flip-front.yellow::before, .flip-front.green::before, .flip-front.pink::before,
+  .prep-choice-btn.red::before, .prep-choice-btn.blue::before, .prep-choice-btn.yellow::before, .prep-choice-btn.green::before, .prep-choice-btn.pink::before {
+    content: '';
+    position: absolute;
+    inset: 6%;
+    z-index: -1;
+    border-radius: inherit;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.26;
+    pointer-events: none;
+  }
+  .card.red::before, .flip-front.red::before, .prep-choice-btn.red::before { background-image: var(--icon-red); }
+  .card.blue::before, .flip-front.blue::before, .prep-choice-btn.blue::before { background-image: var(--icon-blue); }
+  .card.yellow::before, .flip-front.yellow::before, .prep-choice-btn.yellow::before { background-image: var(--icon-yellow); }
+  .card.green::before, .flip-front.green::before, .prep-choice-btn.green::before { background-image: var(--icon-green); }
+  .card.pink::before, .flip-front.pink::before, .prep-choice-btn.pink::before { background-image: var(--icon-pink); }
+
+  /* 手札の色枠だけ、他(場のカードや捨て札)より太くする */
+  .select-panel button.card.red,
+  .select-panel button.card.blue,
+  .select-panel button.card.yellow,
+  .select-panel button.card.green,
+  .select-panel button.card.pink {
+    border-width: 5px;
+  }
+
+  /* ===== オンライン対戦 ===== */
+  .start-btns { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .start-btns .btn.secondary, .online-panel .btn.secondary { margin-left: 0; }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .join-row { display: flex; gap: 8px; justify-content: center; margin: 14px 0 6px; }
+  .join-row input {
+    width: 9em; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text);
+    font-size: 1rem; text-align: center; letter-spacing: 0.2em; font-variant-numeric: tabular-nums;
+  }
+  .online-status { font-size: 0.75rem; color: var(--text-dim); line-height: 1.6; margin: 12px 0 8px; min-height: 1.2em; }
+  .room-code-label { font-size: 0.75rem; color: var(--text-dim); }
+  .room-code { font-size: 3.2rem; font-weight: 900; letter-spacing: 0.15em; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .online-wait-text { font-size: 0.8rem; color: var(--text-dim); line-height: 1.6; margin: 6px 0 14px; }
+  .prep-wait { font-size: 0.85rem; font-weight: 700; color: var(--text-dim); margin-top: 10px; }
+  .prep-panel.waiting .prep-choices, .prep-panel.waiting .prep-instruction { display: none; }
+  .net-notice {
+    position: fixed; left: 50%; top: calc(10px + env(safe-area-inset-top, 0px)); transform: translateX(-50%);
+    z-index: 60; max-width: min(78vw, 420px); padding: 8px 14px; border-radius: 12px;
+    background: var(--bg2); color: var(--text); border: 1px solid var(--card-border);
+    box-shadow: 0 4px 16px var(--shadow); font-size: 0.75rem; line-height: 1.5; display: none;
+  }
+  .net-notice.show { display: block; }
+  .join-row input.name-input { letter-spacing: normal; font-variant-numeric: normal; }
+</style>
+</head>
+<body>
+<audio id="bgmAudio" loop preload="none" src="assets/bgm.mp3"></audio>
+<audio id="prepBgmAudio" preload="none" src="assets/prep-bgm.mp3"></audio>
+<div class="wrap">
+  <button id="themeBtn" class="theme-toggle-btn" aria-label="ライト/ダークモード切替"></button>
+  <h1>🃏 ナンバーデュエル</h1>
+
+  <div id="startScreen">
+    <div class="goal">お互いチップ15枚からスタート！先にチップ30枚集めたら勝ち（相手のチップは0枚になっても即敗北にはならず続行）</div>
+    <div class="start-panel">
+      <div class="section-label">デッキ構築</div>
+      <p class="start-desc">対戦を始める前に、1〜8の各カードの色（赤・青・黄・緑・ピンク）を1枚ずつ選んでデッキを組みます。オンライン対戦では、部屋コードを使って別の端末の相手と対戦できます。</p>
+      <div class="start-btns">
+        <button class="btn" id="onlineBtn">🌐 オンライン対戦</button>
+        <button class="btn secondary" id="startBtn">🤖 CPUと練習（ひとり用）</button>
+        <button class="btn" id="debugModeBtn" style="opacity:0.75; font-size:0.8rem;">🐞 デバッグモード: OFF</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="onlineScreen" class="hidden">
+    <div class="goal">オンライン対戦：部屋を作るか、相手から聞いた部屋コードで入室してください</div>
+    <div class="start-panel online-panel">
+      <div id="onlineMenu">
+        <div class="section-label">あなたの名前（相手に表示されます）</div>
+        <div class="join-row">
+          <input id="playerNameInput" class="name-input" maxlength="16" autocomplete="nickname" placeholder="名前" aria-label="あなたの名前">
+        </div>
+        <div class="section-label" style="margin-top:18px;">新しく対戦を始める</div>
+        <button class="btn" id="createRoomBtn">部屋を作る</button>
+        <div class="section-label" style="margin-top:18px;">部屋に入る</div>
+        <div class="join-row">
+          <input id="roomCodeInput" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0000" aria-label="部屋コード（4桁）">
+          <button class="btn" id="joinRoomBtn">入室</button>
+        </div>
+        <button class="btn secondary" id="resumeRoomBtn" style="display:none; margin-top:8px;"></button>
+      </div>
+      <div id="onlineWait" class="hidden">
+        <div class="room-code-label">部屋コード</div>
+        <div class="room-code" id="roomCodeShow">----</div>
+        <div class="online-wait-text">相手にこのコードを伝えてください。<br>相手の入室を待っています…</div>
+      </div>
+      <div class="online-status" id="onlineStatus"></div>
+      <button class="btn secondary" id="onlineBackBtn">戻る</button>
+    </div>
+  </div>
+
+  <div id="prepScreen" class="hidden">
+    <div class="goal">準備フェイズ：カードの色を選んでデッキを組んでください</div>
+    <div class="prep-panel" id="prepPanel">
+      <div class="prep-progress" id="prepProgress">カード 1 / 8</div>
+      <div class="prep-grid" id="prepGrid"></div>
+      <div class="prep-instruction">好きな方のカードを選んでください</div>
+      <div class="prep-choices" id="prepChoices"></div>
+      <div class="prep-wait hidden" id="prepWait">デッキ完成！相手の準備を待っています…</div>
+    </div>
+  </div>
+
+  <div id="gameScreen" class="hidden">
+  <div class="board" id="board" data-mode="select">
+
+    <!-- 上：相手（チップ／捨て札） -->
+    <div class="zone-side op">
+      <div class="side-col">
+        <div class="side-head"><span id="opLabel">相手(CPU)</span></div>
+        <div class="num" id="opHP">15</div>
+      </div>
+      <div class="discard-col">
+        <div class="discard-grid" id="discardGridOp"></div>
+      </div>
+    </div>
+
+    <!-- 中：バトル場 ⇄ 手札選択 -->
+    <div class="zone-mid">
+      <div class="battle-panel">
+        <div class="pod-display" id="podDisplay"><span id="podValue">00</span></div>
+        <div class="field-slot">
+          <div class="flip-card" id="fieldOpFlip">
+            <div class="flip-inner">
+              <div class="flip-face flip-back"></div>
+              <div class="flip-face flip-front" id="fieldOpFront"></div>
+            </div>
+          </div>
+          <div class="boost" id="fieldOpBoost"></div>
+        </div>
+        <div class="field-slot">
+          <div class="flip-card" id="fieldMeFlip">
+            <div class="flip-inner">
+              <div class="flip-face flip-back"></div>
+              <div class="flip-face flip-front" id="fieldMeFront"></div>
+            </div>
+          </div>
+          <div class="boost" id="fieldMeBoost"></div>
+        </div>
+      </div>
+
+      <div class="select-panel">
+        <div class="pod-mini" id="podMini">ポッド <span id="podValueMini">00</span>🪙</div>
+        <div class="select-prompt" id="selectPrompt">出すカードを選んでください</div>
+        <div class="card-row" id="myHand"></div>
+        <div class="chip-selector">
+          <div class="chip-controls">
+            <button class="chip-btn" id="chipMinus">−</button>
+            <span class="chip-value" id="chipSelectedVal">0</span>
+            <button class="chip-btn" id="chipPlus">+</button>
+          </div>
+          <div>使用チップ（所持 <b id="myChipAvail">0</b>枚）</div>
+        </div>
+        <div class="color-info-hint" id="colorInfoHint" style="display:none;"></div>
+      </div>
+      <div class="role-hint" id="roleHint">▲ タップで役を確認</div>
+      <div class="role-panel" id="rolePanel"></div>
+      <div class="effect-msg" id="effectMsg"></div>
+      <div class="result-msg" id="resultMsg"></div>
+    </div>
+
+    <!-- 下：自分（捨て札／チップ） -->
+    <div class="zone-side me">
+      <div class="discard-col">
+        <div class="discard-grid" id="discardGridMy"></div>
+      </div>
+      <div class="side-col">
+        <div class="num" id="myHP">15</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn secondary" id="soundBtn">🔊 サウンド ON</button>
+    <button class="btn secondary" id="resetBtn">最初からやり直す</button>
+  </div>
+
+  <div class="debug-panel hidden" id="debugPanel">
+    <div class="debug-label">🐞 デバッグ</div>
+    <div class="debug-row">
+      <button class="btn secondary small" id="dbgThroughBtn">THROUGH再生</button>
+      <button class="btn secondary small" id="dbgLoseBtn">LOSE再生</button>
+      <button class="btn secondary small" id="dbgJackpotBtn">JACKPOT再生</button>
+    </div>
+    <div class="debug-row">
+      <button class="btn secondary small" id="dbgHideHandBtn">🙈 手札を隠す</button>
+    </div>
+  </div>
+
+  <div class="rules">
+    基本ルール：お互いチップ15枚からスタート（ラウンド開始時の参加費の支払いはなし）。1〜8のカードが1枚ずつ入った8枚のデッキを、<b>プレイヤーごとに1組ずつ</b>用意してシャッフル。それぞれ手札2枚になるよう自分のデッキから引く。出すカードを選ぶ際、所持チップを消費してその<b>ターンのみ</b>数字を+1できる（カード自体の数字は変わらず、ターン終了時は元の数字のまま捨て札へ）。お互い同時に1枚出し、数字を比較して勝敗を決める。<br><br>
+    決着：先に<b>チップ30枚</b>を集めた方の勝ち。チップが0枚になっても即敗北にはならず、勝つまでゲームは続く。<br><br>
+    勝敗の報酬（チップブーストが鍵）：<br>
+    ・<b>JACKPOT</b>＝ブースト有無を問わず、<b>ちょうど1差</b>で勝った時だけ、ポッドに溜まっている分を総取りできる（負けた側がブーストしていなければ、LOSE同様にポッドへ1枚支払う。支払いは総取りの後）<br>
+    ・<b>THROUGH</b>＝ブーストなしの通常勝利。報酬はないが損もない<br>
+    ・<b>LOSE</b>＝ブーストなしで負けると、ポッドへ1枚支払う<br>
+    ・<b>DRAW</b>＝引き分け。お互いが出したブーストは（LOSEと同じ扱いで）すべてポッドへ<br>
+    ・それ以外の結果（JACKPOTにならなかったブースト、ブーストしての負け等）は、使ったブースト分がそのままポッドへ流れて無報酬になる<br><br>
+    カード効果：現在、1〜8のどのカードにも数字比較以外の特殊効果はありません（検討中）。<br><br>
+    色の役(自分の捨て札の色構成で常時判定)：<b>色トリプル</b>(同色3枚以上)。成立すると捨て札が光り、タップで確認できます。<b>赤</b>(攻め)＝JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）／<b>青</b>(守り)＝ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ）／<b>緑</b>(安定)＝THROUGH(通常勝利)時、ポッドに溜まっていれば1🪙回収できる／<b>ピンク</b>＝相手のデッキの底が見える／<b>黄</b>＝手札選択中に相手がブーストするかどうかだけ見える(枚数は伏せる)。<br><br>
+    色：各カードには赤・青・黄・緑・ピンクいずれかの色がある（デッキ構築時に選択）。現時点では色トリプル以外の効果条件には未使用。<br><br>
+    オンライン対戦：「部屋を作る」で表示される4桁のコードを相手に伝え、相手が入室したら準備フェイズ（それぞれ非公開でデッキを組む）へ進み、両者の準備が終わると対戦開始。手札のカードをタップした時点でそのラウンドの手が確定し、両者が確定したら一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになると手札からランダムに1枚、ブースト0で自動的に出す。黄の役は、相手が確定した時点でブーストの有無が見える。対戦相手もclaude.aiにサインインし、このアーティファクトに書き込める権限（編集者として招待されている等）が必要。途中で抜けても、同じ部屋コードで入り直せば続きから再開できる。<br><br>
+    画面：カードを選ぶ時は「手札選択」画面、カードを出すと「バトル場」画面に自動で切り替わり、決着後にまた手札選択へ戻ります。
+  </div>
+  </div>
+</div>
+
+<div class="net-notice" id="netNotice" role="status"></div>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-card">
+    <h2 id="overlayTitle">ゲーム終了</h2>
+    <p id="overlayText"></p>
+    <button class="btn" id="playAgainBtn">もう一度プレイ</button>
+  </div>
+</div>
+
+<script src="net-shim.js"></script>
+<script>
+(function() {
+  let state = null;
+  let gameToken = 0; // 新しいゲームが始まるたびに増分し、古い演出タイマーを無効化する
+  window.__getRoundLog = function () { return (state && state.roundLog) ? state.roundLog : []; }; // ログパネル用
+
+
+  // ===== サウンド（Web Audio APIで合成。音声ファイルは使わない）=====
+  let audioCtx = null;
+  let masterGain = null;
+  let noiseBuf = null;
+  let soundOn = true;
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try {
+        audioCtx = new AC();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.7;
+        masterGain.connect(audioCtx.destination);
+      } catch (e) {
+        audioCtx = null;
+        return null;
+      }
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  // ブラウザの制限で、最初のタップ以降にしか音は鳴らせない
+  document.addEventListener('pointerdown', ensureAudio);
+
+  function getNoise(ctx) {
+    if (!noiseBuf) {
+      noiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.3), ctx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    return noiseBuf;
+  }
+
+  // 手札をタップして選んだ時の音：低い「トン」＋紙が当たる短い「パシッ」
+  function playSelectSound(delay) {
+    if (!soundOn) return;
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const t = ctx.currentTime + (delay || 0);
+
+    const o = ctx.createOscillator();
+    const og = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(190, t);
+    o.frequency.exponentialRampToValueAtTime(70, t + 0.1);
+    og.gain.setValueAtTime(0.0001, t);
+    og.gain.exponentialRampToValueAtTime(0.55, t + 0.006);
+    og.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+    o.connect(og); og.connect(masterGain);
+    o.start(t); o.stop(t + 0.16);
+
+    const n = ctx.createBufferSource();
+    n.buffer = getNoise(ctx);
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.frequency.value = 1900;
+    f.Q.value = 0.9;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.4, t);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+    n.connect(f); f.connect(ng); ng.connect(masterGain);
+    n.start(t); n.stop(t + 0.08);
+  }
+
+  // 枠に入る時の音：カチッとハマる、短く硬いクリック音
+  function playSnapSound(delay) {
+    if (!soundOn) return;
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const t = ctx.currentTime + (delay || 0);
+
+    // 硬いクリック本体：高めのサイン波を極短時間だけ鳴らす
+    const o = ctx.createOscillator();
+    const og = ctx.createGain();
+    o.type = 'square';
+    o.frequency.setValueAtTime(1400, t);
+    o.frequency.exponentialRampToValueAtTime(900, t + 0.03);
+    og.gain.setValueAtTime(0.0001, t);
+    og.gain.exponentialRampToValueAtTime(0.3, t + 0.004);
+    og.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+    o.connect(og); og.connect(masterGain);
+    o.start(t); o.stop(t + 0.05);
+
+    // 「カチッ」の輪郭を出す、ごく短いノイズの弾け
+    const n = ctx.createBufferSource();
+    n.buffer = getNoise(ctx);
+    const f = ctx.createBiquadFilter();
+    f.type = 'highpass';
+    f.frequency.value = 2500;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.35, t);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.025);
+    n.connect(f); f.connect(ng); ng.connect(masterGain);
+    n.start(t); n.stop(t + 0.03);
+  }
+
+  // チップで数字が上がる音：連続で鳴るたびに音階を上げていく（上昇の表現）
+  const TICK_SEMITONES = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19];
+  function playTickSound(step) {
+    if (!soundOn) return;
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const semi = TICK_SEMITONES[Math.min(step, TICK_SEMITONES.length - 1)];
+    const freq = 523.25 * Math.pow(2, semi / 12); // ド(C5)から上がっていく
+
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.32, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+    o.connect(g); g.connect(masterGain);
+    o.start(t); o.stop(t + 0.18);
+
+    // 1オクターブ上を薄く重ねてきらっとさせる
+    const o2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    o2.type = 'sine';
+    o2.frequency.setValueAtTime(freq * 2, t);
+    g2.gain.setValueAtTime(0.0001, t);
+    g2.gain.exponentialRampToValueAtTime(0.1, t + 0.008);
+    g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+    o2.connect(g2); g2.connect(masterGain);
+    o2.start(t); o2.stop(t + 0.12);
+  }
+
+  // カードをめくる音：空気を切る「シュッ」のみ
+  function playFlipSound(delay) {
+    if (!soundOn) return;
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const t = ctx.currentTime + (delay || 0);
+
+    const n = ctx.createBufferSource();
+    n.buffer = getNoise(ctx);
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.Q.value = 1.4;
+    f.frequency.setValueAtTime(900, t);
+    f.frequency.exponentialRampToValueAtTime(4200, t + 0.16);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.32, t + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+    n.connect(f); f.connect(g); g.connect(masterGain);
+    n.start(t); n.stop(t + 0.22);
+  }
+
+  // ===== BGM（画面ごとに専用トラックをループ再生）=====
+  // SFXと同じ AudioContext 上で鳴らす。<audio>要素と別の音声セッションを使うと、
+  // 環境によってはSFX用のAudioContextが無音化されSEが消えてしまうため。
+  const BGM_TRACKS = {
+    battle: { elId: 'bgmAudio', volume: 0.1 },      // 対戦中のBGM
+    prep:   { elId: 'prepBgmAudio', volume: 0.12 }, // 準備フェイズのBGM
+  };
+  const bgmState = {}; // key: track名 -> { gainNode, buffer, bufferPromise, sourceNode }
+  for (const key in BGM_TRACKS) bgmState[key] = { gainNode: null, buffer: null, bufferPromise: null, sourceNode: null };
+  let currentBgmTrack = null; // 今どのトラックを鳴らすべきか
+
+  function ensureBgmGain(ctx, key) {
+    const st = bgmState[key];
+    if (!st.gainNode) {
+      st.gainNode = ctx.createGain();
+      st.gainNode.gain.value = soundOn ? BGM_TRACKS[key].volume : 0;
+      st.gainNode.connect(ctx.destination);
+    }
+    return st.gainNode;
+  }
+
+  // <audio>タグは音声ファイルの場所を示すだけに使い、再生自体はWeb Audio API側で行う
+  function loadBgmBuffer(ctx, key) {
+    const st = bgmState[key];
+    if (st.buffer) return Promise.resolve(st.buffer);
+    if (st.bufferPromise) return st.bufferPromise;
+    const el = document.getElementById(BGM_TRACKS[key].elId);
+    const src = el ? el.getAttribute('src') : '';
+    st.bufferPromise = fetch(src)
+      .then((res) => { if (!res.ok) throw new Error('bgm ' + res.status); return res.arrayBuffer(); })
+      .then((data) => ctx.decodeAudioData(data))
+      .then((buf) => {
+        st.buffer = buf;
+        return buf;
+      })
+      .catch((e) => { st.bufferPromise = null; throw e; });
+    return st.bufferPromise;
+  }
+
+  function stopBgmSourceOnly(key) {
+    const st = bgmState[key];
+    if (st.sourceNode) {
+      try { st.sourceNode.stop(); } catch (e) {}
+      st.sourceNode.disconnect();
+      st.sourceNode = null;
+    }
+  }
+
+  // 指定したトラックだけを鳴らし、他は止める
+  function startBgm(key) {
+    currentBgmTrack = key;
+    for (const k in BGM_TRACKS) {
+      if (k !== key) stopBgmSourceOnly(k);
+    }
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const gain = ensureBgmGain(ctx, key);
+    const token = gameToken;
+    loadBgmBuffer(ctx, key).then((buf) => {
+      if (currentBgmTrack !== key || token !== gameToken) return;
+      stopBgmSourceOnly(key);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+      src.connect(gain);
+      src.start(0);
+      bgmState[key].sourceNode = src;
+    }).catch(() => {});
+  }
+
+  function stopBgm() {
+    currentBgmTrack = null;
+    for (const k in BGM_TRACKS) stopBgmSourceOnly(k);
+  }
+
+  function syncBgmToSoundToggle() {
+    for (const k in BGM_TRACKS) {
+      const st = bgmState[k];
+      if (st.gainNode) st.gainNode.gain.value = soundOn ? BGM_TRACKS[k].volume : 0;
+    }
+  }
+
+  // 画面の中央エリア切り替え：'select'(手札選択) ⇄ 'battle'(バトル場)
+  function setMode(mode) {
+    document.getElementById('board').dataset.mode = mode;
+  }
+
+  const COLORS = ['red', 'blue', 'yellow', 'green', 'pink'];
+  const COLOR_LABEL = { red: '赤', blue: '青', yellow: '黄', green: '緑', pink: 'ピンク' };
+  let debugMode = false; // デバッグモード：準備フェイズで全色から選べるようにする
+  const WIN_CHIPS = 30; // 新しい勝利条件：どちらかがこの枚数のチップを集めたら決着
+  // 対人戦(2人対戦・画面を渡し合う想定)に備えて、情報系の役(ピンク・黄)は「今画面を見ている側」基準で判定する。
+  // 現状は常にmy(人間側)が画面を見ているが、将来オセットで表示を切り替える際はここを変更するだけでよい。
+  let activeViewer = 'my';
+  function otherOf(who) { return who === 'my' ? 'op' : 'my'; }
+  let prepMyColors = {};
+  let prepOpColors = {};
+  let prepStep = 1;
+  let prepCurrentOptions = [];
+
+  // ===================================================================
+  // オンライン対戦
+  //  - db  ：試合の共有データ（matches/<部屋コード>）と各プレイヤーの座席（…/seats/host|guest）、
+  //          手札・山札などの非公開データ（data/users/<自分のID>/nd-<部屋コード>：本人以外は読めない）
+  //  - room：相手の在室確認と「更新したよ」の合図（presence）。合図を受けたら db を読み直す
+  //  - user：自分のID（非公開データの置き場所）と相手の名前
+  // 進行：各自が手を「確定」（座席に確定済みの印とハッシュだけ書く）→ 両者確定後に各自が「公開」
+  //      → 両端末が同じ計算（computeRoundResult）で演出、ホストが結果を共有データへ書いて正とする
+  // ===================================================================
+  const TURN_SECONDS = 60; // 手札選択の制限時間（秒）
+  const net = {
+    active: false, role: null, code: null, gameId: null, uid: null, oppId: null,
+    db: null, user: null, room: null, namedRoom: null,
+    match: null, seats: { host: null, guest: null }, priv: null, mySeat: null,
+    unsubs: [], pollTimer: null, seq: 0, seatRev: 0, matchRev: 0,
+    oppName: '', oppOnline: null, hostResolvedRound: 0,
+    phase: 'idle', // 'idle' | 'waiting' | 'guestWait' | 'prep' | 'prepWait' | 'game'
+    revealWrittenRound: 0, resolvingRound: 0, timer: null, timerEnd: 0
+  };
+  function oppRole() { return net.role === 'host' ? 'guest' : 'host'; }
+  function oppSeatC() { return net.seats[oppRole()]; }
+  function oppCommittedNow() {
+    const op = oppSeatC();
+    return !!(net.active && state && op && op.commitRound === state.round);
+  }
+
+  let capsPromise = null;
+  function loadCaps() {
+    if (capsPromise) return capsPromise;
+    capsPromise = (async () => {
+      const c = window.claude;
+      if (!c || typeof c.use !== 'function') return { db: null, user: null, room: null };
+      const safe = (name) => Promise.resolve().then(() => c.use(name)).catch(() => null);
+      const [db, user, room] = await Promise.all([safe('db'), safe('user'), safe('room')]);
+      return { db, user, room };
+    })();
+    return capsPromise;
+  }
+
+  function netNotice(text, sticky) {
+    const el = document.getElementById('netNotice');
+    if (!el) return;
+    el.textContent = text || '';
+    el.classList.toggle('show', !!text);
+    clearTimeout(netNotice._t);
+    if (text && !sticky) netNotice._t = setTimeout(() => el.classList.remove('show'), 4000);
+  }
+  function setOnlineStatus(t) {
+    const el = document.getElementById('onlineStatus');
+    if (el) el.textContent = t || '';
+  }
+  function handleNetError(e) {
+    const code = e && e.code;
+    if (code === 'invalid_argument') netNotice('サーバーに書き込みが拒否されました。ページを再読み込みしてからもう一度お試しください', true);
+    else if (code === 'quota_exceeded') netNotice('保存容量の上限に達したため、データを保存できませんでした', true);
+    else if (code === 'revoked') netNotice('アクセス権が変更されたため、通信できなくなりました', true);
+    else netNotice('通信エラーが発生しました（' + (code || 'unknown') + '）。自動で再読み込みを続けます');
+    console.warn('[online] error', e);
+  }
+
+  // 同じドキュメントへの書き込みは1つずつ順番に（前の書き込みを待ってから次へ）
+  const writeQueues = {};
+  function queuedWrite(path, fn) {
+    const run = async () => {
+      try { await fn(); }
+      catch (e) {
+        if (e && e.code === 'unavailable') {
+          await new Promise(r => setTimeout(r, 400 + Math.random() * 600));
+          try { await fn(); } catch (e2) { handleNetError(e2); }
+        } else handleNetError(e);
+      }
+    };
+    const p = (writeQueues[path] || Promise.resolve()).then(run);
+    writeQueues[path] = p;
+    return p;
+  }
+  function matchPath() { return 'matches/' + net.code; }
+  function seatPath(role) { return 'matches/' + net.code + '/seats/' + role; }
+  function privPath() { return 'data/users/' + net.uid + '/nd-' + net.code; }
+  function nudge() {
+    if (net.namedRoom) net.namedRoom.presence({ uid: net.uid, seq: ++net.seq }).catch(() => {});
+  }
+  // 自分の座席（公開してよい情報だけ）：確定の印・公開した手・捨て札・デッキの底(相手がピンク役の時だけ)など
+  function writeMySeat(patch) {
+    net.seatRev++;
+    net.mySeat = Object.assign({}, net.mySeat || {}, patch, { uid: net.uid, gameId: net.gameId, rev: net.seatRev });
+    net.seats[net.role] = net.mySeat;
+    const data = JSON.parse(JSON.stringify(net.mySeat));
+    const path = seatPath(net.role);
+    return queuedWrite(path, () => net.db.doc(path).set(data)).then(nudge);
+  }
+  // 試合の共有データ（ホストだけが書く。例外はゲストの入室時の guestId のみ）
+  function writeMatch(patch) {
+    net.matchRev++;
+    const data = Object.assign({}, patch, { rev: net.matchRev, updatedAt: Date.now() });
+    net.match = Object.assign({}, net.match || {}, data);
+    const path = matchPath();
+    return queuedWrite(path, () => net.db.doc(path).update(data)).then(nudge);
+  }
+  // 自分だけが読める非公開データ（色・山札・手札・確定した手・ログ）
+  function writePriv(patch) {
+    net.priv = Object.assign({}, net.priv || {}, patch, { gameId: net.gameId });
+    const data = JSON.parse(JSON.stringify(net.priv));
+    const path = privPath();
+    return queuedWrite(path, () => net.db.doc(path).set(data));
+  }
+
+  function sameJson(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+  function acceptMatch(d) {
+    if (!d || d.gameId !== net.gameId) return false;
+    if (net.match && (d.rev || 0) < (net.match.rev || 0)) return false;
+    if (net.match && sameJson(d, net.match)) return false;
+    net.match = d;
+    return true;
+  }
+  function acceptSeat(role, d) {
+    if (!d || d.gameId !== net.gameId) return false;
+    if (role === net.role) return false; // 自分の座席は手元の内容が正
+    const cur = net.seats[role];
+    if (cur && (d.rev || 0) < (cur.rev || 0)) return false;
+    if (cur && sameJson(d, cur)) return false;
+    net.seats[role] = d;
+    return true;
+  }
+
+  function subscribeAll() {
+    const onErr = (e) => { if (e && e.code === 'revoked') netNotice('アクセス権が変更されたため、通信できなくなりました', true); };
+    net.unsubs.push(net.db.doc(matchPath()).onSnapshot(snap => {
+      if (snap.exists && acceptMatch(snap.data())) onNetUpdate();
+    }, onErr));
+    ['host', 'guest'].forEach(role => {
+      net.unsubs.push(net.db.doc(seatPath(role)).onSnapshot(snap => {
+        if (snap.exists && acceptSeat(role, snap.data())) onNetUpdate();
+      }, onErr));
+    });
+    // 保険：リアルタイム配信が遅い環境向けに定期的に読み直す
+    net.pollTimer = setInterval(fetchAll, 4000);
+  }
+  let fetching = false;
+  async function fetchAll() {
+    if (!net.active || fetching) return;
+    fetching = true;
+    try {
+      const [m, h, g] = await Promise.all([
+        net.db.doc(matchPath()).get(),
+        net.db.doc(seatPath('host')).get(),
+        net.db.doc(seatPath('guest')).get()
+      ]);
+      if (!net.active) return;
+      let changed = false;
+      if (m.exists && acceptMatch(m.data())) changed = true;
+      if (h.exists && acceptSeat('host', h.data())) changed = true;
+      if (g.exists && acceptSeat('guest', g.data())) changed = true;
+      if (changed) onNetUpdate();
+    } catch (e) { /* 次回の読み直しに任せる */ }
+    finally { fetching = false; }
+  }
+
+  async function joinNetRoom() {
+    if (!net.room || typeof net.room.join !== 'function') return;
+    try {
+      const code = net.code;
+      const r = await net.room.join('nd-' + code);
+      if (!net.active || net.code !== code) { r.leave().catch(() => {}); return; }
+      net.namedRoom = r;
+      r.presence({ uid: net.uid, seq: net.seq }).catch(() => {});
+      net.unsubs.push(r.onPeers((ch) => {
+        const others = ch.peers.filter(p => !p.isMe);
+        net.oppOnline = net.oppId
+          ? others.some(p => p.by === net.oppId || (p.presence && p.presence.uid === net.oppId))
+          : null;
+        if (ch.updated.some(p => !p.isMe) || ch.joined.some(p => !p.isMe)) fetchAll();
+        updateOpLabel();
+      }, () => { net.oppOnline = null; updateOpLabel(); }));
+    } catch (e) {
+      net.namedRoom = null;
+    }
+  }
+
+  function leaveOnline() {
+    net.unsubs.forEach(u => { try { u(); } catch (e) {} });
+    net.unsubs = [];
+    clearInterval(net.pollTimer);
+    net.pollTimer = null;
+    stopTurnTimer();
+    if (net.namedRoom) { net.namedRoom.leave().catch(() => {}); net.namedRoom = null; }
+    Object.assign(net, {
+      active: false, role: null, code: null, gameId: null, oppId: null,
+      match: null, seats: { host: null, guest: null }, priv: null, mySeat: null,
+      phase: 'idle', oppOnline: null, oppName: '', hostResolvedRound: 0,
+      revealWrittenRound: 0, resolvingRound: 0, seatRev: 0, matchRev: 0
+    });
+    document.getElementById('resetBtn').textContent = '最初からやり直す';
+    document.getElementById('playAgainBtn').textContent = 'もう一度プレイ';
+    updateOpLabel();
+  }
+
+  // ---- ロビー（部屋を作る／入る）----
+  function setOnlineButtonsDisabled(dis) {
+    ['createRoomBtn', 'joinRoomBtn', 'resumeRoomBtn'].forEach(id => {
+      const b = document.getElementById(id);
+      if (b) b.disabled = dis;
+    });
+    const inp = document.getElementById('roomCodeInput');
+    if (inp) inp.disabled = dis;
+  }
+  function showOnlineMenu() {
+    showScreen('online');
+    document.getElementById('onlineMenu').classList.remove('hidden');
+    document.getElementById('onlineWait').classList.add('hidden');
+  }
+  function showOnlineWait() {
+    showScreen('online');
+    document.getElementById('onlineMenu').classList.add('hidden');
+    document.getElementById('onlineWait').classList.remove('hidden');
+    document.getElementById('roomCodeShow').textContent = net.code;
+    setOnlineStatus('');
+  }
+  function getLastRoom() {
+    try { const v = localStorage.getItem('nd-lastRoom'); return /^\d{4}$/.test(v || '') ? v : null; } catch (e) { return null; }
+  }
+  async function openOnlineScreen() {
+    showOnlineMenu();
+    setOnlineButtonsDisabled(true);
+    document.getElementById('resumeRoomBtn').style.display = 'none';
+    setOnlineStatus('接続を確認しています…');
+    const caps = await loadCaps();
+    net.db = caps.db; net.user = caps.user; net.room = caps.room;
+    if (!net.db || !net.user) {
+      setOnlineStatus('サーバーに接続できないため、オンライン対戦を使えません。');
+      return;
+    }
+    try { net.uid = await net.user.id(); } catch (e) { net.uid = null; }
+    if (!net.uid) {
+      setOnlineStatus('サーバーに接続できないため、オンライン対戦を使えません（通信状態を確認してください）。');
+      return;
+    }
+    let canWrite = null;
+    try { canWrite = await net.user.can('data.write'); } catch (e) {}
+    if (canWrite === false) {
+      setOnlineStatus('サーバーへの書き込みが許可されていないため対戦できません。');
+      return;
+    }
+    setOnlineButtonsDisabled(false);
+    setOnlineStatus('');
+    const last = getLastRoom();
+    const rb = document.getElementById('resumeRoomBtn');
+    if (last) { rb.textContent = `前回の部屋（${last}）に戻る`; rb.style.display = ''; }
+  }
+
+  function makeGameId() {
+    return 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+  async function createRoom() {
+    setOnlineButtonsDisabled(true);
+    setOnlineStatus('部屋を作成中…');
+    try {
+      let code = null;
+      for (let i = 0; i < 12 && !code; i++) {
+        const c = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+        const snap = await net.db.doc('matches/' + c).get();
+        const d = snap.exists ? snap.data() : null;
+        const free = !d || d.status === 'over' || (Date.now() - (d.updatedAt || 0)) > 12 * 3600 * 1000;
+        if (free) code = c;
+      }
+      if (!code) throw { msg: '空いている部屋コードが見つかりませんでした。もう一度お試しください。' };
+      net.code = code;
+      net.gameId = makeGameId();
+      net.role = 'host';
+      net.matchRev = 1;
+      const m = {
+        gameId: net.gameId, code, hostId: net.uid, guestId: '', status: 'waiting', debug: !!debugMode,
+        round: 0, chips: { host: 15, guest: 15 }, pod: 0, rev: 1, createdAt: Date.now(), updatedAt: Date.now()
+      };
+      net.match = m;
+      await net.db.doc(matchPath()).set(m);
+      await enterMatch();
+    } catch (e) {
+      net.code = null; net.role = null; net.gameId = null; net.match = null;
+      setOnlineStatus(e && e.msg ? e.msg : '部屋を作れませんでした（' + ((e && e.code) || 'unknown') + '）。通信状態を確認してください。');
+      setOnlineButtonsDisabled(false);
+    }
+  }
+  async function joinRoom(code) {
+    code = String(code || '').trim();
+    if (!/^\d{4}$/.test(code)) { setOnlineStatus('部屋コードは4桁の数字です'); return; }
+    setOnlineButtonsDisabled(true);
+    setOnlineStatus('入室中…');
+    try {
+      const ref = net.db.doc('matches/' + code);
+      let snap = await ref.get();
+      if (!snap.exists) throw { msg: 'その部屋コードの部屋は見つかりませんでした。' };
+      let d = snap.data();
+      let role = null;
+      if (d.hostId === net.uid) role = 'host';
+      else if (d.guestId === net.uid) role = 'guest';
+      else {
+        if (d.status === 'over') throw { msg: 'この部屋の対戦は終了しています。' };
+        if (d.guestId) throw { msg: 'この部屋はすでに2人そろっています。' };
+        await ref.update({ guestId: net.uid });
+        snap = await ref.get();
+        d = snap.data();
+        if (!d || d.guestId !== net.uid) throw { msg: 'この部屋はすでに2人そろっています。' };
+        role = 'guest';
+      }
+      if (d.status === 'over') throw { msg: 'この部屋の対戦は終了しています。' };
+      net.code = code;
+      net.role = role;
+      net.gameId = d.gameId;
+      net.match = d;
+      net.matchRev = d.rev || 0;
+      await enterMatch();
+    } catch (e) {
+      net.code = null; net.role = null; net.gameId = null; net.match = null;
+      setOnlineStatus(e && e.msg ? e.msg : '入室できませんでした（' + ((e && e.code) || 'unknown') + '）。');
+      setOnlineButtonsDisabled(false);
+    }
+  }
+
+  async function enterMatch() {
+    net.active = true;
+    try { localStorage.setItem('nd-lastRoom', net.code); } catch (e) {}
+    net.oppId = (net.role === 'host' ? net.match.guestId : net.match.hostId) || null;
+    // 再開時に備えて、自分の非公開データ・座席を読み込む（別の試合のデータは gameId で除外）
+    const [p, ms, os] = await Promise.all([
+      net.db.doc(privPath()).get(),
+      net.db.doc(seatPath(net.role)).get(),
+      net.db.doc(seatPath(oppRole())).get()
+    ]);
+    const pd = p.exists ? p.data() : null;
+    net.priv = (pd && pd.gameId === net.gameId) ? pd : null;
+    const msd = ms.exists ? ms.data() : null;
+    net.mySeat = (msd && msd.gameId === net.gameId) ? msd : null;
+    net.seats[net.role] = net.mySeat;
+    net.seatRev = net.mySeat ? (net.mySeat.rev || 0) : 0;
+    const osd = os.exists ? os.data() : null;
+    net.seats[oppRole()] = (osd && osd.gameId === net.gameId) ? osd : null;
+    debugMode = !!net.match.debug;
+    updateDebugBtn();
+    document.getElementById('resetBtn').textContent = '対戦を抜ける';
+    document.getElementById('playAgainBtn').textContent = 'スタートに戻る';
+    subscribeAll();
+    joinNetRoom();
+    net.phase = 'idle';
+    onNetUpdate();
+  }
+
+  // ---- 状態の進行（共有データが変わるたびに呼ばれる。何度呼ばれても同じ結果になるよう作る）----
+  function onNetUpdate() {
+    if (!net.active || !net.match) return;
+    const m = net.match;
+    if (!net.oppId) {
+      const o = net.role === 'host' ? m.guestId : m.hostId;
+      if (o) net.oppId = o;
+    }
+    updateOpName();
+
+    if (m.status === 'waiting') {
+      if (net.role === 'host' && m.guestId) { writeMatch({ status: 'prep' }); return onNetUpdate(); }
+      if (net.role === 'host' && net.phase !== 'waiting') { net.phase = 'waiting'; showOnlineWait(); }
+      if (net.role === 'guest' && net.phase !== 'guestWait') {
+        net.phase = 'guestWait';
+        showOnlineMenu();
+        setOnlineButtonsDisabled(true);
+        setOnlineStatus('入室しました。ホストの開始を待っています…');
+      }
+      return;
+    }
+    if (m.status === 'prep') {
+      const myDone = !!(net.mySeat && net.mySeat.prepDone && net.priv);
+      if (!myDone && net.phase !== 'prep') { net.phase = 'prep'; startPrepPhase(true); }
+      else if (myDone && net.phase !== 'prepWait') { net.phase = 'prepWait'; showPrepWait(); }
+      const op = oppSeatC();
+      if (net.role === 'host' && myDone && op && op.prepDone) {
+        writeMatch({ status: 'playing', round: 1, chips: { host: 15, guest: 15 }, pod: 0 });
+        return onNetUpdate();
+      }
+      return;
+    }
+    if (m.status === 'playing' || m.status === 'over') {
+      if (net.phase !== 'game') {
+        if (!net.priv || m.status === 'over') {
+          const msg = m.status === 'over' ? 'この部屋の対戦は終了しています。' : 'この対戦の自分のデータが見つからないため再開できません。';
+          leaveOnline();
+          showOnlineMenu();
+          openOnlineScreen().then(() => setOnlineStatus(msg));
+          return;
+        }
+        net.phase = 'game';
+        startOnlineGame();
+        return;
+      }
+      gameNetTick();
+    }
+  }
+
+  // ---- 準備フェイズ ----
+  function showPrepWait() {
+    showScreen('prep');
+    if (net.priv && net.priv.colors) prepMyColors = Object.assign({}, net.priv.colors);
+    prepStep = 9;
+    document.getElementById('prepProgress').textContent = 'デッキ完成';
+    renderPrepGrid();
+    document.getElementById('prepChoices').innerHTML = '';
+    document.getElementById('prepPanel').classList.add('waiting');
+    document.getElementById('prepWait').classList.remove('hidden');
+  }
+  function onlineFinishPrep() {
+    const deck = shuffle([1, 2, 3, 4, 5, 6, 7, 8]);
+    const hand = [deck.pop(), deck.pop()];
+    writePriv({ colors: Object.assign({}, prepMyColors), deck, hand, pending: null, drawnRound: 1, log: [] });
+    writeMySeat({ prepDone: true, discard: [], commitRound: 0, commitHash: null, boostFlag: null, reveal: null, deckBottom: null });
+    net.phase = 'prepWait';
+    showPrepWait();
+    onNetUpdate();
+  }
+
+  // ---- 対戦開始・再開 ----
+  function startOnlineGame() {
+    const m = net.match, pv = net.priv;
+    gameToken++;
+    openRoleWho = null;
+    document.getElementById('overlay').classList.remove('show');
+    showScreen('game');
+    startBgm('battle');
+    const R = m.round;
+    const my = net.mySeat || {};
+    const op = oppSeatC() || {};
+    const opColors = {};
+    (op.discard || []).forEach(e => { if (e.c) opColors[e.n] = e.c; });
+    state = makeState(Object.assign({}, pv.colors), opColors);
+    Object.assign(state, {
+      myDeck: (pv.deck || []).slice(),
+      myHand: (pv.hand || []).slice(),
+      opDeck: [], opHand: [],
+      myDiscard: (my.discard || []).map(e => e.n),
+      opDiscard: (op.discard || []).map(e => e.n),
+      myChips: m.chips[net.role], opChips: m.chips[oppRole()], pod: m.pod,
+      round: R, roundLog: (pv.log || []).slice()
+    });
+    net.hostResolvedRound = 0;
+    net.revealWrittenRound = 0;
+    net.resolvingRound = 0;
+    renderRoundLog();
+    updateOpLabel();
+
+    let pending = pv.pending || null;
+    if ((pv.drawnRound || 1) < R) {
+      // 前ラウンドの決着後、ドローする前に中断していた → ここでドローして続きから
+      if (pending && pending.round < R) {
+        const i = state.myHand.indexOf(pending.card);
+        if (i >= 0) state.myHand.splice(i, 1);
+        pending = null;
+      }
+      while (state.myHand.length < 2) {
+        const before = state.myHand.length;
+        drawInto(state.myHand, 'my');
+        if (state.myHand.length === before) break;
+      }
+      persistAfterRoundDraw();
+    }
+    if (m.status === 'over') {
+      state.over = true;
+      render();
+      showGameOver();
+      return;
+    }
+    if (pending && pending.round === R) {
+      // 手を確定した後に中断していた → 確定済みの状態から再開
+      const i = state.myHand.indexOf(pending.card);
+      if (i >= 0) state.myHand.splice(i, 1);
+      state.pendingCommit = pending;
+      state.chipSelect = pending.boost;
+      state.locked = true;
+      state.netPhase = 'committed';
+      state.fieldMyPlaced = true;
+      state.fieldOpPlaced = oppCommittedNow();
+      document.getElementById('myHP').textContent = state.myChips;
+      document.getElementById('opHP').textContent = state.opChips;
+      updatePodDisplay();
+      render();
+      setMode('battle');
+      const rm = document.getElementById('resultMsg');
+      rm.textContent = '相手の選択を待っています…';
+      rm.className = 'result-msg';
+      gameNetTick();
+    } else {
+      startRound();
+    }
+  }
+
+  function myDeckBottomPublic() {
+    // 相手がピンクの役を持っている時だけ、自分のデッキの底を公開する
+    if (!state || !hasColorTriple('op', 'pink')) return null;
+    return state.myDeck.length ? state.myDeck[0] : null;
+  }
+  function persistAfterRoundDraw() {
+    writePriv({ deck: state.myDeck.slice(), hand: state.myHand.slice(), pending: null, drawnRound: state.round, log: state.roundLog });
+    writeMySeat({ discard: discEntries('my'), deckBottom: myDeckBottomPublic() });
+  }
+
+  // 相手の捨て札を共有データに合わせる（山札へ戻った時は戻る演出）
+  function syncOpDiscard(op) {
+    (op.discard || []).forEach(e => { if (e.c) state.opCardColors[e.n] = e.c; });
+    const incoming = (op.discard || []).map(e => e.n);
+    const cur = state.opDiscard;
+    const bottom = getDeckBottom('op');
+    if (incoming.length === cur.length && incoming.every((n, i) => n === cur[i]) && bottom === state.lastOpBottom) return;
+    if (cur.length && cur.some(n => !incoming.includes(n))) state.returning.op = cur.slice();
+    state.opDiscard = incoming;
+    state.lastOpBottom = bottom;
+    renderDiscardGrid('discardGridOp', state.opDiscard, state.opCardColors, 'op');
+    refreshRolePanel();
+  }
+
+  function gameNetTick() {
+    if (!state || !net.active || net.phase !== 'game') return;
+    const R = state.round;
+    const op = oppSeatC();
+    const me = net.mySeat;
+    updateOpLabel();
+    if (state.over) return;
+
+    const oppRevealedNow = !!(op && op.reveal && op.reveal.round === R);
+    const busy = state.netPhase === 'resolving' || ((state.netPhase === 'committed' || state.netPhase === 'committing') && oppRevealedNow);
+    if (!busy && op) syncOpDiscard(op);
+
+    // 相手が確定済みなら、場に裏向きのカードを置く
+    if (state.netPhase === 'select' || state.netPhase === 'committing' || state.netPhase === 'committed') {
+      const oc = oppCommittedNow();
+      if (state.fieldOpPlaced !== oc) { state.fieldOpPlaced = oc; render(true); }
+    }
+    refreshColorInfoHint();
+
+    // ホストの集計と自分の計算を照らし合わせる（ずれていたらホストの値に合わせる）
+    if (net.match && net.match.round === R && state.reconciledRound !== R && (state.netPhase === 'select' || state.netPhase === 'committing' || state.netPhase === 'committed')) {
+      reconcileWithMatch();
+    }
+
+    // ピンク：相手が役を持っていれば自分のデッキの底を公開（変化した時だけ書く）
+    if (me && state.netPhase !== 'resolving') {
+      const bottom = myDeckBottomPublic();
+      if ((typeof me.deckBottom === 'number' ? me.deckBottom : null) !== bottom) writeMySeat({ deckBottom: bottom });
+    }
+
+    // 両者が確定 → 自分の手を公開
+    const oc = oppCommittedNow();
+    if (state.netPhase === 'committed' && oc && state.pendingCommit && net.revealWrittenRound !== R && !(me && me.reveal && me.reveal.round === R)) {
+      net.revealWrittenRound = R;
+      const pc = state.pendingCommit;
+      const discard = discEntries('my').filter(e => e.n !== pc.card);
+      discard.push({ n: pc.card, c: pc.color });
+      writeMySeat({ reveal: { round: R, card: pc.card, color: pc.color, boost: pc.boost, salt: pc.salt }, discard });
+    }
+    if (state.netPhase === 'committed' && oc) {
+      const rm = document.getElementById('resultMsg');
+      if (rm && rm.textContent === '相手の選択を待っています…') rm.textContent = 'カードを公開中…';
+    }
+
+    // 両者が公開済み → 勝敗の演出へ
+    const meRevealed = !!(net.mySeat && net.mySeat.reveal && net.mySeat.reveal.round === R);
+    if (state.netPhase === 'committed' && meRevealed && oppRevealedNow && net.resolvingRound !== R) {
+      net.resolvingRound = R;
+      beginOnlineResolve(op.reveal);
+    }
+
+    if (net.role === 'host') hostMaybeResolve();
+  }
+
+  function reconcileWithMatch() {
+    const m = net.match;
+    state.reconciledRound = state.round;
+    const myC = m.chips[net.role], opC = m.chips[oppRole()];
+    if (myC === state.myChips && opC === state.opChips && m.pod === state.pod) return;
+    console.warn('[online] 集計のずれを補正', { local: [state.myChips, state.opChips, state.pod], host: [myC, opC, m.pod] });
+    state.myChips = myC; state.opChips = opC; state.pod = m.pod;
+    const last = state.roundLog[state.roundLog.length - 1];
+    if (last) {
+      last.notes = (last.notes ? last.notes + ' / ' : '') + `⚠ ホストの集計と差異があったため補正（あなた${myC}・相手${opC}・ポッド${m.pod}）`;
+      renderRoundLog();
+    }
+    document.getElementById('opHP').textContent = state.opChips;
+    updatePodDisplay();
+    updateChipSelectorUI();
+  }
+
+  // ホスト：両者の公開がそろったら、そのラウンドの結果を計算して共有データを進める
+  function hostMaybeResolve() {
+    const m = net.match;
+    if (!m || m.status !== 'playing') return;
+    const R = m.round;
+    const hs = net.seats.host, gs = net.seats.guest;
+    if (!hs || !gs || !hs.reveal || !gs.reveal || hs.reveal.round !== R || gs.reveal.round !== R) return;
+    if (net.hostResolvedRound >= R) return;
+    net.hostResolvedRound = R;
+    const hB = Math.max(0, Math.min(hs.reveal.boost | 0, m.chips.host));
+    const gB = Math.max(0, Math.min(gs.reveal.boost | 0, m.chips.guest));
+    const res = computeRoundResult({
+      myCard: hs.reveal.card, opCard: gs.reveal.card, myBoost: hB, opBoost: gB,
+      myChips: m.chips.host - hB, opChips: m.chips.guest - gB, pod: m.pod,
+      myDisc: hs.discard || [], opDisc: gs.discard || []
+    });
+    const over = !m.debug && (res.myChips >= WIN_CHIPS || res.opChips >= WIN_CHIPS);
+    writeMatch({ round: R + 1, chips: { host: res.myChips, guest: res.opChips }, pod: res.pod, status: over ? 'over' : 'playing', lastRound: R });
+  }
+
+  async function commitHash(r, card, boost, salt) {
+    try {
+      if (!(window.crypto && crypto.subtle && window.TextEncoder)) return null;
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${net.gameId}|${r}|${card}|${boost}|${salt}`));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (e) { return null; }
+  }
+
+  // 自分の手を確定：非公開データに手を保存し、座席には「確定した」印とハッシュだけを書く
+  async function onlineCommit(card) {
+    const R = state.round;
+    const token = gameToken;
+    const boost = Math.max(0, Math.min(state.chipSelect, state.myChips));
+    const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const pc = { round: R, card, boost, salt, color: state.myCardColors[card] || null };
+    state.pendingCommit = pc;
+    stopTurnTimer();
+    const hash = await commitHash(R, card, boost, salt);
+    if (token !== gameToken || !net.active) return;
+    writePriv({ pending: pc });
+    writeMySeat({ commitRound: R, commitHash: hash, boostFlag: hasColorTriple('op', 'yellow') ? boost > 0 : null });
+    state.netPhase = 'committed';
+    gameNetTick();
+  }
+
+  async function beginOnlineResolve(oppReveal) {
+    const token = gameToken;
+    const R = state.round;
+    state.netPhase = 'resolving';
+    const op = oppSeatC();
+    const h = await commitHash(R, oppReveal.card, oppReveal.boost, oppReveal.salt);
+    if (token !== gameToken) return;
+    state.tamperNote = (h && op && op.commitHash && h !== op.commitHash) ? '⚠ 相手の公開内容が確定時の記録と一致しません' : '';
+    if (oppReveal.color) state.opCardColors[oppReveal.card] = oppReveal.color;
+    state.opPendingChips = oppReveal.boost | 0;
+    state.chipSelect = state.pendingCommit.boost;
+    state.fieldOpPlaced = true;
+    state.fieldMyPlaced = true;
+    render(true);
+    const rm = document.getElementById('resultMsg');
+    rm.textContent = 'カードを公開中…';
+    rm.className = 'result-msg';
+    setTimeout(() => {
+      if (token !== gameToken) return;
+      resolveRound(state.pendingCommit.card, oppReveal.card, token);
+    }, 500);
+  }
+
+  function onlineNextRound() {
+    drawInto(state.myHand, 'my');
+    state.fieldMy = null;
+    state.fieldOp = null;
+    state.fieldMyCardId = null;
+    state.fieldOpCardId = null;
+    state.fieldMyChips = 0;
+    state.fieldOpChips = 0;
+    state.fieldMyPlaced = false;
+    state.fieldOpPlaced = false;
+    state.fieldRevealed = false;
+    state.locked = false;
+    state.round += 1;
+    state.pendingCommit = null;
+    state.tamperNote = '';
+    persistAfterRoundDraw();
+    startRound();
+  }
+
+  // ---- 手札選択の制限時間 ----
+  function startTurnTimer() {
+    stopTurnTimer();
+    net.timerEnd = Date.now() + TURN_SECONDS * 1000;
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((net.timerEnd - Date.now()) / 1000));
+      const el = document.getElementById('selectPrompt');
+      if (el) el.textContent = `出すカードを選んでください（残り${left}秒）`;
+      if (left <= 0) { stopTurnTimer(); autoPlay(); }
+    };
+    tick();
+    net.timer = setInterval(tick, 250);
+  }
+  function stopTurnTimer() {
+    if (net.timer) clearInterval(net.timer);
+    net.timer = null;
+    const el = document.getElementById('selectPrompt');
+    if (el) el.textContent = '出すカードを選んでください';
+  }
+  function autoPlay() {
+    if (!state || state.locked || state.over || state.netPhase !== 'select' || !state.myHand.length) return;
+    state.chipSelect = 0;
+    updateChipSelectorUI();
+    const card = state.myHand[Math.floor(Math.random() * state.myHand.length)];
+    const btn = Array.from(document.querySelectorAll('#myHand .card')).find(b => b.textContent === String(card));
+    netNotice('時間切れ：手札からランダムに1枚、ブースト0で出しました');
+    playRound(card, btn || null);
+  }
+
+  // ---- 相手の名前・状態の表示 ----
+  let oppNameAskedAt = 0;
+  function updateOpName() {
+    if (!net.user || !net.oppId || net.oppName) return;
+    if (Date.now() - oppNameAskedAt < 15000) return;
+    oppNameAskedAt = Date.now();
+    net.user.profiles([net.oppId]).then(ps => {
+      const p = ps && ps[net.oppId];
+      net.oppName = (p && p.name) || '';
+      updateOpLabel();
+    }).catch(() => {});
+  }
+  function updateOpLabel() {
+    const el = document.getElementById('opLabel');
+    if (!el) return;
+    if (!net.active) { el.textContent = '相手(CPU)'; return; }
+    const name = net.oppName || '相手';
+    let st = '';
+    if (net.oppOnline === false) st = '離席中';
+    else if (state && !state.over && net.phase === 'game') {
+      st = oppCommittedNow() ? '確定済み' : '選択中…';
+    }
+    el.textContent = st ? `${name}・${st}` : name;
+  }
+
+  const CARD_EFFECTS = {
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+    5: [],
+    6: [],
+    7: [],
+    8: []
+  };
+
+  // 色ごとの効果（最大2つ、現時点では未実装のためすべて空）
+  const COLOR_EFFECTS = {
+    red: [],
+    blue: [],
+    yellow: [],
+    green: [],
+    pink: []
+  };
+
+  function getCardEffectTexts(c) {
+    return CARD_EFFECTS[c] || [];
+  }
+
+  // ダメージは表示上だけ3桁増やす（内部計算はそのまま）
+  function dmg(n) {
+    return n === 0 ? '0' : String(n * 1000);
+  }
+
+  // ポッドの数字が変わるたびにポップ演出を入れつつダイナミックに反映（常に2桁・ゼロ埋め表示）
+  // kind: 'jackpot'(総取りで派手に) / 'grow'(ポッドへ流入、やや強め) / 未指定(通常のポップ)
+  // バトル画面の巨大表示(#podValue)と、手札選択画面のコンパクト表示(#podValueMini)を両方更新する
+  function updatePodDisplay(kind) {
+    const podText = String(state.pod).padStart(2, '0');
+
+    const el = document.getElementById('podValue');
+    if (el) {
+      el.textContent = podText;
+      el.classList.remove('pop', 'jackpot', 'grow');
+      void el.offsetWidth; // reflow でアニメーションを再始動
+      if (kind === 'jackpot') el.classList.add('jackpot');
+      else if (kind === 'grow') el.classList.add('grow');
+      else el.classList.add('pop');
+    }
+
+    const mini = document.getElementById('podValueMini');
+    if (mini) {
+      mini.textContent = podText;
+      mini.classList.remove('pop', 'jackpot', 'grow');
+      void mini.offsetWidth;
+      if (kind === 'jackpot') mini.classList.add('jackpot');
+      else if (kind === 'grow') mini.classList.add('grow');
+      else mini.classList.add('pop');
+    }
+  }
+
+  // 勝敗に応じたチップ数字の一瞬の演出（JACKPOT獲得＝ゴールドに膨らむ／LOSE支払い＝赤く縮む）
+  function flashNum(id, cls) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+    setTimeout(() => el.classList.remove(cls), 600);
+  }
+
+  // === 色の役：色トリプル（捨て札に同色3枚以上）のみ。成立すれば出したカードの色を問わず常時発動 ===
+  const COLOR_TRIPLE_DESC = {
+    red: '攻めの一撃：JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（相手の残りが2枚未満なら0枚になるまで）',
+    blue: '守りの軽減：ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ。例：3🪙ブースト→2🪙がポッドへ、1🪙は手元に残る）',
+    green: 'コツコツ回収：THROUGH（ブーストなしの通常勝利）時、ポッドに1🪙以上あれば1🪙を回収できる',
+    pink: '情報アドバンテージ：相手のデッキの底（次に引かれる最後のカード）の捨て札枠に👁が表示される',
+    yellow: '情報アドバンテージ：手札選択中、相手がブーストするかどうかだけ見える(枚数は伏せる)'
+  };
+  function getColorCounts(who) {
+    const discard = state[who + 'Discard'];
+    const colors = state[who + 'CardColors'];
+    const counts = {};
+    discard.forEach(n => {
+      const c = colors[n];
+      if (c) counts[c] = (counts[c] || 0) + 1;
+    });
+    return counts;
+  }
+  function hasColorTriple(who, color) {
+    return (getColorCounts(who)[color] || 0) >= 3;
+  }
+  function hasTripleColor(who) {
+    const counts = getColorCounts(who);
+    return COLORS.find(c => counts[c] >= 3) || null;
+  }
+
+  // 現在発動している役の一覧（捨て札の光り表示・役パネルの両方で使う）。同時に複数色が成立することもある
+  function getActiveRoles(who) {
+    const counts = getColorCounts(who);
+    const roles = [];
+    COLORS.forEach(color => {
+      if ((counts[color] || 0) >= 3) {
+        roles.push({ name: `色トリプル(${COLOR_LABEL[color]})`, color, count: counts[color], desc: COLOR_TRIPLE_DESC[color] });
+      }
+    });
+    return roles;
+  }
+
+  // 捨て札タップで出る「発動中の役」パネル
+  let openRoleWho = null;
+  function refreshRolePanel() {
+    const panel = document.getElementById('rolePanel');
+    if (!panel) return;
+    if (!openRoleWho || !state) {
+      panel.className = 'role-panel';
+      panel.innerHTML = '';
+      return;
+    }
+    const who = openRoleWho;
+    panel.className = 'role-panel show ' + who;
+    panel.innerHTML = '';
+    const title = document.createElement('div');
+    title.className = 'role-panel-title';
+    title.textContent = (who === 'my' ? 'あなた' : '相手') + 'の発動中の役';
+    panel.appendChild(title);
+    const roles = getActiveRoles(who);
+    if (roles.length === 0) {
+      const e = document.createElement('div');
+      e.className = 'role-empty';
+      e.textContent = '発動中の役はありません';
+      panel.appendChild(e);
+      return;
+    }
+    roles.forEach(r => {
+      const row = document.createElement('div');
+      row.className = 'role-row';
+      const dot = document.createElement('div');
+      dot.className = 'role-dot ' + r.color;
+      const body = document.createElement('div');
+      const nm = document.createElement('div');
+      nm.className = 'role-name';
+      nm.textContent = `${r.name}　捨て札の${COLOR_LABEL[r.color]} ${r.count}枚`;
+      const ds = document.createElement('div');
+      ds.className = 'role-desc';
+      ds.textContent = r.desc;
+      if (r.color === 'blue') {
+        const status = document.createElement('div');
+        status.className = 'role-desc';
+        status.style.opacity = '0.85';
+        status.textContent = state.blueChargeUsed[who] ? '(残り0/1回・使用済み)' : '(残り1/1回・未使用)';
+        ds.appendChild(document.createElement('br'));
+        ds.appendChild(status);
+      }
+      body.appendChild(nm);
+      body.appendChild(ds);
+      row.appendChild(dot);
+      row.appendChild(body);
+      panel.appendChild(row);
+    });
+  }
+  // ヒントの横位置を、相手の捨て札置き場の中央に合わせる
+  function alignRoleHint() {
+    const hint = document.getElementById('roleHint');
+    const grid = document.getElementById('discardGridOp');
+    const mid = document.querySelector('.zone-mid');
+    if (!hint || !grid || !mid) return;
+    const g = grid.getBoundingClientRect();
+    const m = mid.getBoundingClientRect();
+    if (!g.width) return;
+    hint.style.left = (g.left - m.left + g.width / 2) + 'px';
+    hint.style.maxWidth = g.width + 'px';
+  }
+  window.addEventListener('resize', alignRoleHint);
+
+  function closeRolePanel() {
+    openRoleWho = null;
+    refreshRolePanel();
+  }
+
+  function updateHandBadges() {
+    refreshRolePanel();
+  }
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function showScreen(name) {
+    document.getElementById('startScreen').classList.toggle('hidden', name !== 'start');
+    document.getElementById('onlineScreen').classList.toggle('hidden', name !== 'online');
+    document.getElementById('prepScreen').classList.toggle('hidden', name !== 'prep');
+    document.getElementById('gameScreen').classList.toggle('hidden', name !== 'game');
+    document.querySelector('.wrap').classList.toggle('in-game', name === 'game');
+  }
+
+  function pickTwoRandomColors() {
+    return shuffle(COLORS).slice(0, 2);
+  }
+
+  function startPrepPhase(online) {
+    startBgm('prep');
+    prepOpColors = {};
+    if (!online) {
+      // CPUの色はランダムに（同じ「2色から1色選ぶ」方式で内部的に決定）自動で組む
+      for (let n = 1; n <= 8; n++) {
+        const options = pickTwoRandomColors();
+        prepOpColors[n] = options[Math.floor(Math.random() * options.length)];
+      }
+    }
+    document.getElementById('prepPanel').classList.remove('waiting');
+    document.getElementById('prepWait').classList.add('hidden');
+    prepMyColors = {};
+    prepStep = 1;
+    showScreen('prep');
+    renderPrepStep();
+  }
+
+  function renderPrepStep(justLandedNum) {
+    if (prepStep > 8) {
+      finishPrep();
+      return;
+    }
+    document.getElementById('prepProgress').textContent = `カード ${prepStep} / 8`;
+    renderPrepGrid(justLandedNum);
+
+    prepCurrentOptions = debugMode ? COLORS.slice() : pickTwoRandomColors();
+    const choicesEl = document.getElementById('prepChoices');
+    choicesEl.innerHTML = '';
+    choicesEl.style.pointerEvents = '';
+    prepCurrentOptions.forEach((color, idx) => {
+      const option = document.createElement('div');
+      option.className = 'prep-option';
+
+      const btn = document.createElement('button');
+      btn.className = 'prep-choice-btn ' + color;
+      btn.textContent = prepStep;
+      btn.addEventListener('click', () => choosePrepColor(color, btn));
+      option.appendChild(btn);
+
+      const effectsEl = document.createElement('div');
+      effectsEl.className = 'prep-option-effects';
+      // このカード番号に固定で付く効果（例：4の逆転）と、色ごとの効果をあわせて表示
+      const effects = [...getCardEffectTexts(prepStep), ...(COLOR_EFFECTS[color] || [])];
+      for (let i = 0; i < 2; i++) {
+        if (i === 1) {
+          const divider = document.createElement('div');
+          divider.className = 'prep-effect-divider';
+          effectsEl.appendChild(divider);
+        }
+        const row = document.createElement('div');
+        const text = effects[i];
+        if (text) {
+          row.className = 'prep-effect-row';
+          row.textContent = text;
+        } else {
+          row.className = 'prep-effect-row empty';
+          row.textContent = '━';
+        }
+        effectsEl.appendChild(row);
+      }
+      option.appendChild(effectsEl);
+
+      choicesEl.appendChild(option);
+    });
+  }
+
+  // 8枚ぶんの枠を描画。選択済みはその色で塗り、現在選んでいる枠だけ強調する
+  function renderPrepGrid(justLandedNum) {
+    const grid = document.getElementById('prepGrid');
+    grid.innerHTML = '';
+    for (let n = 1; n <= 8; n++) {
+      const slot = document.createElement('div');
+      slot.id = 'prepSlot' + n;
+      if (n < prepStep) {
+        slot.className = 'prep-slot filled ' + prepMyColors[n] + (n === justLandedNum ? ' just-landed' : '');
+        slot.textContent = n;
+      } else if (n === prepStep) {
+        slot.className = 'prep-slot active';
+        slot.textContent = n;
+      } else {
+        slot.className = 'prep-slot';
+        slot.textContent = n;
+      }
+      grid.appendChild(slot);
+    }
+  }
+
+  function choosePrepColor(color, btnEl) {
+    const startRect = btnEl.getBoundingClientRect();
+    const targetSlot = document.getElementById('prepSlot' + prepStep);
+    const landedNum = prepStep;
+
+    playSelectSound(); // 選択時：対戦中の手札選択と同じ音
+
+    // 連打防止：飛んでいる間は選択肢をタップできないようにする
+    document.getElementById('prepChoices').style.pointerEvents = 'none';
+
+    flyChoiceToSlot(startRect, targetSlot, color, landedNum, () => {
+      playSnapSound(); // 枠に入る時：カチッとハマる音
+      prepMyColors[landedNum] = color;
+      prepStep++;
+      renderPrepStep(landedNum); // 着地した枠だけ、ポンと弾む演出付きで塗る
+    });
+  }
+
+  // 選んだカードを、選択肢の位置から対応する枠まで飛ばす
+  function flyChoiceToSlot(startRect, targetSlot, color, num, onDone) {
+    const endRect = targetSlot.getBoundingClientRect();
+
+    const clone = document.createElement('div');
+    clone.className = 'prep-flying ' + color;
+    clone.textContent = num;
+    clone.style.left = startRect.left + 'px';
+    clone.style.top = startRect.top + 'px';
+    clone.style.width = startRect.width + 'px';
+    clone.style.height = startRect.height + 'px';
+    clone.style.fontSize = '2.1rem';
+    document.body.appendChild(clone);
+
+    void clone.offsetWidth; // 強制リフロー後にトランジションを開始
+
+    const dx = endRect.left - startRect.left;
+    const dy = endRect.top - startRect.top;
+    const sx = endRect.width / startRect.width;
+    const sy = endRect.height / startRect.height;
+    clone.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+    clone.style.fontSize = (2.1 / sy) + 'rem'; // 縮小に合わせて文字も縮めておく（見た目上は等倍）
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clone.remove();
+      onDone();
+    };
+    clone.addEventListener('transitionend', finish, { once: true });
+    setTimeout(finish, 360); // 保険（transitionendが発火しない環境向け）
+  }
+
+  function finishPrep() {
+    if (net.active) { onlineFinishPrep(); return; }
+    showScreen('game');
+    newGame(prepMyColors, prepOpColors);
+    startBgm('battle');
+  }
+
+  function backToStart() {
+    gameToken++; // 進行中の演出タイマーを無効化
+    openRoleWho = null;
+    document.getElementById('overlay').classList.remove('show');
+    if (net.active) leaveOnline();
+    showScreen('start');
+    stopBgm();
+  }
+
+  function newGame(myColors, opColors) {
+    gameToken++;
+    openRoleWho = null;
+    state = makeState(myColors, opColors);
+    updateOpLabel();
+    for (let i = 0; i < 2; i++) {
+      drawInto(state.myHand, 'my');
+      drawInto(state.opHand, 'op');
+    }
+    startRound();
+  }
+
+  function makeState(myColors, opColors) {
+    return {
+      myDeck: shuffle([1,2,3,4,5,6,7,8]),
+      opDeck: shuffle([1,2,3,4,5,6,7,8]),
+      myCardColors: myColors || {},
+      opCardColors: opColors || {},
+      myDiscard: [],
+      opDiscard: [],
+      myHand: [],
+      opHand: [],
+      myChips: 15,
+      opChips: 15,
+      pod: 0,
+      chipSelect: 0,
+      fieldMy: null,
+      fieldOp: null,
+      fieldMyCardId: null,
+      fieldOpCardId: null,
+      fieldMyChips: 0,
+      fieldOpChips: 0,
+      fieldMyPlaced: false,
+      fieldOpPlaced: false,
+      fieldRevealed: false,
+      locked: false,
+      over: false,
+      returning: { my: null, op: null },     // 山札へ戻る捨て札（演出用）
+      roleSeen: { my: new Set(), op: new Set() }, // 直前に成立していた役（新規成立の検出用）
+      blueChargeUsed: { my: false, op: false }, // 青トリプル：今の成立中に1回分の蒸発無効を使い切ったか
+      returningNow: { my: false, op: false }, // 演出中は捨て札置き場の再描画を止める
+      roundLog: [],   // ラウンドごとの収支ログ（検証用）
+      roundSnap: null, // ラウンド開始時（ブースト消費前）のチップ・ポッド
+      round: 1,              // ラウンド番号（オンライン対戦の同期に使う）
+      netPhase: null,        // オンライン：'select' | 'committing' | 'committed' | 'resolving'
+      pendingCommit: null,   // オンライン：確定した自分の手
+      opPendingChips: 0,
+      tamperNote: '',
+      reconciledRound: 0,
+      lastOpBottom: null
+    };
+  }
+
+  // ラウンド開始フェイズ：強制供出（賭金）と、支払えない場合の即敗北は撤廃。
+  // 所持チップが0でも参加でき、その場合は単にブーストできないだけになる。
+  function startRound() {
+    document.getElementById('myHP').textContent = state.myChips;
+    document.getElementById('opHP').textContent = state.opChips;
+    updatePodDisplay();
+    document.getElementById('myChipAvail').textContent = state.myChips;
+    render();
+
+    if (net.active) {
+      state.netPhase = 'select';
+      state.pendingCommit = null;
+      state.fieldOpPlaced = oppCommittedNow();
+      render(true);
+      setMode('select');
+      refreshColorInfoHint();
+      updateOpLabel();
+      if (!state.over) startTurnTimer();
+      gameNetTick();
+      return;
+    }
+
+    decideOpponentMove(); // 黄の役で相手のブースト予定を見せるため、選択フェイズが始まる前に相手の手を決めておく
+    render();
+    setMode('select');
+    refreshColorInfoHint();
+  }
+
+  // 相手（CPU）の今ラウンドの出すカード・ブースト量をあらかじめ決めておく（自分の手札選択より前）
+  // ※CPUのブーストは検証用に1〜3枚へ制限。2人対戦仕様に寄せる際にこの制限は撤廃する想定
+  function decideOpponentMove() {
+    const idx = Math.floor(Math.random() * state.opHand.length);
+    state.opPendingIdx = idx;
+    state.opPendingCard = state.opHand[idx];
+    let chips = 0;
+    if (state.opChips > 0 && Math.random() < 0.5) {
+      const maxBoost = Math.min(3, state.opChips);
+      chips = Math.floor(Math.random() * maxBoost) + 1;
+    }
+    state.opPendingChips = chips;
+  }
+
+  // 黄・ピンクの役が発動中なら、選択フェイズ中にヒントを表示する（ピンクの「見える」側は捨て札グリッドの目のアイコンで表現）
+  // 自分の役で相手の情報が見える場合と、相手の役で自分の情報が見えてしまっている場合の両方を表示する（対人戦でどちらが役を揃えても機能するように）
+  function refreshColorInfoHint() {
+    const el = document.getElementById('colorInfoHint');
+    if (!el) return;
+    const me = activeViewer;
+    const opp = otherOf(me);
+    const lines = [];
+    if (hasColorTriple(me, 'yellow')) {
+      if (net.active) {
+        const op = oppSeatC();
+        if (op && op.commitRound === state.round) {
+          lines.push(typeof op.boostFlag === 'boolean'
+            ? (op.boostFlag ? '黄の役：相手はブーストする' : '黄の役：相手はブーストしない')
+            : '黄の役：相手は確定済み（ブースト情報なし）');
+        } else {
+          lines.push('黄の役：相手はまだ選択中（確定するとブーストの有無が見える）');
+        }
+      } else {
+        lines.push(state.opPendingChips > 0 ? '黄の役：相手はブーストする予定' : '黄の役：相手はブーストしない予定');
+      }
+    }
+    if (hasColorTriple(opp, 'yellow')) {
+      lines.push('相手の黄の役：自分がブーストするかどうかが相手に見えている');
+    }
+    if (hasColorTriple(opp, 'pink')) {
+      lines.push('相手のピンクの役：自分のデッキの底が相手に見えている');
+    }
+    el.textContent = lines.join(' ／ ');
+    el.style.display = lines.length ? '' : 'none';
+  }
+
+  function drawInto(hand, who) {
+    const card = drawCard(who);
+    if (card !== null) hand.push(card);
+  }
+
+  function drawCard(who) {
+    const deckKey = who + 'Deck';
+    const discardKey = who + 'Discard';
+    if (state[deckKey].length === 0) {
+      if (state[discardKey].length === 0) return null;
+      state.returning[who] = state[discardKey].slice(); // 戻る前の捨て札を演出用に控える
+      state[deckKey] = shuffle(state[discardKey]);
+      state[discardKey] = [];
+    }
+    return state[deckKey].pop();
+  }
+
+  function playRound(myCard, sourceEl) {
+    if (state.locked || state.over) return;
+    if (net.active && state.netPhase !== 'select') return;
+    state.locked = true;
+    const myToken = gameToken;
+    playSelectSound(); // 手札をタップして選んだ音
+
+    // 手札を再描画で消す前に、選択したカードの座標を確保しておく
+    const startRect = sourceEl ? sourceEl.getBoundingClientRect() : null;
+    setMode('battle'); // 手札選択 → バトル場へ（場の座標が取れるよう先に切り替える）
+
+    const idx = state.myHand.indexOf(myCard);
+    state.myHand.splice(idx, 1);
+
+    if (net.active) {
+      // オンライン：自分のカードを裏向きで場に出し、相手の確定を待つ
+      state.fieldMy = null;
+      state.fieldOp = null;
+      state.fieldMyChips = 0;
+      state.fieldOpChips = 0;
+      state.fieldOpPlaced = oppCommittedNow();
+      state.fieldMyPlaced = false;
+      state.fieldRevealed = false;
+      state.netPhase = 'committing';
+      renderHandsAndDiscard();
+      render(true);
+      const rmw = document.getElementById('resultMsg');
+      rmw.textContent = '相手の選択を待っています…';
+      rmw.className = 'result-msg';
+      document.getElementById('effectMsg').textContent = '';
+      if (startRect) flyCardToField(startRect, 'fieldMeFlip', myToken, null);
+      else { state.fieldMyPlaced = true; render(true); }
+      onlineCommit(myCard);
+      return;
+    }
+
+    const opIdx = state.opPendingIdx;
+    const opCard = state.opHand.splice(opIdx, 1)[0];
+
+    // フェーズ1：お互い裏向きでセット（自分のカードは手札位置から場へ飛んでいく演出）
+    state.fieldMy = null;
+    state.fieldOp = null;
+    state.fieldMyChips = 0;
+    state.fieldOpChips = 0;
+    state.fieldOpPlaced = true;
+    state.fieldMyPlaced = false;
+    state.fieldRevealed = false;
+
+    renderHandsAndDiscard();
+    render(true);
+
+    const rm0 = document.getElementById('resultMsg');
+    rm0.textContent = 'カードをセット中…';
+    rm0.className = 'result-msg';
+    document.getElementById('effectMsg').textContent = '';
+
+    // 両者のカードが出揃ってから0.5秒待ってから公開する
+    const proceedToReveal = () => {
+      if (myToken !== gameToken) return; // 途中でリセットされていたら何もしない
+      setTimeout(() => {
+        if (myToken !== gameToken) return;
+        resolveRound(myCard, opCard, myToken);
+      }, 500);
+    };
+
+    if (startRect) {
+      flyCardToField(startRect, 'fieldMeFlip', myToken, proceedToReveal);
+    } else {
+      state.fieldMyPlaced = true;
+      render(true);
+      proceedToReveal();
+    }
+  }
+
+  function flyCardToField(startRect, targetId, myToken, onLanded) {
+    const targetEl = document.getElementById(targetId);
+    const endRect = targetEl.getBoundingClientRect();
+
+    const clone = document.createElement('div');
+    clone.className = 'flying-card';
+    clone.style.left = startRect.left + 'px';
+    clone.style.top = startRect.top + 'px';
+    clone.style.width = startRect.width + 'px';
+    clone.style.height = startRect.height + 'px';
+    document.body.appendChild(clone);
+
+    // 強制リフローしてから移動先へトランジション
+    void clone.offsetWidth;
+
+    // 手札(大)から場(小)へ、位置とサイズを合わせて飛ばす
+    const dx = endRect.left - startRect.left;
+    const dy = endRect.top - startRect.top;
+    const sx = endRect.width / startRect.width;
+    const sy = endRect.height / startRect.height;
+    clone.style.transformOrigin = '0 0';
+    clone.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clone.remove();
+      if (myToken !== gameToken) return; // ゲームがリセットされていたら以降の処理をしない
+      state.fieldMyPlaced = true;
+      render(true);
+      if (onLanded) onLanded();
+    };
+    clone.addEventListener('transitionend', finish, { once: true });
+    setTimeout(finish, 320); // 保険（transitionendが発火しない環境向け）
+  }
+
+  function resolveRound(myCard, opCard, myToken) {
+    state.roundSnap = { my: state.myChips, op: state.opChips, pod: state.pod };
+    const myChipsUsed = Math.min(state.chipSelect, state.myChips);
+    state.myChips -= myChipsUsed;
+    state.chipSelect = 0;
+
+    const opChipsUsed = Math.max(0, Math.min(state.opPendingChips || 0, state.opChips));
+    state.opChips -= opChipsUsed;
+
+    const myEffective = myCard + myChipsUsed;
+    const opEffective = opCard + opChipsUsed;
+
+    // まず素の数字でカードを公開（チップ演出はこの後）
+    state.fieldMy = myCard;
+    state.fieldOp = opCard;
+    state.fieldMyCardId = myCard;
+    state.fieldOpCardId = opCard;
+    state.fieldMyChips = 0;
+    state.fieldOpChips = 0;
+    state.fieldRevealed = true;
+    playFlipSound(0); // カードをフリップする音
+    if (!state.myDiscard.includes(myCard)) state.myDiscard.push(myCard);
+    if (!state.opDiscard.includes(opCard)) state.opDiscard.push(opCard);
+
+    renderHandsAndDiscard();
+    render(true);
+
+    document.getElementById('effectMsg').textContent = '';
+    const rm0 = document.getElementById('resultMsg');
+    rm0.textContent = (myChipsUsed > 0 || opChipsUsed > 0) ? 'チップを集計中…' : '';
+    rm0.className = 'result-msg';
+
+    const finalize = () => {
+      if (myToken !== gameToken) return;
+      finalizeRound(myCard, opCard, myChipsUsed, opChipsUsed, myEffective, opEffective, myToken);
+    };
+
+    if (myChipsUsed > 0 || opChipsUsed > 0) {
+      setTimeout(() => {
+        if (myToken !== gameToken) return;
+        animateChipCount(myCard, opCard, myChipsUsed, opChipsUsed, myToken, finalize);
+      }, 1500);
+    } else {
+      setTimeout(finalize, 250);
+    }
+  }
+
+  // チップ演出：数字がスロットのように1ずつ上がっていく。両者チップを使った場合は同時にカウントアップ
+  function animateChipCount(myCard, opCard, myChipsUsed, opChipsUsed, myToken, onDone) {
+    const myTarget = myCard + myChipsUsed;
+    const opTarget = opCard + opChipsUsed;
+    const frontMy = document.getElementById('fieldMeFront');
+    const frontOp = document.getElementById('fieldOpFront');
+    let myCur = myCard;
+    let opCur = opCard;
+    let tickStep = 0; // 何回目のカウントアップか（音程に使う）
+
+    const pulse = (el) => {
+      el.classList.remove('ticking');
+      void el.offsetWidth;
+      el.classList.add('ticking');
+    };
+
+    const tick = () => {
+      if (myToken !== gameToken) return; // 途中でリセットされていたら演出を止める
+      let stillGoing = false;
+      if (myCur < myTarget) {
+        myCur += 1;
+        frontMy.textContent = myCur;
+        pulse(frontMy);
+        stillGoing = true;
+      }
+      if (opCur < opTarget) {
+        opCur += 1;
+        frontOp.textContent = opCur;
+        pulse(frontOp);
+        stillGoing = true;
+      }
+      if (stillGoing) {
+        playTickSound(tickStep++);
+        setTimeout(tick, 220);
+      } else {
+        setTimeout(onDone, 300);
+      }
+    };
+    tick();
+  }
+
+  // 捨て札を「数字＋色」の一覧にする（勝敗計算・オンライン同期用）
+  function discEntries(who) {
+    const colors = state[who + 'CardColors'] || {};
+    return state[who + 'Discard'].map(n => ({ n, c: colors[n] || null }));
+  }
+
+  // 勝敗と報酬の計算（画面には触らない純粋な計算）。オンラインでは両端末とホストが同じ入力で同じ結果を得る。
+  // p.myChips / p.opChips はブースト消費後の枚数。p.myDisc / p.opDisc は今回出したカードを含む捨て札（{n, c}の配列）
+  function computeRoundResult(p) {
+    const chips = { my: p.myChips, op: p.opChips };
+    let pod = p.pod;
+    const nm = who => (who === 'my' ? 'あなた' : '相手');
+    const has = (who, color) => ((who === 'my' ? p.myDisc : p.opDisc) || []).filter(e => e.c === color).length >= 3;
+    const myEffective = p.myCard + p.myBoost;
+    const opEffective = p.opCard + p.opBoost;
+    const res = {
+      outcome: myEffective === opEffective ? 'tie' : (myEffective > opEffective ? 'me' : 'op'),
+      myEffective, opEffective, notes: [], logKind: '', roundPodKind: 'through',
+      jackpotWinner: null, losePayer: null, drawBothFlash: false, carried: 0
+    };
+
+    if (res.outcome === 'tie') {
+      // DRAW：場に出ていたブーストチップはすべてポッドへ（青トリプルの軽減は効かない）
+      const carried = p.myBoost + p.opBoost;
+      pod += carried;
+      res.carried = carried;
+      if (carried > 0) { res.roundPodKind = 'grow'; res.drawBothFlash = true; }
+      res.logKind = 'DRAW';
+      res.notes.push(`ブースト計${carried}🪙がポッドへ`);
+    } else {
+      const winner = res.outcome === 'me' ? 'my' : 'op';
+      const loser = winner === 'my' ? 'op' : 'my';
+      const winnerBoost = winner === 'my' ? p.myBoost : p.opBoost;
+      const loserBoost = winner === 'my' ? p.opBoost : p.myBoost;
+      const diff = Math.abs(myEffective - opEffective);
+
+      if (diff === 1) {
+        // JACKPOT：ちょうど1差で勝った側が、ポッド（今回の両者のブースト分を含む）を総取り。ブースト有無は問わない
+        const jackpot = pod + winnerBoost + loserBoost;
+        pod = 0;
+        chips[winner] += jackpot;
+        res.roundPodKind = 'jackpot';
+        res.jackpotWinner = winner;
+        res.notes.push(winnerBoost > 0
+          ? `JACKPOT！${nm(winner)}の+1差ブースト勝利：ポッド${jackpot}🪙を総取り`
+          : `JACKPOT！${nm(winner)}のノーブースト+1差勝利：ポッド${jackpot}🪙を総取り`);
+        // JACKPOTで負けた側（ブーストしていない場合）も、LOSEと同様にポッドへ1🪙。総取りの後に支払う（仮置き）
+        if (loserBoost === 0) {
+          const payment = Math.min(1, chips[loser]);
+          if (payment > 0) {
+            chips[loser] -= payment;
+            pod += payment;
+            res.losePayer = loser;
+            res.notes.push(`${nm(loser)}がポッドへ${payment}🪙支払い（JACKPOT敗者）`);
+          }
+        }
+        // 赤トリプル（攻め）：総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）
+        if (has(winner, 'red')) {
+          const steal = Math.min(2, chips[loser]);
+          if (steal > 0) {
+            chips[loser] -= steal;
+            chips[winner] += steal;
+            res.notes.push(`赤トリプル：${nm(winner)}が${nm(loser)}から${steal}🪙を直接強奪`);
+          }
+        }
+      } else {
+        // 青トリプル（守り）：ブーストして負けた側は、ポッドへ流れる分が半分（端数はポッドへ）
+        let loserProtected = 0;
+        if (loserBoost > 0 && has(loser, 'blue')) loserProtected = Math.floor(loserBoost / 2);
+        const loserToPod = loserBoost - loserProtected;
+        const toPod = winnerBoost + loserToPod;
+        if (toPod > 0) {
+          pod += toPod;
+          res.roundPodKind = 'grow';
+          const parts = [];
+          if (winnerBoost > 0) parts.push(`${nm(winner)}のブースト${winnerBoost}🪙`);
+          if (loserToPod > 0) parts.push(`${nm(loser)}のブースト${loserToPod}🪙`);
+          res.notes.push(`${parts.join('＋')}がポッドへ` + (winnerBoost > 0 ? '（+1差以外は無報酬）' : ''));
+        }
+        if (loserProtected > 0) {
+          chips[loser] += loserProtected; // 手元に残る分（ブースト消費時に一度引かれているので戻す）
+          res.notes.push(`青トリプル：${nm(loser)}はブースト失敗分のうち${loserProtected}🪙を手元に残した`);
+        }
+
+        if (winnerBoost === 0) {
+          // THROUGH（報酬なし）。緑トリプル（安定）：ポッドに溜まっていれば1🪙回収
+          if (has(winner, 'green') && pod > 0) {
+            pod -= 1;
+            chips[winner] += 1;
+            res.roundPodKind = 'grow';
+            res.notes.push(`緑トリプル：${nm(winner)}がTHROUGHでポッドから1🪙回収`);
+          } else {
+            res.notes.push(`THROUGH：${nm(winner)}の通常勝利（報酬なし）`);
+          }
+        }
+        if (loserBoost === 0) {
+          // LOSE：ポッドへ1枚支払う（持っている分だけ）
+          const payment = Math.min(1, chips[loser]);
+          chips[loser] -= payment;
+          pod += payment;
+          if (payment > 0 && res.roundPodKind === 'through') res.roundPodKind = 'grow';
+          res.losePayer = loser;
+          res.notes.push(`LOSE：${nm(loser)}がポッドへ${payment}🪙支払い`);
+        }
+      }
+      res.logKind = diff === 1
+        ? 'JACKPOT'
+        : [winnerBoost === 0 ? 'THROUGH' : 'ブースト勝ち(無報酬)', loserBoost === 0 ? 'LOSE' : 'ブースト負け'].join(' + ');
+    }
+    res.myChips = chips.my;
+    res.opChips = chips.op;
+    res.pod = pod;
+    return res;
+  }
+
+  function finalizeRound(myCard, opCard, myChipsUsed, opChipsUsed, myEffective, opEffective, myToken) {
+    // 捨て札に行くまでは、場の数字はチップで上がった数値のまま表示する
+    state.fieldMy = myEffective;
+    state.fieldOp = opEffective;
+    state.fieldMyChips = myChipsUsed;
+    state.fieldOpChips = opChipsUsed;
+    render(true);
+
+    const res = computeRoundResult({
+      myCard, opCard, myBoost: myChipsUsed, opBoost: opChipsUsed,
+      myChips: state.myChips, opChips: state.opChips, pod: state.pod,
+      myDisc: discEntries('my'), opDisc: discEntries('op')
+    });
+    state.myChips = res.myChips;
+    state.opChips = res.opChips;
+    state.pod = res.pod;
+    const outcome = res.outcome;
+
+    const myLabel = myChipsUsed > 0 ? `${myCard}(+${myChipsUsed}🪙=${myEffective})` : `${myCard}`;
+    const opLabel = opChipsUsed > 0 ? `${opCard}(+${opChipsUsed}🪙=${opEffective})` : `${opCard}`;
+
+    let msg = '';
+    let msgClass = '';
+    if (outcome === 'tie') {
+      msg = `あなた ${myLabel} / 相手 ${opLabel} → DRAW：${res.carried}🪙がポッドへ（ポッド計${state.pod}🪙）`;
+      msgClass = 'draw';
+    } else if (outcome === 'me') {
+      msg = `あなた ${myLabel} / 相手 ${opLabel} → あなたの勝ち！`;
+      msgClass = 'win';
+    } else {
+      msg = `あなた ${myLabel} / 相手 ${opLabel} → 相手の勝ち…`;
+      msgClass = 'lose';
+    }
+    const noteText = res.notes.join(' / ');
+    const boostRiskNote = outcome === 'tie' ? '' : noteText;
+
+    if (state.roundSnap) {
+      state.roundLog.push({
+        no: net.active ? state.round : state.roundLog.length + 1,
+        result: outcome === 'tie' ? '引き分け' : (outcome === 'me' ? 'あなたの勝ち' : '相手の勝ち'),
+        kind: res.logKind,
+        cards: `あなた ${myLabel} / 相手 ${opLabel}`,
+        dMy: state.myChips - state.roundSnap.my,
+        dOp: state.opChips - state.roundSnap.op,
+        dPod: state.pod - state.roundSnap.pod,
+        my: state.myChips, op: state.opChips, pod: state.pod,
+        notes: noteText + (state.tamperNote ? ' / ' + state.tamperNote : '')
+      });
+      state.roundSnap = null;
+      renderRoundLog();
+    }
+
+    document.getElementById('effectMsg').textContent = boostRiskNote;
+
+    const rm = document.getElementById('resultMsg');
+    rm.textContent = msg;
+    rm.className = 'result-msg ' + msgClass;
+
+    document.getElementById('myHP').textContent = state.myChips;
+    document.getElementById('opHP').textContent = state.opChips;
+    updatePodDisplay(res.roundPodKind);
+    document.getElementById('myChipAvail').textContent = state.myChips;
+    updateHandBadges();
+    const hpId = who => (who === 'my' ? 'myHP' : 'opHP');
+    if (res.jackpotWinner) flashNum(hpId(res.jackpotWinner), 'gain-flash');
+    if (res.losePayer) flashNum(hpId(res.losePayer), 'pay-flash');
+    if (res.drawBothFlash) {
+      flashNum('myHP', 'pay-flash');
+      flashNum('opHP', 'pay-flash');
+    }
+
+    // 決着判定：どちらかがWIN_CHIPS枚に到達したら勝利（チップ0枚になっても即敗北にはせず、続行する）
+    if (!debugMode && (state.myChips >= WIN_CHIPS || state.opChips >= WIN_CHIPS)) {
+      state.over = true;
+      if (net.active) {
+        stopTurnTimer();
+        writePriv({ log: state.roundLog });
+        updateOpLabel();
+      }
+      setTimeout(() => {
+        if (myToken !== gameToken) return;
+        showGameOver();
+      }, 1100);
+      return;
+    }
+
+    setTimeout(() => {
+      if (myToken !== gameToken) return;
+      if (net.active) { onlineNextRound(); return; }
+      drawInto(state.myHand, 'my');
+      drawInto(state.opHand, 'op');
+      state.fieldMy = null;
+      state.fieldOp = null;
+      state.fieldMyCardId = null;
+      state.fieldOpCardId = null;
+      state.fieldMyChips = 0;
+      state.fieldOpChips = 0;
+      state.fieldMyPlaced = false;
+      state.fieldOpPlaced = false;
+      state.fieldRevealed = false;
+      state.locked = false;
+      startRound();
+    }, 1100);
+  }
+
+  function showGameOver() {
+    const overlay = document.getElementById('overlay');
+    const title = document.getElementById('overlayTitle');
+    const text = document.getElementById('overlayText');
+    if (state.myChips >= WIN_CHIPS) {
+      title.textContent = `🎉 あなたの勝ち！（チップ${WIN_CHIPS}枚達成）`;
+    } else if (state.opChips >= WIN_CHIPS) {
+      title.textContent = `😢 相手の勝ち…（チップ${WIN_CHIPS}枚達成）`;
+    } else {
+      title.textContent = '終了';
+    }
+    text.textContent = `所持チップ：あなた ${state.myChips}🪙 - 相手 ${state.opChips}🪙`;
+    if (net.active) stopTurnTimer();
+    overlay.classList.add('show');
+  }
+
+  function render(fieldOnly) {
+    if (!fieldOnly) {
+      renderHandsAndDiscard();
+    }
+    updateFieldSlot('fieldMeFlip', 'fieldMeFront', 'fieldMeBoost', state.fieldMy, state.fieldMyCardId, state.myCardColors, state.fieldMyChips, state.fieldMyPlaced, false);
+    updateFieldSlot('fieldOpFlip', 'fieldOpFront', 'fieldOpBoost', state.fieldOp, state.fieldOpCardId, state.opCardColors, state.fieldOpChips, state.fieldOpPlaced, true);
+    if (!fieldOnly) {
+      document.getElementById('effectMsg').textContent = '';
+      const rm = document.getElementById('resultMsg');
+      rm.textContent = state.over ? '' : 'カードを選んで出してください';
+      rm.className = 'result-msg';
+    }
+  }
+
+  function updateFieldSlot(flipId, frontId, boostId, value, cardId, colorMap, chipsUsed, placed, usePop) {
+    const flipEl = document.getElementById(flipId);
+    const frontEl = document.getElementById(frontId);
+    const boostEl = document.getElementById(boostId);
+    let cls = 'flip-card';
+    if (placed) cls += usePop ? ' placed pop' : ' placed';
+    if (state.fieldRevealed) cls += ' flipped';
+    flipEl.className = cls;
+    if (value !== null) {
+      frontEl.textContent = value;
+    } else {
+      frontEl.textContent = '';
+    }
+    let frontCls = 'flip-face flip-front';
+    if (state.fieldRevealed && cardId !== null && colorMap[cardId]) {
+      frontCls += ' ' + colorMap[cardId];
+    }
+    frontEl.className = frontCls;
+    boostEl.textContent = (state.fieldRevealed && chipsUsed > 0) ? `+${chipsUsed}🪙` : '';
+  }
+
+  function renderHandsAndDiscard() {
+    const myHandEl = document.getElementById('myHand');
+    myHandEl.innerHTML = '';
+    state.myHand.forEach(c => {
+      const wrap = document.createElement('div');
+      wrap.className = 'hand-card-wrap';
+      const btn = document.createElement('button');
+      btn.className = 'card' + (state.myCardColors[c] ? ' ' + state.myCardColors[c] : '');
+      btn.textContent = c;
+      btn.disabled = state.locked || state.over;
+      btn.addEventListener('click', (e) => playRound(c, e.currentTarget));
+      const label = document.createElement('div');
+      label.className = 'card-effect-label';
+      label.textContent = getCardEffectTexts(c).join(' / ');
+      wrap.appendChild(btn);
+      wrap.appendChild(label);
+      myHandEl.appendChild(wrap);
+    });
+
+    const opHandEl = document.getElementById('opHand');
+    if (opHandEl) {
+      opHandEl.innerHTML = '';
+      state.opHand.forEach(() => {
+        const d = document.createElement('div');
+        d.className = 'card back';
+        d.textContent = '?';
+        opHandEl.appendChild(d);
+      });
+    }
+
+    renderDiscardGrid('discardGridMy', state.myDiscard, state.myCardColors, 'my');
+    renderDiscardGrid('discardGridOp', state.opDiscard, state.opCardColors, 'op');
+    alignRoleHint();
+    updateChipSelectorUI();
+    updateHandBadges();
+  }
+
+  function updateChipSelectorUI() {
+    if (state.chipSelect > state.myChips) state.chipSelect = state.myChips;
+    document.getElementById('myChipAvail').textContent = state.myChips;
+    document.getElementById('chipSelectedVal').textContent = state.chipSelect;
+    const disabled = state.locked || state.over;
+    document.getElementById('chipMinus').disabled = disabled || state.chipSelect <= 0;
+    document.getElementById('chipPlus').disabled = disabled || state.chipSelect >= state.myChips;
+
+    // ブースト量を増減するたびに、持ちチップの大きい数字をリアルタイムに増減させる
+    const previewChips = Math.max(0, state.myChips - state.chipSelect);
+    const hpEl = document.getElementById('myHP');
+    if (hpEl) hpEl.textContent = previewChips;
+  }
+
+  const RETURN_STAGGER_MS = 40;   // 1枚ごとのずらし幅（約2〜3フレーム）
+  const RETURN_DURATION_MS = 260; // 1枚がフェードアウトする時間
+
+  // 役が新しく成立した瞬間の「パワーアップ」音：上昇アルペジオ＋きらめき
+  function playRoleUpSound() {
+    if (!soundOn) return;
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const t0 = ctx.currentTime;
+
+    // 上昇する3音のアルペジオ（ド→ミ→ソ→高ド）
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    notes.forEach((freq, i) => {
+      const t = t0 + i * 0.06;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.3, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      o.connect(g); g.connect(masterGain);
+      o.start(t); o.stop(t + 0.24);
+    });
+
+    // 下から吹き上がる「きらめき」のスイープ
+    const sweep = ctx.createOscillator();
+    const sg = ctx.createGain();
+    sweep.type = 'sawtooth';
+    sweep.frequency.setValueAtTime(300, t0);
+    sweep.frequency.exponentialRampToValueAtTime(2600, t0 + 0.3);
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 800;
+    sg.gain.setValueAtTime(0.0001, t0);
+    sg.gain.exponentialRampToValueAtTime(0.1, t0 + 0.1);
+    sg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.32);
+    sweep.connect(hp); hp.connect(sg); sg.connect(masterGain);
+    sweep.start(t0); sweep.stop(t0 + 0.34);
+  }
+
+  // デッキの底（ピンクの役で見えるカード）。オンラインの相手分は、相手が公開した値を使う
+  function getDeckBottom(who) {
+    if (net.active && who === 'op') {
+      const op = oppSeatC();
+      return (op && typeof op.deckBottom === 'number') ? op.deckBottom : null;
+    }
+    const d = state[who + 'Deck'];
+    return (d && d.length) ? d[0] : null;
+  }
+
+  function renderDiscardGrid(elementId, discardArr, colorMap, who) {
+    if (state.returningNow[who]) return; // 演出中。終了時に最新状態で描き直す
+    const grid = document.getElementById(elementId);
+    const returning = state.returning[who];
+
+    if (returning && returning.length) {
+      // 山札へ戻る演出：捨て札を残したまま、順番に下(自分)/上(相手)へフェードアウト
+      state.returning[who] = null;
+      state.returningNow[who] = true;
+      grid.innerHTML = '';
+      let order = 0;
+      for (let n = 1; n <= 8; n++) {
+        const slot = document.createElement('div');
+        slot.className = 'discard-slot'; // 空枠（元の位置に残る）
+        slot.textContent = n;
+        if (returning.includes(n)) {
+          const card = document.createElement('div');
+          let cls = 'discard-slot filled returning' + (who === 'op' ? ' up' : '');
+          if (colorMap[n]) cls += ' ' + colorMap[n];
+          card.className = cls;
+          card.textContent = n;
+          card.style.setProperty('--d', (order * RETURN_STAGGER_MS) + 'ms');
+          slot.style.setProperty('--d', (order * RETURN_STAGGER_MS) + 'ms');
+          slot.classList.add('has-ret');
+          order++;
+          slot.appendChild(card);
+        }
+        grid.appendChild(slot);
+      }
+      const token = gameToken;
+      const total = (order - 1) * RETURN_STAGGER_MS + RETURN_DURATION_MS + 60;
+      setTimeout(() => {
+        if (token !== gameToken) return;
+        state.returningNow[who] = false;
+        renderDiscardGrid(elementId, state[who + 'Discard'], colorMap, who);
+      }, total);
+      return;
+    }
+
+    grid.innerHTML = '';
+    const activeRoles = getActiveRoles(who);
+    const glowColors = new Set(activeRoles.map(r => r.color));
+
+    // 前回の描画になかった役が新たに成立していたら、パワーアップ音を鳴らす
+    const roleKeys = new Set(activeRoles.map(r => r.name));
+    const seen = state.roleSeen[who];
+    let newlyActivated = false;
+    const blueRoleKey = `色トリプル(${COLOR_LABEL.blue})`;
+    roleKeys.forEach(k => {
+      if (!seen.has(k)) {
+        newlyActivated = true;
+        if (k === blueRoleKey) state.blueChargeUsed[who] = false; // 再成立で1回分を回復（ストックはしない）
+      }
+    });
+    state.roleSeen[who] = roleKeys;
+    if (newlyActivated) playRoleUpSound();
+
+    // ピンクトリプル発動中：相手のデッキの底（次に引かれる最後のカード）の枠に目のアイコンを表示
+    // activeViewer基準：今画面を見ている側がピンクを持っていれば、相手側の捨て札グリッド(who === otherOf(activeViewer))に表示する
+    const peekTarget = (who === otherOf(activeViewer) && hasColorTriple(activeViewer, 'pink'))
+      ? getDeckBottom(who)
+      : null;
+
+    for (let n = 1; n <= 8; n++) {
+      const slot = document.createElement('div');
+      const isFilled = discardArr.includes(n);
+      let cls = 'discard-slot' + (isFilled ? ' filled' : '');
+      if (isFilled && colorMap[n]) {
+        cls += ' ' + colorMap[n];
+        if (glowColors.has(colorMap[n])) cls += ' glow';
+      }
+      slot.className = cls;
+      slot.textContent = n;
+      if (peekTarget === n) {
+        const eye = document.createElement('span');
+        eye.className = 'peek-eye';
+        eye.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 5C5 5 1 12 1 12s4 7 11 7 11-7 11-7-4-7-11-7zm0 11a4 4 0 110-8 4 4 0 010 8zm0-2a2 2 0 100-4 2 2 0 000 4z"/></svg>';
+        slot.appendChild(eye);
+      }
+      grid.appendChild(slot);
+    }
+  }
+
+  // 捨て札をタップ → 役パネルの開閉。それ以外をタップで閉じる
+  document.addEventListener('click', (e) => {
+    const grid = e.target.closest && e.target.closest('.discard-grid');
+    if (grid) {
+      const who = grid.id === 'discardGridMy' ? 'my' : 'op';
+      openRoleWho = (openRoleWho === who) ? null : who;
+      refreshRolePanel();
+      const hint = document.getElementById('roleHint');
+      if (hint) hint.classList.add('gone'); // 一度使ったらヒントは消す
+    } else if (openRoleWho) {
+      closeRolePanel();
+    }
+  });
+
+  document.getElementById('chipMinus').addEventListener('click', () => {
+    if (state.locked || state.over) return;
+    if (state.chipSelect > 0) {
+      state.chipSelect -= 1;
+      updateChipSelectorUI();
+    }
+  });
+  document.getElementById('chipPlus').addEventListener('click', () => {
+    if (state.locked || state.over) return;
+    if (state.chipSelect < state.myChips) {
+      state.chipSelect += 1;
+      updateChipSelectorUI();
+    }
+  });
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    startPrepPhase();
+  });
+
+  function updateDebugBtn() {
+    document.getElementById('debugModeBtn').textContent = debugMode
+      ? '🐞 デバッグモード: ON（準備フェイズ全色選択・チップ30枚勝利条件なし）'
+      : '🐞 デバッグモード: OFF';
+    document.getElementById('debugPanel').classList.toggle('hidden', !debugMode);
+  }
+  document.getElementById('debugModeBtn').addEventListener('click', () => {
+    debugMode = !debugMode;
+    updateDebugBtn();
+  });
+
+  // ===== オンライン対戦のボタン =====
+  document.getElementById('onlineBtn').addEventListener('click', () => { openOnlineScreen(); });
+  document.getElementById('createRoomBtn').addEventListener('click', () => { createRoom(); });
+  document.getElementById('joinRoomBtn').addEventListener('click', () => {
+    joinRoom(document.getElementById('roomCodeInput').value);
+  });
+  document.getElementById('roomCodeInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') joinRoom(e.currentTarget.value);
+  });
+  document.getElementById('roomCodeInput').addEventListener('input', (e) => {
+    e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 4);
+  });
+  document.getElementById('resumeRoomBtn').addEventListener('click', () => {
+    const last = getLastRoom();
+    if (last) joinRoom(last);
+  });
+  document.getElementById('onlineBackBtn').addEventListener('click', () => {
+    // 待機中のホストが戻る場合は、部屋を閉じる
+    if (net.active && net.role === 'host' && net.match && net.match.status === 'waiting') writeMatch({ status: 'over' });
+    if (net.active) leaveOnline();
+    setOnlineStatus('');
+    showScreen('start');
+    stopBgm();
+  });
+
+  // デバッグ：実際のチップ・ポッドを動かさずに、勝敗演出（THROUGH/LOSE/JACKPOT）だけを単独再生する
+  document.getElementById('dbgThroughBtn').addEventListener('click', () => {
+    updatePodDisplay('through');
+  });
+  document.getElementById('dbgLoseBtn').addEventListener('click', () => {
+    updatePodDisplay('grow');
+    flashNum('myHP', 'pay-flash');
+  });
+  document.getElementById('dbgJackpotBtn').addEventListener('click', () => {
+    updatePodDisplay('jackpot');
+    flashNum('myHP', 'gain-flash');
+  });
+
+  // デバッグ：自分の手札（選ぶカードの列）だけを一時的に隠す。盤面だけを見たい時や撮影用
+  document.getElementById('dbgHideHandBtn').addEventListener('click', () => {
+    const board = document.getElementById('board');
+    const hidden = board.classList.toggle('hide-hand');
+    document.getElementById('dbgHideHandBtn').textContent = hidden ? '👁 手札を表示' : '🙈 手札を隠す';
+  });
+
+  document.getElementById('soundBtn').addEventListener('click', () => {
+    soundOn = !soundOn;
+    document.getElementById('soundBtn').textContent = soundOn ? '🔊 サウンド ON' : '🔇 サウンド OFF';
+    syncBgmToSoundToggle();
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    backToStart();
+  });
+  document.getElementById('playAgainBtn').addEventListener('click', () => {
+    backToStart();
+  });
+
+  // ===== ライト/ダークモード切替 =====
+  // 保存した選択があればそれを、なければ端末のシステム設定に従う
+  function systemPrefersDark() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function getSavedTheme() {
+    try {
+      const v = localStorage.getItem('nd-theme');
+      if (v === 'light' || v === 'dark') return v;
+    } catch (e) {}
+    return null;
+  }
+  function currentTheme() {
+    const attr = document.documentElement.getAttribute('data-theme');
+    if (attr === 'light' || attr === 'dark') return attr;
+    return systemPrefersDark() ? 'dark' : 'light';
+  }
+  function updateThemeBtnLabel(theme) {
+    const btn = document.getElementById('themeBtn');
+    if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  }
+  function applyTheme(theme, save) {
+    document.documentElement.setAttribute('data-theme', theme);
+    if (save) {
+      try { localStorage.setItem('nd-theme', theme); } catch (e) {}
+    }
+    updateThemeBtnLabel(theme);
+  }
+  const savedTheme = getSavedTheme();
+  if (savedTheme) {
+    applyTheme(savedTheme, false); // 保存済みの選択を反映（このタブでの再保存はしない）
+  } else {
+    updateThemeBtnLabel(currentTheme()); // 端末設定どおり。属性は付けずシステム変更にも追従する
+  }
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    const next = currentTheme() === 'dark' ? 'light' : 'dark';
+    applyTheme(next, true);
+  });
+
+  showScreen('start');
+})();
+</script>
+
+<style>
+  #logBtn { position: fixed; right: 10px; bottom: 10px; z-index: 900; padding: 8px 12px; font-size: 0.85rem; border-radius: 20px; border: 1px solid #888; background: #fff; color: #333; cursor: pointer; opacity: 0.9; }
+  #logPanel { position: fixed; left: 0; right: 0; bottom: 0; max-height: 65vh; overflow-y: auto; z-index: 950; background: #fff; color: #222; border-top: 2px solid #666; box-shadow: 0 -4px 16px rgba(0,0,0,0.3); padding: 10px 12px 16px; display: none; font-size: 0.8rem; }
+  #logPanel.show { display: block; }
+  #logPanel .lp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: bold; }
+  #logPanel .lp-head button { border: 1px solid #888; background: #f4f4f4; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  #logPanel .lp-round { border-top: 1px solid #ddd; padding: 6px 0; line-height: 1.5; }
+  #logPanel .lp-kind { font-weight: bold; }
+  #logPanel .pos { color: #1a7f37; font-weight: bold; }
+  #logPanel .neg { color: #c62828; font-weight: bold; }
+  #logPanel .zero { color: #777; }
+  #logPanel .lp-notes { color: #555; }
+</style>
+<button id="logBtn">📋 ログ</button>
+<div id="logPanel">
+  <div class="lp-head"><span>ラウンドログ</span><span><button id="logCopyBtn">コピー</button> <button id="logCloseBtn">閉じる</button></span></div>
+  <div id="logBody"></div>
+</div>
+<script>
+  (function () {
+    const fmt = n => n > 0 ? `<span class="pos">+${n}</span>` : (n < 0 ? `<span class="neg">${n}</span>` : `<span class="zero">±0</span>`);
+    const plain = n => n > 0 ? `+${n}` : (n < 0 ? `${n}` : '±0');
+    window.renderRoundLog = function () {
+      const body = document.getElementById('logBody');
+      if (!body) return;
+      const log = window.__getRoundLog ? window.__getRoundLog() : [];
+      if (!log.length) { body.innerHTML = '<div class="zero">まだログはありません</div>'; return; }
+      body.innerHTML = log.slice().reverse().map(r =>
+        `<div class="lp-round"><div><span class="lp-kind">R${r.no}｜${r.result}｜${r.kind}</span></div>` +
+        `<div>${r.cards}</div>` +
+        `<div>あなた ${fmt(r.dMy)}（→${r.my}） / 相手 ${fmt(r.dOp)}（→${r.op}） / ポッド ${fmt(r.dPod)}（→${r.pod}）</div>` +
+        (r.notes ? `<div class="lp-notes">${r.notes}</div>` : '') + `</div>`
+      ).join('');
+    };
+    document.getElementById('logBtn').addEventListener('click', () => { renderRoundLog(); document.getElementById('logPanel').classList.toggle('show'); });
+    document.getElementById('logCloseBtn').addEventListener('click', () => document.getElementById('logPanel').classList.remove('show'));
+    document.getElementById('logCopyBtn').addEventListener('click', () => {
+      const log = window.__getRoundLog ? window.__getRoundLog() : [];
+      const text = log.map(r => `R${r.no} ${r.result} ${r.kind} | ${r.cards} | あなた${plain(r.dMy)}(${r.my}) 相手${plain(r.dOp)}(${r.op}) ポッド${plain(r.dPod)}(${r.pod}) | ${r.notes}`).join('\n');
+      const btn = document.getElementById('logCopyBtn');
+      const done = () => { btn.textContent = 'コピー済み'; setTimeout(() => btn.textContent = 'コピー', 1200); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(() => {});
+      else done();
+    });
+  })();
+</script>
+<script>
+  (function () {
+    const inp = document.getElementById('playerNameInput');
+    if (!inp || !window.NumberDuelNet) return;
+    inp.value = window.NumberDuelNet.getName();
+    inp.addEventListener('change', () => window.NumberDuelNet.setName(inp.value));
+  })();
+</script>
+</body>
+</html>
