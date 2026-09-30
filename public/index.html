@@ -98,26 +98,6 @@
     position: relative;
   }
   /* ライト/ダークモード切替：どの画面でも右上に固定表示 */
-  .theme-toggle-btn {
-    position: fixed;
-    top: calc(12px + env(safe-area-inset-top, 0px));
-    right: 12px;
-    z-index: 50;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 1px solid var(--card-border);
-    background: var(--bg2);
-    box-shadow: 0 2px 8px var(--shadow);
-    font-size: 1.2rem;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0;
-  }
-  .theme-toggle-btn:active { transform: scale(0.92); }
   h1 {
     text-align: center;
     font-size: 1.5rem;
@@ -708,20 +688,8 @@
     0%, 100% { box-shadow: 0 0 4px var(--gc), 0 0 8px var(--gc); }
     50% { box-shadow: 0 0 9px var(--gc), 0 0 20px var(--gc), 0 0 3px #fff inset; }
   }
-  .discard-slot .peek-eye {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 22px;
-    height: 22px;
-    color: var(--color-pink);
-    filter: drop-shadow(0 0 3px var(--color-pink));
-    pointer-events: none;
-    z-index: 2;
-    animation: peekEyeBlink 1.8s ease-in-out infinite;
-  }
-  /* 確定情報：捨て札が山札に戻った時点で手札に残っていた数字（相手にも中身が分かっている） */
+  /* バッジ（枠の右上に重ねる）：ピンクトリプルで見える相手のデッキの底／確定情報 */
+  .discard-slot .peek-eye,
   .discard-slot .known-mark {
     position: absolute;
     top: -7px;
@@ -732,18 +700,24 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--known);
     color: #fff;
     font-size: 0.72rem;
     font-weight: 900;
     line-height: 1;
-    box-shadow: 0 0 4px var(--known), 0 0 8px var(--known);
     pointer-events: none;
     z-index: 3;
     animation: peekEyeBlink 1.8s ease-in-out infinite;
   }
-  /* 相手側は右上がライト/ダーク切替ボタンに隠れるので左上に出す */
-  #discardGridOp .discard-slot .known-mark { right: auto; left: -7px; }
+  .discard-slot .peek-eye { background: var(--color-pink); box-shadow: 0 0 4px var(--color-pink), 0 0 8px var(--color-pink); }
+  .discard-slot .peek-eye svg { width: 12px; height: 12px; }
+  .discard-slot.peek {
+    color: var(--color-pink);
+    border-color: var(--color-pink);
+    box-shadow: 0 0 0 1px var(--color-pink) inset, 0 0 8px color-mix(in srgb, var(--color-pink) 50%, transparent);
+    z-index: 1;
+  }
+  /* 確定情報：捨て札が山札に戻った時点で手札に残っていた数字（相手にも中身が分かっている） */
+  .discard-slot .known-mark { background: var(--known); box-shadow: 0 0 4px var(--known), 0 0 8px var(--known); }
   .discard-slot.known {
     color: var(--known);
     border-color: var(--known);
@@ -1169,7 +1143,6 @@
 <audio id="bgmAudio" loop preload="none" src="assets/bgm.mp3"></audio>
 <audio id="prepBgmAudio" preload="none" src="assets/prep-bgm.mp3"></audio>
 <div class="wrap">
-  <button id="themeBtn" class="theme-toggle-btn" aria-label="ライト/ダークモード切替"></button>
   <h1>🃏 ナンバーデュエル</h1>
 
   <div id="startScreen">
@@ -1294,6 +1267,7 @@
 
   <div class="controls">
     <button class="btn secondary" id="soundBtn">🔊 サウンド ON</button>
+    <button class="btn secondary" id="themeBtn" aria-label="ライト/ダークモード切替">🌙 ダークモード OFF</button>
     <button class="btn secondary" id="resetBtn">最初からやり直す</button>
   </div>
 
@@ -3598,9 +3572,11 @@
         slot.appendChild(mark);
       }
       if (peekTarget === n) {
+        slot.classList.add('peek');
+        slot.title = '相手のデッキの底（最後に引かれるカード）';
         const eye = document.createElement('span');
         eye.className = 'peek-eye';
-        eye.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 5C5 5 1 12 1 12s4 7 11 7 11-7 11-7-4-7-11-7zm0 11a4 4 0 110-8 4 4 0 010 8zm0-2a2 2 0 100-4 2 2 0 000 4z"/></svg>';
+        eye.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 5C5 5 1 12 1 12s4 7 11 7 11-7 11-7-4-7-11-7zm0 11a4 4 0 110-8 4 4 0 010 8zm0-2a2 2 0 100-4 2 2 0 000 4z"/></svg>';
         slot.appendChild(eye);
       }
       grid.appendChild(slot);
@@ -3728,7 +3704,7 @@
   }
   function updateThemeBtnLabel(theme) {
     const btn = document.getElementById('themeBtn');
-    if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    if (btn) btn.textContent = theme === 'dark' ? '🌙 ダークモード ON' : '☀️ ダークモード OFF';
   }
   function applyTheme(theme, save) {
     document.documentElement.setAttribute('data-theme', theme);
