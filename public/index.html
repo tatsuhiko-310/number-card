@@ -30,6 +30,7 @@
     --color-yellow: #ffd400;
     --color-green: #2ed17a;
     --color-pink: #ff5cb3;
+    --known: #ff8a00;
     --icon-red: url("assets/icon-red.png");
     --icon-blue: url("assets/icon-blue.png");
     --icon-yellow: url("assets/icon-yellow.png");
@@ -720,6 +721,35 @@
     z-index: 2;
     animation: peekEyeBlink 1.8s ease-in-out infinite;
   }
+  /* 確定情報：捨て札が山札に戻った時点で手札に残っていた数字（相手にも中身が分かっている） */
+  .discard-slot .known-mark {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--known);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: 0 0 4px var(--known), 0 0 8px var(--known);
+    pointer-events: none;
+    z-index: 3;
+    animation: peekEyeBlink 1.8s ease-in-out infinite;
+  }
+  /* 相手側は右上がライト/ダーク切替ボタンに隠れるので左上に出す */
+  #discardGridOp .discard-slot .known-mark { right: auto; left: -7px; }
+  .discard-slot.known {
+    color: var(--known);
+    border-color: var(--known);
+    box-shadow: 0 0 0 1px var(--known) inset, 0 0 8px color-mix(in srgb, var(--known) 50%, transparent);
+    z-index: 1;
+  }
   @keyframes peekEyeBlink {
     0%, 80%, 100% { opacity: 1; }
     90% { opacity: 0.35; }
@@ -1290,6 +1320,7 @@
     ・それ以外の結果（JACKPOTにならなかったブースト、ブーストしての負け等）は、使ったブースト分がそのままポッドへ流れて無報酬になる<br><br>
     カード効果：現在、1〜8のどのカードにも数字比較以外の特殊効果はありません（検討中）。<br><br>
     色の役(自分の捨て札の色構成で常時判定)：<b>色トリプル</b>(同色3枚以上)。成立すると捨て札が光り、タップで確認できます。<b>赤</b>(攻め)＝JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）／<b>青</b>(守り)＝ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ）／<b>緑</b>(安定)＝THROUGH(通常勝利)時、ポッドに溜まっていれば1🪙回収できる／<b>ピンク</b>＝相手のデッキの底が見える／<b>黄</b>＝手札選択中に相手がブーストするかどうかだけ見える(枚数は伏せる)。<br><br>
+    確定情報：山札がなくなり捨て札を山札に戻した時、その時点で手札に残っていたカードの数字は、お互いに分かる。その数字は捨て札の枠に<b style="color:var(--known)">！</b>が表示され、出されるまで残る。<br><br>
     色：各カードには赤・青・黄・緑・ピンクいずれかの色がある（デッキ構築時に選択）。現時点では色トリプル以外の効果条件には未使用。<br><br>
     オンライン対戦：「部屋を作る」で表示される4桁のコードを相手に伝え、相手が入室したら準備フェイズ（それぞれ非公開でデッキを組む）へ進み、両者の準備が終わると対戦開始。手札のカードをタップした時点でそのラウンドの手が確定し、両者が確定したら一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになると手札からランダムに1枚、ブースト0で自動的に出す。黄の役は、相手が確定した時点でブーストの有無が見える。通信はブラウザ同士の直接通信で、部屋を作った人のブラウザが対戦データを持つため、対戦中はそのページを閉じないこと。途中で抜けても、同じブラウザから同じ部屋コードで入り直せば続きから再開できる。<br><br>
     画面：カードを選ぶ時は「手札選択」画面、カードを出すと「バトル場」画面に自動で切り替わり、決着後にまた手札選択へ戻ります。
@@ -2085,7 +2116,10 @@
     const cur = state.opDiscard;
     const bottom = getDeckBottom('op');
     if (incoming.length === cur.length && incoming.every((n, i) => n === cur[i]) && bottom === state.lastOpBottom) return;
-    if (cur.length && cur.some(n => !incoming.includes(n))) state.returning.op = cur.slice();
+    if (cur.length && cur.some(n => !incoming.includes(n))) {
+      state.returning.op = cur.slice();
+      state.knownHeld.op = knownHeldFrom(cur);
+    }
     state.opDiscard = incoming;
     state.lastOpBottom = bottom;
     renderDiscardGrid('discardGridOp', state.opDiscard, state.opCardColors, 'op');
@@ -2698,6 +2732,7 @@
       locked: false,
       over: false,
       returning: { my: null, op: null },     // 山札へ戻る捨て札（演出用）
+      knownHeld: { my: [], op: [] },          // 捨て札が山札へ戻った時に手札に残っていた数字（確定情報。出されるまで「！」表示）
       roleSeen: { my: new Set(), op: new Set() }, // 直前に成立していた役（新規成立の検出用）
       blueChargeUsed: { my: false, op: false }, // 青トリプル：今の成立中に1回分の蒸発無効を使い切ったか
       returningNow: { my: false, op: false }, // 演出中は捨て札置き場の再描画を止める
@@ -2799,6 +2834,7 @@
     if (state[deckKey].length === 0) {
       if (state[discardKey].length === 0) return null;
       state.returning[who] = state[discardKey].slice(); // 戻る前の捨て札を演出用に控える
+      state.knownHeld[who] = knownHeldFrom(state[discardKey]);
       state[deckKey] = shuffle(state[discardKey]);
       state[discardKey] = [];
     }
@@ -3471,6 +3507,13 @@
     return (d && d.length) ? d[0] : null;
   }
 
+  // 山札へ戻る捨て札に含まれない数字＝その時点で手札に残っていたカード（両者に分かる確定情報）
+  function knownHeldFrom(returningCards) {
+    const out = [];
+    for (let n = 1; n <= 8; n++) if (!returningCards.includes(n)) out.push(n);
+    return out;
+  }
+
   function renderDiscardGrid(elementId, discardArr, colorMap, who) {
     if (state.returningNow[who]) return; // 演出中。終了時に最新状態で描き直す
     const grid = document.getElementById(elementId);
@@ -3542,8 +3585,18 @@
         cls += ' ' + colorMap[n];
         if (glowColors.has(colorMap[n])) cls += ' glow';
       }
+      // 確定情報の数字：まだ出されていなければ「！」を重ねる
+      const isKnown = !isFilled && ((state.knownHeld && state.knownHeld[who]) || []).includes(n);
+      if (isKnown) cls += ' known';
       slot.className = cls;
       slot.textContent = n;
+      if (isKnown) {
+        const mark = document.createElement('span');
+        mark.className = 'known-mark';
+        mark.textContent = '!';
+        slot.title = who === 'op' ? '確定情報：この数字は相手の手札にある' : '確定情報：この数字が手札にあることは相手にも分かっている';
+        slot.appendChild(mark);
+      }
       if (peekTarget === n) {
         const eye = document.createElement('span');
         eye.className = 'peek-eye';
