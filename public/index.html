@@ -447,19 +447,22 @@
     color: var(--accent);
   }
   .field-slot { position: relative; z-index: 1; }
-  /* チップブースト演出：チップ数の表示からカードへ飛んでいくチップ */
+  /* チップブースト演出：チップ数の表示からカードへ飛んでいくチップ（色はプレイヤーの色：自分＝ピンク、相手＝ブルー） */
   .flying-chip {
+    --chip: var(--gold);
     position: fixed;
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #fff7b0 0%, var(--gold) 55%, #e0a800 100%);
-    border: 2px solid #c99700;
-    box-shadow: 0 2px 6px var(--shadow), 0 0 10px rgba(255, 204, 0, 0.6);
+    background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--chip) 30%, #fff) 0%, var(--chip) 55%, color-mix(in srgb, var(--chip) 75%, #000) 100%);
+    border: 2px solid color-mix(in srgb, var(--chip) 70%, #000);
+    box-shadow: 0 2px 6px var(--shadow), 0 0 10px color-mix(in srgb, var(--chip) 60%, transparent);
     z-index: 80;
     pointer-events: none;
     will-change: transform;
   }
+  .flying-chip.me { --chip: var(--accent); }
+  .flying-chip.op { --chip: var(--accent2); }
   .field-slot .boost {
     position: absolute;
     left: calc(100% + 10px);
@@ -3031,7 +3034,7 @@
       const size = 24;
       const center = (el) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
       const chip = document.createElement('div');
-      chip.className = 'flying-chip';
+      chip.className = 'flying-chip ' + (sd.own ? 'me' : 'op');
       chip.style.left = '0px';
       chip.style.top = '0px';
       document.body.appendChild(chip);
