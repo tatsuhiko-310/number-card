@@ -3022,35 +3022,21 @@
       if (sd.own) state.myHpShown = sd.hpShown;
       if (hpEl) hpEl.textContent = sd.hpShown;
       const cardEl = document.getElementById(sd.flip);
-      if (reduceMotion || !hpEl || !cardEl || typeof document.body.animate !== 'function') {
+      if (reduceMotion || !hpEl || !cardEl) {
         setTimeout(() => land(sd, k), reduceMotion ? 0 : CHIP_FLIGHT_MS);
         return;
       }
-      const from = hpEl.getBoundingClientRect();
-      const to = cardEl.getBoundingClientRect();
+      // 毎フレーム、出発点（チップ数）と着地点（カードの中央）の今の位置を測り直して飛ばす。
+      // スクロールやアドレスバーの伸縮で画面が動いても、必ずカードの中央に着地する
       const size = 24;
-      const x0 = from.left + from.width / 2 - size / 2;
-      const y0 = from.top + from.height / 2 - size / 2;
-      // 着地点：カードの中央
-      const x1 = to.left + to.width / 2 - size / 2;
-      const y1 = to.top + to.height / 2 - size / 2;
-      const dx = x1 - x0, dy = y1 - y0;
-      // 弧を描くように、進行方向に対して横へふくらませる
-      const len = Math.hypot(dx, dy) || 1;
-      const bulge = Math.min(90, len * 0.35);
-      const mx = dx / 2 + (dy / len) * bulge;
-      const my = dy / 2 - (dx / len) * bulge;
-
+      const center = (el) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
       const chip = document.createElement('div');
       chip.className = 'flying-chip';
-      chip.style.left = x0 + 'px';
-      chip.style.top = y0 + 'px';
+      chip.style.left = '0px';
+      chip.style.top = '0px';
       document.body.appendChild(chip);
-      const anim = chip.animate([
-        { transform: 'translate(0, 0) scale(0.6)', opacity: 0.4 },
-        { transform: `translate(${mx}px, ${my}px) scale(1.15)`, opacity: 1, offset: 0.5 },
-        { transform: `translate(${dx}px, ${dy}px) scale(0.9)`, opacity: 1 }
-      ], { duration: CHIP_FLIGHT_MS, easing: 'ease-in-out', fill: 'forwards' });
+      const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+      const t0 = performance.now();
       let done = false;
       const finish = () => {
         if (done) return;
@@ -3058,8 +3044,30 @@
         chip.remove();
         land(sd, k);
       };
-      anim.onfinish = finish;
-      setTimeout(finish, CHIP_FLIGHT_MS + 200); // 保険（アニメーションが止まった環境向け）
+      const frame = (now) => {
+        if (done) return;
+        if (myToken !== gameToken) { done = true; chip.remove(); return; }
+        const t = Math.min(1, (now - t0) / CHIP_FLIGHT_MS);
+        const e = ease(t);
+        const a = center(hpEl);
+        const b = center(cardEl);
+        // 弧を描くように、進行方向に対して横へふくらませる（2次ベジェ曲線）
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const len = Math.hypot(dx, dy) || 1;
+        const bulge = Math.min(90, len * 0.35);
+        const cx = a.x + dx / 2 + (dy / len) * bulge;
+        const cy = a.y + dy / 2 - (dx / len) * bulge;
+        const u = 1 - e;
+        const x = u * u * a.x + 2 * u * e * cx + e * e * b.x;
+        const y = u * u * a.y + 2 * u * e * cy + e * e * b.y;
+        const scale = t < 0.5 ? 0.6 + 1.1 * t : 1.15 - 0.3 * (t - 0.5);
+        chip.style.opacity = String(Math.min(1, 0.4 + t * 2.4));
+        chip.style.transform = `translate(${x - size / 2}px, ${y - size / 2}px) scale(${scale})`;
+        if (t < 1) requestAnimationFrame(frame);
+        else finish();
+      };
+      requestAnimationFrame(frame);
+      setTimeout(finish, CHIP_FLIGHT_MS + 400); // 保険（タブが裏に回ってアニメーションが止まった場合など）
     };
 
     sides.forEach(sd => {
