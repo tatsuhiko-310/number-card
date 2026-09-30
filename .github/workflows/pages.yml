@@ -3,7 +3,6 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -17,6 +16,8 @@ concurrency:
 
 jobs:
   deploy:
+    # リポジトリの既定ブランチへの push だけを公開する
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     environment:
       name: github-pages

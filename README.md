@@ -13,7 +13,7 @@ claude.ai のアーティファクト版をもとに、**サーバー不要の�
 
 ### GitHub Pages
 1. リポジトリの **Settings → Pages → Build and deployment → Source** で「GitHub Actions」を選ぶ
-2. `main` ブランチに push する（または Actions タブから「Deploy to GitHub Pages」を手動実行）
+2. 既定ブランチに push する（または Actions タブから「Deploy to GitHub Pages」を手動実行）
 3. `https://<ユーザー名>.github.io/<リポジトリ名>/` で遊べます
 
 ※ 非公開リポジトリで GitHub Pages を使うには有料プランが必要です。
