@@ -447,6 +447,19 @@
     color: var(--accent);
   }
   .field-slot { position: relative; z-index: 1; }
+  /* チップブースト演出：チップ数の表示からカードへ飛んでいくチップ */
+  .flying-chip {
+    position: fixed;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff7b0 0%, var(--gold) 55%, #e0a800 100%);
+    border: 2px solid #c99700;
+    box-shadow: 0 2px 6px var(--shadow), 0 0 10px rgba(255, 204, 0, 0.6);
+    z-index: 80;
+    pointer-events: none;
+    will-change: transform;
+  }
   .field-slot .boost {
     position: absolute;
     left: calc(100% + 10px);
@@ -2945,45 +2958,112 @@
     }
   }
 
-  // チップ演出：数字がスロットのように1ずつ上がっていく。両者チップを使った場合は同時にカウントアップ
+  // チップブースト演出：ブーストした枚数だけ、チップ数の表示からカードへチップが1枚ずつ飛ぶ。
+  // 1枚着地するたびに、カードの数字・カード横の「+N🪙」・背景のポッドの数字がそれぞれ+1される。
+  // 両者ブーストした場合は同時に進める。ポッドの数字はここでは見た目だけ先に増やし、決着時に正しい値へそろえる
+  const CHIP_STEP_MS = 240;    // 1枚ごとの発射間隔
+  const CHIP_FLIGHT_MS = 460;  // 1枚が飛んでいる時間
   function animateChipCount(myCard, opCard, myChipsUsed, opChipsUsed, myToken, onDone) {
-    const myTarget = myCard + myChipsUsed;
-    const opTarget = opCard + opChipsUsed;
-    const frontMy = document.getElementById('fieldMeFront');
-    const frontOp = document.getElementById('fieldOpFront');
-    let myCur = myCard;
-    let opCur = opCard;
-    let tickStep = 0; // 何回目のカウントアップか（音程に使う）
+    const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const podEl = document.getElementById('podValue');
+    const podMiniEl = document.getElementById('podValueMini');
+    let podShown = state.pod;
+    let tickStep = 0; // 何枚目の着地か（音程に使う）
 
     const pulse = (el) => {
       el.classList.remove('ticking');
       void el.offsetWidth;
       el.classList.add('ticking');
     };
-
-    const tick = () => {
-      if (myToken !== gameToken) return; // 途中でリセットされていたら演出を止める
-      let stillGoing = false;
-      if (myCur < myTarget) {
-        myCur += 1;
-        frontMy.textContent = myCur;
-        pulse(frontMy);
-        stillGoing = true;
-      }
-      if (opCur < opTarget) {
-        opCur += 1;
-        frontOp.textContent = opCur;
-        pulse(frontOp);
-        stillGoing = true;
-      }
-      if (stillGoing) {
-        playTickSound(tickStep++);
-        setTimeout(tick, 220);
-      } else {
-        setTimeout(onDone, 300);
-      }
+    const bumpPod = () => {
+      podShown += 1;
+      const text = String(podShown).padStart(2, '0');
+      [podEl, podMiniEl].forEach(el => {
+        if (!el) return;
+        el.textContent = text;
+        el.classList.remove('pop', 'jackpot', 'grow');
+        void el.offsetWidth;
+        el.classList.add('grow');
+      });
     };
-    tick();
+
+    const sides = [
+      { used: myChipsUsed, base: myCard, hp: 'myHP', flip: 'fieldMeFlip', front: 'fieldMeFront', boost: 'fieldMeBoost',
+        // 自分のチップ数はブースト量を選んだ時点で減っているので、飛び立つ時に数字は動かさない
+        hpShown: null },
+      { used: opChipsUsed, base: opCard, hp: 'opHP', flip: 'fieldOpFlip', front: 'fieldOpFront', boost: 'fieldOpBoost',
+        // 相手のチップ数は、チップが飛び立つたびに1ずつ減らす
+        hpShown: state.opChips + opChipsUsed }
+    ].filter(sd => sd.used > 0);
+
+    let pending = sides.reduce((n, sd) => n + sd.used, 0);
+    if (pending === 0) { setTimeout(onDone, 250); return; }
+
+    const land = (sd, k) => {
+      if (myToken !== gameToken) return;
+      const front = document.getElementById(sd.front);
+      const boostEl = document.getElementById(sd.boost);
+      if (front) { front.textContent = sd.base + k; pulse(front); }
+      if (boostEl) boostEl.textContent = `+${k}🪙`;
+      bumpPod();
+      playTickSound(tickStep++);
+      pending -= 1;
+      if (pending === 0) setTimeout(() => { if (myToken === gameToken) onDone(); }, 350);
+    };
+
+    const launch = (sd, k) => {
+      if (myToken !== gameToken) return;
+      const hpEl = document.getElementById(sd.hp);
+      if (sd.hpShown !== null && hpEl) {
+        sd.hpShown -= 1;
+        hpEl.textContent = sd.hpShown;
+      }
+      const cardEl = document.getElementById(sd.flip);
+      if (reduceMotion || !hpEl || !cardEl || typeof document.body.animate !== 'function') {
+        setTimeout(() => land(sd, k), reduceMotion ? 0 : CHIP_FLIGHT_MS);
+        return;
+      }
+      const from = hpEl.getBoundingClientRect();
+      const to = cardEl.getBoundingClientRect();
+      const size = 24;
+      const x0 = from.left + from.width / 2 - size / 2;
+      const y0 = from.top + from.height / 2 - size / 2;
+      // 着地点：カードの右下寄り（「+N」表示のそば）
+      const x1 = to.right - size * 0.7;
+      const y1 = to.top + to.height * 0.62 - size / 2;
+      const dx = x1 - x0, dy = y1 - y0;
+      // 弧を描くように、進行方向に対して横へふくらませる
+      const len = Math.hypot(dx, dy) || 1;
+      const bulge = Math.min(90, len * 0.35);
+      const mx = dx / 2 + (dy / len) * bulge;
+      const my = dy / 2 - (dx / len) * bulge;
+
+      const chip = document.createElement('div');
+      chip.className = 'flying-chip';
+      chip.style.left = x0 + 'px';
+      chip.style.top = y0 + 'px';
+      document.body.appendChild(chip);
+      const anim = chip.animate([
+        { transform: 'translate(0, 0) scale(0.6)', opacity: 0.4 },
+        { transform: `translate(${mx}px, ${my}px) scale(1.15)`, opacity: 1, offset: 0.5 },
+        { transform: `translate(${dx}px, ${dy}px) scale(0.9)`, opacity: 1 }
+      ], { duration: CHIP_FLIGHT_MS, easing: 'ease-in-out', fill: 'forwards' });
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        chip.remove();
+        land(sd, k);
+      };
+      anim.onfinish = finish;
+      setTimeout(finish, CHIP_FLIGHT_MS + 200); // 保険（アニメーションが止まった環境向け）
+    };
+
+    sides.forEach(sd => {
+      for (let k = 1; k <= sd.used; k++) {
+        setTimeout(() => launch(sd, k), (k - 1) * CHIP_STEP_MS);
+      }
+    });
   }
 
   // 捨て札を「数字＋色」の一覧にする（勝敗計算・オンライン同期用）
