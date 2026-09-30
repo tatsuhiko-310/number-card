@@ -2050,6 +2050,7 @@
       state.netPhase = 'committed';
       state.fieldMyPlaced = true;
       state.fieldOpPlaced = oppCommittedNow();
+      state.myHpShown = null;
       document.getElementById('myHP').textContent = state.myChips;
       document.getElementById('opHP').textContent = state.opChips;
       updatePodDisplay();
@@ -2712,6 +2713,7 @@
   // ラウンド開始フェイズ：強制供出（賭金）と、支払えない場合の即敗北は撤廃。
   // 所持チップが0でも参加でき、その場合は単にブーストできないだけになる。
   function startRound() {
+    state.myHpShown = null;
     document.getElementById('myHP').textContent = state.myChips;
     document.getElementById('opHP').textContent = state.opChips;
     updatePodDisplay();
@@ -2914,6 +2916,8 @@
   function resolveRound(myCard, opCard, myToken) {
     state.roundSnap = { my: state.myChips, op: state.opChips, pod: state.pod };
     const myChipsUsed = Math.min(state.chipSelect, state.myChips);
+    // 表示上は、チップが飛び立つまでブースト前の枚数のままにしておく
+    state.myHpShown = myChipsUsed > 0 ? state.myChips : null;
     state.myChips -= myChipsUsed;
     state.chipSelect = 0;
 
@@ -2989,8 +2993,8 @@
 
     const sides = [
       { used: myChipsUsed, base: myCard, hp: 'myHP', flip: 'fieldMeFlip', front: 'fieldMeFront', boost: 'fieldMeBoost',
-        // 自分のチップ数はブースト量を選んだ時点で減っているので、飛び立つ時に数字は動かさない
-        hpShown: null },
+        // 自分のチップ数も、チップが飛び立つたびに1ずつ減らす
+        hpShown: state.myChips + myChipsUsed, own: true },
       { used: opChipsUsed, base: opCard, hp: 'opHP', flip: 'fieldOpFlip', front: 'fieldOpFront', boost: 'fieldOpBoost',
         // 相手のチップ数は、チップが飛び立つたびに1ずつ減らす
         hpShown: state.opChips + opChipsUsed }
@@ -3014,10 +3018,9 @@
     const launch = (sd, k) => {
       if (myToken !== gameToken) return;
       const hpEl = document.getElementById(sd.hp);
-      if (sd.hpShown !== null && hpEl) {
-        sd.hpShown -= 1;
-        hpEl.textContent = sd.hpShown;
-      }
+      sd.hpShown -= 1;
+      if (sd.own) state.myHpShown = sd.hpShown;
+      if (hpEl) hpEl.textContent = sd.hpShown;
       const cardEl = document.getElementById(sd.flip);
       if (reduceMotion || !hpEl || !cardEl || typeof document.body.animate !== 'function') {
         setTimeout(() => land(sd, k), reduceMotion ? 0 : CHIP_FLIGHT_MS);
@@ -3252,6 +3255,7 @@
     rm.textContent = msg;
     rm.className = 'result-msg ' + msgClass;
 
+    state.myHpShown = null;
     document.getElementById('myHP').textContent = state.myChips;
     document.getElementById('opHP').textContent = state.opChips;
     updatePodDisplay(res.roundPodKind);
@@ -3400,10 +3404,9 @@
     document.getElementById('chipMinus').disabled = disabled || state.chipSelect <= 0;
     document.getElementById('chipPlus').disabled = disabled || state.chipSelect >= state.myChips;
 
-    // ブースト量を増減するたびに、持ちチップの大きい数字をリアルタイムに増減させる
-    const previewChips = Math.max(0, state.myChips - state.chipSelect);
+    // 持ちチップの大きい数字は、ブースト量を選んでいる間は変えない（チップが飛び立つ演出で減らす）
     const hpEl = document.getElementById('myHP');
-    if (hpEl) hpEl.textContent = previewChips;
+    if (hpEl) hpEl.textContent = state.myHpShown != null ? state.myHpShown : state.myChips;
   }
 
   const RETURN_STAGGER_MS = 40;   // 1枚ごとのずらし幅（約2〜3フレーム）
