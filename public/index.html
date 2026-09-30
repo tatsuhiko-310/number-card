@@ -297,6 +297,7 @@
     font-weight: 700;
     color: var(--text-dim);
   }
+  .pod-mini .lose-cost { margin-left: 8px; padding-left: 8px; border-left: 1px solid var(--card-border); color: var(--lose); }
   .pod-mini #podValueMini {
     font-size: 0.95rem;
     font-weight: 900;
@@ -1215,7 +1216,7 @@
       </div>
 
       <div class="select-panel">
-        <div class="pod-mini" id="podMini">ポッド <span id="podValueMini">00</span>🪙</div>
+        <div class="pod-mini" id="podMini">ポッド <span id="podValueMini">00</span>🪙<span class="lose-cost" id="loseCostMini"></span></div>
         <div class="select-prompt" id="selectPrompt">出すカードを選んでください</div>
         <div class="card-row" id="myHand"></div>
         <div class="chip-selector">
@@ -1266,9 +1267,9 @@
     基本ルール：お互いチップ15枚からスタート（ラウンド開始時の参加費の支払いはなし）。1〜8のカードが1枚ずつ入った8枚のデッキを、<b>プレイヤーごとに1組ずつ</b>用意してシャッフル。それぞれ手札2枚になるよう自分のデッキから引く。出すカードを選ぶ際、所持チップを消費してその<b>ターンのみ</b>数字を+1できる（カード自体の数字は変わらず、ターン終了時は元の数字のまま捨て札へ）。お互い同時に1枚出し、数字を比較して勝敗を決める。<br><br>
     決着：先に<b>チップ30枚</b>を集めた方の勝ち。チップが0枚になっても即敗北にはならず、勝つまでゲームは続く。<br><br>
     勝敗の報酬（チップブーストが鍵）：<br>
-    ・<b>JACKPOT</b>＝ブースト有無を問わず、<b>ちょうど1差</b>で勝った時だけ、ポッドに溜まっている分を総取りできる（負けた側がブーストしていなければ、LOSE同様にポッドへ1枚支払う。支払いは総取りの後）<br>
+    ・<b>JACKPOT</b>＝ブースト有無を問わず、<b>ちょうど1差</b>で勝った時だけ、ポッドに溜まっている分を総取りできる（負けた側がブーストしていなければ、LOSE同様にポッドへ支払う。支払いは総取りの後）<br>
     ・<b>THROUGH</b>＝ブーストなしの通常勝利。報酬はないが損もない<br>
-    ・<b>LOSE</b>＝ブーストなしで負けると、ポッドへ1枚支払う<br>
+    ・<b>LOSE</b>＝ブーストなしで負けると、ポッドへチップを支払う。支払う枚数は<b>5ラウンドごとに1枚ずつ増える</b>（1〜5ラウンド：1枚、6〜10ラウンド：2枚、11〜15ラウンド：3枚…。持っている分だけ）<br>
     ・<b>DRAW</b>＝引き分け。お互いが出したブーストは（LOSEと同じ扱いで）すべてポッドへ<br>
     ・それ以外の結果（JACKPOTにならなかったブースト、ブーストしての負け等）は、使ったブースト分がそのままポッドへ流れて無報酬になる<br><br>
     カード効果：現在、1〜8のどのカードにも数字比較以外の特殊効果はありません（検討中）。<br><br>
@@ -2159,7 +2160,7 @@
     const res = computeRoundResult({
       myCard: hs.reveal.card, opCard: gs.reveal.card, myBoost: hB, opBoost: gB,
       myChips: m.chips.host - hB, opChips: m.chips.guest - gB, pod: m.pod,
-      myDisc: hs.discard || [], opDisc: gs.discard || []
+      myDisc: hs.discard || [], opDisc: gs.discard || [], round: R
     });
     const over = !m.debug && (res.myChips >= WIN_CHIPS || res.opChips >= WIN_CHIPS);
     writeMatch({ round: R + 1, chips: { host: res.myChips, guest: res.opChips }, pod: res.pod, status: over ? 'over' : 'playing', lastRound: R });
@@ -2991,10 +2992,23 @@
     return state[who + 'Discard'].map(n => ({ n, c: colors[n] || null }));
   }
 
+  // LOSE（ブーストなしの負け）でポッドへ支払う枚数：5ラウンドごとに1枚ずつ増える
+  // 1〜5ラウンド：1枚、6〜10ラウンド：2枚、11〜15ラウンド：3枚 …
+  const LOSE_STEP_ROUNDS = 5;
+  function losePaymentFor(round) {
+    return Math.floor((Math.max(1, round | 0) - 1) / LOSE_STEP_ROUNDS) + 1;
+  }
+  // 今のラウンド番号（オンラインは共有のラウンド番号、CPU戦は決着済みラウンド数+1）
+  function currentRoundNo() {
+    return net.active ? state.round : state.roundLog.length + 1;
+  }
+
   // 勝敗と報酬の計算（画面には触らない純粋な計算）。オンラインでは両端末とホストが同じ入力で同じ結果を得る。
   // p.myChips / p.opChips はブースト消費後の枚数。p.myDisc / p.opDisc は今回出したカードを含む捨て札（{n, c}の配列）
+  // p.round はラウンド番号（LOSEの支払い枚数が決まる）
   function computeRoundResult(p) {
     const chips = { my: p.myChips, op: p.opChips };
+    const loseCost = losePaymentFor(p.round);
     let pod = p.pod;
     const nm = who => (who === 'my' ? 'あなた' : '相手');
     const has = (who, color) => ((who === 'my' ? p.myDisc : p.opDisc) || []).filter(e => e.c === color).length >= 3;
@@ -3031,9 +3045,9 @@
         res.notes.push(winnerBoost > 0
           ? `JACKPOT！${nm(winner)}の+1差ブースト勝利：ポッド${jackpot}🪙を総取り`
           : `JACKPOT！${nm(winner)}のノーブースト+1差勝利：ポッド${jackpot}🪙を総取り`);
-        // JACKPOTで負けた側（ブーストしていない場合）も、LOSEと同様にポッドへ1🪙。総取りの後に支払う（仮置き）
+        // JACKPOTで負けた側（ブーストしていない場合）も、LOSEと同様にポッドへ支払う。総取りの後に支払う（仮置き）
         if (loserBoost === 0) {
-          const payment = Math.min(1, chips[loser]);
+          const payment = Math.min(loseCost, chips[loser]);
           if (payment > 0) {
             chips[loser] -= payment;
             pod += payment;
@@ -3081,8 +3095,8 @@
           }
         }
         if (loserBoost === 0) {
-          // LOSE：ポッドへ1枚支払う（持っている分だけ）
-          const payment = Math.min(1, chips[loser]);
+          // LOSE：ポッドへ支払う（ラウンドに応じた枚数。持っている分だけ）
+          const payment = Math.min(loseCost, chips[loser]);
           chips[loser] -= payment;
           pod += payment;
           if (payment > 0 && res.roundPodKind === 'through') res.roundPodKind = 'grow';
@@ -3111,7 +3125,7 @@
     const res = computeRoundResult({
       myCard, opCard, myBoost: myChipsUsed, opBoost: opChipsUsed,
       myChips: state.myChips, opChips: state.opChips, pod: state.pod,
-      myDisc: discEntries('my'), opDisc: discEntries('op')
+      myDisc: discEntries('my'), opDisc: discEntries('op'), round: currentRoundNo()
     });
     state.myChips = res.myChips;
     state.opChips = res.opChips;
@@ -3222,6 +3236,11 @@
   }
 
   function render(fieldOnly) {
+    const loseEl = document.getElementById('loseCostMini');
+    if (loseEl && state) {
+      const r = currentRoundNo();
+      loseEl.textContent = `R${r}・LOSE ${losePaymentFor(r)}🪙`;
+    }
     if (!fieldOnly) {
       renderHandsAndDiscard();
     }
