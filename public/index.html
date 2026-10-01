@@ -225,7 +225,8 @@
     white-space: nowrap;
   }
   .pod-display #podValue {
-    font-size: clamp(11rem, 78vw, 21rem);
+    /* Orbitron は横幅が広いので、「00」が盤面幅の約9割に収まる大きさにする（盤面幅＝画面幅−32px、最大480px） */
+    font-size: min(calc(52vw - 17px), 15.5rem);
     font-weight: 900;
     line-height: 1;
     color: var(--text-dim);
