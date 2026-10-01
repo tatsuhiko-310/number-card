@@ -1531,35 +1531,62 @@
   }
 
   // チップで数字が上がる音：連続で鳴るたびに音階を上げていく（上昇の表現）
-  const TICK_SEMITONES = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19];
+  // チップが1枚着地するたびの音（シンセプラック）：
+  // 少しずらしたのこぎり波3本をフィルタで一瞬「ピュン」と弾くEDM風の電子音。デジタルエコー付き。
+  // 1枚ごとにマイナーペンタトニックで音が上がっていく
+  const TICK_SEMITONES = [0, 3, 5, 7, 10, 12, 15, 17, 19, 22, 24, 27];
+  let tickEchoIn = null;
+  function getTickEcho(ctx) {
+    if (!tickEchoIn) {
+      tickEchoIn = ctx.createGain();
+      tickEchoIn.connect(masterGain);
+      const dl = ctx.createDelay(1); dl.delayTime.value = 0.12;
+      const fb = ctx.createGain(); fb.gain.value = 0.32;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 4000;
+      const wet = ctx.createGain(); wet.gain.value = 0.35;
+      tickEchoIn.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(wet); wet.connect(masterGain);
+    }
+    return tickEchoIn;
+  }
   function playTickSound(step) {
     if (!soundOn) return;
     const ctx = ensureAudio();
     if (!ctx) return;
     const t = ctx.currentTime;
     const semi = TICK_SEMITONES[Math.min(step, TICK_SEMITONES.length - 1)];
-    const freq = 523.25 * Math.pow(2, semi / 12); // ド(C5)から上がっていく
+    const freq = 440 * Math.pow(2, semi / 12); // ラ(A4)から上がっていく
+    const out = getTickEcho(ctx);
+    const env = (g, peak, decay) => {
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + 0.003);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.003 + decay);
+    };
 
-    const o = ctx.createOscillator();
+    // のこぎり波3本（わずかにずらして厚みを出す）→ 共鳴ローパスを素早く閉じて「ピュン」
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.Q.value = 8;
+    lp.frequency.setValueAtTime(6000, t);
+    lp.frequency.exponentialRampToValueAtTime(500, t + 0.16);
     const g = ctx.createGain();
-    o.type = 'triangle';
-    o.frequency.setValueAtTime(freq, t);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.32, t + 0.008);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
-    o.connect(g); g.connect(masterGain);
-    o.start(t); o.stop(t + 0.18);
+    env(g, 0.18, 0.2);
+    lp.connect(g); g.connect(out);
+    [1, 1.008, 0.992].forEach(m => {
+      const o = ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(freq * m, t);
+      o.connect(lp);
+      o.start(t); o.stop(t + 0.24);
+    });
 
-    // 1オクターブ上を薄く重ねてきらっとさせる
-    const o2 = ctx.createOscillator();
-    const g2 = ctx.createGain();
-    o2.type = 'sine';
-    o2.frequency.setValueAtTime(freq * 2, t);
-    g2.gain.setValueAtTime(0.0001, t);
-    g2.gain.exponentialRampToValueAtTime(0.1, t + 0.008);
-    g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
-    o2.connect(g2); g2.connect(masterGain);
-    o2.start(t); o2.stop(t + 0.12);
+    // 1オクターブ下の正弦波で芯を足す
+    const sub = ctx.createOscillator();
+    const gs = ctx.createGain();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(freq / 2, t);
+    env(gs, 0.09, 0.15);
+    sub.connect(gs); gs.connect(out);
+    sub.start(t); sub.stop(t + 0.2);
   }
 
   // カードをめくる音：空気を切る「シュッ」のみ
