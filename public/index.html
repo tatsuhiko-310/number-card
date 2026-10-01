@@ -1225,8 +1225,8 @@
 </style>
 </head>
 <body>
-<audio id="bgmAudio" loop preload="none" src="assets/bgm.mp3"></audio>
-<audio id="prepBgmAudio" preload="none" src="assets/prep-bgm.mp3"></audio>
+<audio id="bgmAudio" loop preload="none" src="assets/bgm-battle-9v.mp3"></audio>
+<audio id="prepBgmAudio" preload="none" src="assets/bgm-prep-bitworks.mp3"></audio>
 <div class="wrap">
   <h1 class="title-logo"><img src="assets/title-logo-clear.webp" alt="NUMBER WAR" width="960" height="169"></h1>
 
@@ -1552,8 +1552,8 @@
   // SFXと同じ AudioContext 上で鳴らす。<audio>要素と別の音声セッションを使うと、
   // 環境によってはSFX用のAudioContextが無音化されSEが消えてしまうため。
   const BGM_TRACKS = {
-    battle: { elId: 'bgmAudio', volume: 0.1 },      // 対戦中のBGM
-    prep:   { elId: 'prepBgmAudio', volume: 0.12 }, // 準備フェイズのBGM
+    battle: { elId: 'bgmAudio', volume: 0.1 },      // 対戦中のBGM（9V）
+    prep:   { elId: 'prepBgmAudio', volume: 0.12 }, // マッチング待機中・デッキ構築のBGM（ビットワークス）
   };
   const bgmState = {}; // key: track名 -> { gainNode, buffer, bufferPromise, sourceNode }
   for (const key in BGM_TRACKS) bgmState[key] = { gainNode: null, buffer: null, bufferPromise: null, sourceNode: null };
@@ -1598,6 +1598,8 @@
 
   // 指定したトラックだけを鳴らし、他は止める
   function startBgm(key) {
+    // 同じ曲が鳴っている最中なら頭出しし直さない（マッチング待機→デッキ構築で途切れないように）
+    if (currentBgmTrack === key && bgmState[key].sourceNode) return;
     currentBgmTrack = key;
     for (const k in BGM_TRACKS) {
       if (k !== key) stopBgmSourceOnly(k);
@@ -1857,6 +1859,7 @@
   }
   function showOnlineWait(guest) {
     showScreen('online');
+    startBgm('prep'); // マッチング待機中もデッキ構築と同じBGM
     document.getElementById('roomCodeShow').textContent = net.code;
     document.getElementById('onlineWaitText').innerHTML = guest
       ? '入室しました。<br>ホストの開始を待っています…'
