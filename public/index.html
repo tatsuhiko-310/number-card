@@ -3422,7 +3422,7 @@
     document.getElementById('opHP').textContent = state.opChips;
     updatePodDisplay(res.roundPodKind);
     if (res.roundPodKind === 'jackpot') playSe('jackpot');
-    else if (res.losePayer) playSe('lose'); // JACKPOTの敗者の支払いはJACKPOTの音だけにする
+    else if (res.losePayer === 'my') playSe('lose'); // 自分がLOSEした時だけ（JACKPOTの敗者の支払いはJACKPOTの音だけ）
     document.getElementById('myChipAvail').textContent = state.myChips;
     updateHandBadges();
     const hpId = who => (who === 'my' ? 'myHP' : 'opHP');
