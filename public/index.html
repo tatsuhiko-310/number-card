@@ -5,33 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>NUMBER WAR</title>
 <meta name="description" content="1〜8のカードとチップで駆け引きする2人対戦カードゲーム">
-<meta name="theme-color" content="#ff3b8d">
+<meta name="theme-color" content="#05070f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap">
 <link rel="icon" href="assets/icon-pink.png">
 <style>
+  /* 配色：ダークモード固定 */
   :root {
-    --bg: #eef6ff;
-    --bg2: #ffffff;
-    --text: #1c1830;
-    --text-dim: #6d7290;
-    --accent: #ff3b8d;
-    --accent2: #1e90ff;
-    --gold: #ffcc00;
-    --card-bg: #ffffff;
-    --card-border: #dbe4f5;
+    --bg: #05070f;
+    --bg2: #0b1020;
+    --text: #eef3ff;
+    --text-dim: #8fa0c4;
+    --accent: #ff2b4f;
+    --accent2: #1e8bff;
+    --gold: #ffda4d;
+    --card-bg: #111a30;
+    --card-border: #1f2a44;
     --card-back-1: #2a1b5e;
     --card-back-2: #7a1e8a;
-    --win: #22c774;
-    --lose: #ff4757;
-    --tie: #ffab00;
-    --shadow: rgba(30, 40, 80, 0.14);
-    --glow: rgba(255, 59, 141, 0.5);
+    --win: #4ee08a;
+    --lose: #ff6b7a;
+    --tie: #ffcb5c;
+    --shadow: rgba(0, 0, 0, 0.6);
+    --glow: rgba(30, 139, 255, 0.35);
     --color-red: #ff4d4d;
     --color-blue: #2f8fff;
     --color-yellow: #ffd400;
     --color-green: #2ed17a;
     --color-pink: #ff5cb3;
     --known: #ff8a00;
-    --logo-filter: drop-shadow(0 0 1px rgba(10, 15, 40, 0.9)) drop-shadow(0 1px 3px rgba(10, 15, 40, 0.6));
+    --logo-filter: none;
+    /* サイバーテーマ（A案：ネオン・グロー）。ロゴの赤・青・シアン */
+    --cy-red: #ff2b4f;
+    --cy-blue: #1e8bff;
+    --cy-cyan: #19d3ff;
+    --cy-panel: #0b1020;
+    color-scheme: dark;
     --icon-red: url("assets/icon-red.png");
     --icon-blue: url("assets/icon-blue.png");
     --icon-yellow: url("assets/icon-yellow.png");
@@ -39,47 +49,6 @@
     --card-back-img: url("assets/card-back.png");
     --icon-pink: url("assets/icon-pink.png");
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #0d0a1f;
-      --bg2: #1a1433;
-      --text: #f5f2ff;
-      --text-dim: #b3a8d9;
-      --accent: #ff5ba0;
-      --accent2: #4fa8ff;
-      --gold: #ffda4d;
-      --card-bg: #241a44;
-      --card-border: #4a3a70;
-      --card-back-1: #2a1b5e;
-      --card-back-2: #7a1e8a;
-      --win: #4ee08a;
-      --lose: #ff6b7a;
-      --tie: #ffcb5c;
-      --shadow: rgba(0, 0, 0, 0.55);
-      --glow: rgba(255, 91, 160, 0.6);
-      --logo-filter: none;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #0d0a1f;
-    --bg2: #1a1433;
-    --text: #f5f2ff;
-    --text-dim: #b3a8d9;
-    --accent: #ff5ba0;
-    --accent2: #4fa8ff;
-    --gold: #ffda4d;
-    --card-bg: #241a44;
-    --card-border: #4a3a70;
-    --card-back-1: #2a1b5e;
-    --card-back-2: #7a1e8a;
-    --win: #4ee08a;
-    --lose: #ff6b7a;
-    --tie: #ffcb5c;
-    --shadow: rgba(0, 0, 0, 0.55);
-    --glow: rgba(255, 91, 160, 0.6);
-    --logo-filter: none;
-  }
-
   * { box-sizing: border-box; }
   :root {
     padding-top: env(safe-area-inset-top, 0px);
@@ -1191,6 +1160,67 @@
   .online-status:empty { margin: 0; min-height: 0; }
   .dev-section { margin-top: 28px; padding-top: 22px; border-top: 1px dashed var(--card-border); }
   .dev-label { font-size: 0.78rem; font-weight: 700; color: var(--text-dim); margin-bottom: 12px; }
+
+  /* ===== サイバーテーマ（A案：ネオン・グロー） ===== */
+  body {
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(255, 43, 79, 0.22), transparent 45%),
+      radial-gradient(ellipse at 50% 110%, rgba(30, 139, 255, 0.22), transparent 45%),
+      var(--bg);
+    background-attachment: fixed;
+  }
+  /* パネル：赤→紫→青のグラデーション枠＋外側の光 */
+  .start-panel, .prep-panel, .board, .overlay-card, .role-panel {
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background:
+      linear-gradient(var(--cy-panel), var(--cy-panel)) padding-box,
+      linear-gradient(100deg, var(--cy-red), #7a3cff 50%, var(--cy-blue)) border-box;
+    box-shadow: 0 0 18px rgba(255, 43, 79, 0.25), 0 0 26px rgba(30, 139, 255, 0.25);
+  }
+  /* ボタン：メイン＝赤→青グラデーション、サブ＝シアンの線 */
+  .btn {
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(100deg, var(--cy-red), var(--cy-blue));
+    color: #fff;
+    font-family: 'Rajdhani', "Hiragino Sans", "Yu Gothic", sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.06em;
+    box-shadow: 0 0 12px rgba(255, 43, 79, 0.55), 0 0 18px rgba(30, 139, 255, 0.45);
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+  }
+  .btn.secondary {
+    background: transparent;
+    border: 1px solid var(--cy-cyan);
+    color: var(--cy-cyan);
+    box-shadow: 0 0 10px rgba(25, 211, 255, 0.35), inset 0 0 10px rgba(25, 211, 255, 0.15);
+    text-shadow: 0 0 6px rgba(25, 211, 255, 0.8);
+  }
+  .btn:disabled { box-shadow: none; text-shadow: none; }
+  .room-input {
+    background: rgba(25, 211, 255, 0.05);
+    border: 1px solid var(--cy-cyan);
+    color: #fff;
+    box-shadow: inset 0 0 10px rgba(25, 211, 255, 0.2);
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif;
+  }
+  .room-input::placeholder { color: var(--text-dim); }
+  .dev-section { border-top: 1px solid rgba(25, 211, 255, 0.3); }
+  /* 大きな数字はデジタル書体で、自分＝赤・相手＝青に光らせる */
+  .num, #podValue, .room-code { font-family: 'Orbitron', "Hiragino Sans", sans-serif; }
+  .zone-side.me .num { color: var(--cy-red); text-shadow: 0 0 14px rgba(255, 43, 79, 0.9); }
+  .zone-side.op .num { color: var(--cy-blue); text-shadow: 0 0 14px rgba(30, 139, 255, 0.9); }
+  .zone-side.op { border-bottom: 1px solid rgba(30, 139, 255, 0.5); }
+  .zone-side.me { border-top: 1px solid rgba(255, 43, 79, 0.5); }
+  .room-code { color: var(--cy-cyan); text-shadow: 0 0 14px rgba(25, 211, 255, 0.8); }
+  .pod-mini, .chip-controls {
+    background: rgba(11, 16, 32, 0.9);
+    border: 1px solid var(--cy-cyan);
+    box-shadow: 0 0 10px rgba(25, 211, 255, 0.35);
+  }
+  .chip-btn { background: transparent; border: 1px solid var(--cy-cyan); color: var(--cy-cyan); }
+  .discard-slot { border-color: #24304d; }
 </style>
 </head>
 <body>
@@ -1210,9 +1240,6 @@
         <button class="btn" id="joinRoomBtn">部屋に入る</button>
       </div>
       <div class="online-status" id="onlineStatus"></div>
-      <div class="start-btns start-group">
-        <button class="btn secondary theme-btn" id="themeBtnStart" aria-label="ライト/ダークモード切替">🌙 ダークモード OFF</button>
-      </div>
       <div class="dev-section">
         <div class="dev-label">-開発用-</div>
         <div class="start-btns">
@@ -1315,7 +1342,6 @@
 
   <div class="controls">
     <button class="btn secondary" id="soundBtn">🔊 サウンド ON</button>
-    <button class="btn secondary theme-btn" id="themeBtn" aria-label="ライト/ダークモード切替">🌙 ダークモード OFF</button>
     <button class="btn secondary" id="resetBtn">最初からやり直す</button>
   </div>
 
@@ -3756,63 +3782,22 @@
     backToStart();
   });
 
-  // ===== ライト/ダークモード切替 =====
-  // 保存した選択があればそれを、なければ端末のシステム設定に従う
-  function systemPrefersDark() {
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }
-  function getSavedTheme() {
-    try {
-      const v = localStorage.getItem('nd-theme');
-      if (v === 'light' || v === 'dark') return v;
-    } catch (e) {}
-    return null;
-  }
-  function currentTheme() {
-    const attr = document.documentElement.getAttribute('data-theme');
-    if (attr === 'light' || attr === 'dark') return attr;
-    return systemPrefersDark() ? 'dark' : 'light';
-  }
-  function updateThemeBtnLabel(theme) {
-    // スタート画面と対戦画面の切替ボタンの表示をそろえる
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-      btn.textContent = theme === 'dark' ? '🌙 ダークモード ON' : '☀️ ダークモード OFF';
-    });
-  }
-  function applyTheme(theme, save) {
-    document.documentElement.setAttribute('data-theme', theme);
-    if (save) {
-      try { localStorage.setItem('nd-theme', theme); } catch (e) {}
-    }
-    updateThemeBtnLabel(theme);
-  }
-  const savedTheme = getSavedTheme();
-  if (savedTheme) {
-    applyTheme(savedTheme, false); // 保存済みの選択を反映（このタブでの再保存はしない）
-  } else {
-    updateThemeBtnLabel(currentTheme()); // 端末設定どおり。属性は付けずシステム変更にも追従する
-  }
-  document.querySelectorAll('.theme-btn').forEach(btn => btn.addEventListener('click', () => {
-    const next = currentTheme() === 'dark' ? 'light' : 'dark';
-    applyTheme(next, true);
-  }));
-
   initLobby();
 })();
 </script>
 
 <style>
-  #logBtn { position: fixed; right: 10px; bottom: 10px; z-index: 900; padding: 8px 12px; font-size: 0.85rem; border-radius: 20px; border: 1px solid #888; background: #fff; color: #333; cursor: pointer; opacity: 0.9; }
-  #logPanel { position: fixed; left: 0; right: 0; bottom: 0; max-height: 65vh; overflow-y: auto; z-index: 950; background: #fff; color: #222; border-top: 2px solid #666; box-shadow: 0 -4px 16px rgba(0,0,0,0.3); padding: 10px 12px 16px; display: none; font-size: 0.8rem; }
+  #logBtn { position: fixed; right: 10px; bottom: 10px; z-index: 900; padding: 8px 12px; font-size: 0.85rem; border-radius: 20px; border: 1px solid #19d3ff; background: rgba(11, 16, 32, 0.9); color: #19d3ff; cursor: pointer; opacity: 0.9; }
+  #logPanel { position: fixed; left: 0; right: 0; bottom: 0; max-height: 65vh; overflow-y: auto; z-index: 950; background: #0b1020; color: #eef3ff; border-top: 2px solid #19d3ff; box-shadow: 0 -4px 16px rgba(0,0,0,0.3); padding: 10px 12px 16px; display: none; font-size: 0.8rem; }
   #logPanel.show { display: block; }
   #logPanel .lp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: bold; }
-  #logPanel .lp-head button { border: 1px solid #888; background: #f4f4f4; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
-  #logPanel .lp-round { border-top: 1px solid #ddd; padding: 6px 0; line-height: 1.5; }
+  #logPanel .lp-head button { border: 1px solid #19d3ff; background: transparent; color: #19d3ff; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  #logPanel .lp-round { border-top: 1px solid #1f2a44; padding: 6px 0; line-height: 1.5; }
   #logPanel .lp-kind { font-weight: bold; }
-  #logPanel .pos { color: #1a7f37; font-weight: bold; }
-  #logPanel .neg { color: #c62828; font-weight: bold; }
-  #logPanel .zero { color: #777; }
-  #logPanel .lp-notes { color: #555; }
+  #logPanel .pos { color: #4ee08a; font-weight: bold; }
+  #logPanel .neg { color: #ff6b7a; font-weight: bold; }
+  #logPanel .zero { color: #8fa0c4; }
+  #logPanel .lp-notes { color: #8fa0c4; }
 </style>
 <button id="logBtn">📋 ログ</button>
 <div id="logPanel">
