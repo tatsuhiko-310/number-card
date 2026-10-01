@@ -1190,7 +1190,6 @@
       <div class="start-btns start-group">
         <input id="roomCodeInput" class="room-input" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="部屋番号（4桁）" aria-label="部屋番号（4桁）">
         <button class="btn" id="joinRoomBtn">部屋に入る</button>
-        <button class="btn secondary" id="resumeRoomBtn" style="display:none;"></button>
       </div>
       <div class="online-status" id="onlineStatus"></div>
       <div class="dev-section">
@@ -1801,7 +1800,7 @@
 
   // ---- ロビー（部屋を作る／入る）----
   function setOnlineButtonsDisabled(dis) {
-    ['createRoomBtn', 'joinRoomBtn', 'resumeRoomBtn'].forEach(id => {
+    ['createRoomBtn', 'joinRoomBtn'].forEach(id => {
       const b = document.getElementById(id);
       if (b) b.disabled = dis;
     });
@@ -1816,14 +1815,10 @@
       : '相手にこの番号を伝えてください。<br>相手の入室を待っています…<br>※対戦が終わるまで、このページを閉じないでください';
     setOnlineStatus('');
   }
-  function getLastRoom() {
-    try { const v = localStorage.getItem('nd-lastRoom'); return /^\d{4}$/.test(v || '') ? v : null; } catch (e) { return null; }
-  }
   // スタート画面のオンライン対戦ボタンを使えるか確認する
   async function initLobby() {
     showScreen('start');
     setOnlineButtonsDisabled(true);
-    document.getElementById('resumeRoomBtn').style.display = 'none';
     setOnlineStatus('接続を確認しています…');
     const caps = await loadCaps();
     net.db = caps.db; net.user = caps.user; net.room = caps.room;
@@ -1844,9 +1839,6 @@
     }
     setOnlineButtonsDisabled(false);
     setOnlineStatus('');
-    const last = getLastRoom();
-    const rb = document.getElementById('resumeRoomBtn');
-    if (last) { rb.textContent = `前回の部屋（${last}）に戻る`; rb.style.display = ''; }
   }
 
   function makeGameId() {
@@ -1927,7 +1919,6 @@
 
   async function enterMatch() {
     net.active = true;
-    try { localStorage.setItem('nd-lastRoom', net.code); } catch (e) {}
     net.oppId = (net.role === 'host' ? net.match.guestId : net.match.hostId) || null;
     // 再開時に備えて、自分の非公開データ・座席を読み込む（別の試合のデータは gameId で除外）
     const [p, ms, os] = await Promise.all([
@@ -3701,10 +3692,6 @@
   });
   document.getElementById('roomCodeInput').addEventListener('input', (e) => {
     e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 4);
-  });
-  document.getElementById('resumeRoomBtn').addEventListener('click', () => {
-    const last = getLastRoom();
-    if (last) joinRoom(last);
   });
   document.getElementById('onlineBackBtn').addEventListener('click', () => {
     // 待機中のホストが戻る場合は、部屋を閉じる
