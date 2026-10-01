@@ -3424,7 +3424,7 @@
     updatePodDisplay(res.roundPodKind);
     if (res.roundPodKind === 'jackpot') playSe('jackpot');
     else if (res.outcome === 'me') playSe('win');    // 自分が勝った時（JACKPOTはJACKPOTの音だけ）
-    else if (res.losePayer === 'my' || res.outcome === 'tie') playSe('lose'); // 自分がLOSEした時・引き分けの時（JACKPOTの敗者の支払いはJACKPOTの音だけ）
+    else playSe('lose'); // 自分の負け（LOSE・ブーストしての負け）と引き分け。JACKPOTで負けた時はJACKPOTの音だけ
     document.getElementById('myChipAvail').textContent = state.myChips;
     updateHandBadges();
     const hpId = who => (who === 'my' ? 'myHP' : 'opHP');
