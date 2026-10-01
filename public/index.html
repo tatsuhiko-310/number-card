@@ -1425,7 +1425,8 @@
   // ===== 効果音（音声ファイル）=====
   const SE_FILES = {
     jackpot: { src: 'assets/se-jackpot.mp3', volume: 0.3 }, // JACKPOT成立時
-    lose: { src: 'assets/se-lose.mp3', volume: 0.3 }        // LOSE（ブーストなしの負けでポッドへ支払い）
+    lose: { src: 'assets/se-lose2.mp3', volume: 0.3 },      // 自分がLOSE（ブーストなしの負けでポッドへ支払い）
+    win: { src: 'assets/se-win.mp3', volume: 0.3 }          // 自分が勝った時（JACKPOT以外）
   };
   const seBuffers = {};
   function loadSe(key) {
@@ -3422,6 +3423,7 @@
     document.getElementById('opHP').textContent = state.opChips;
     updatePodDisplay(res.roundPodKind);
     if (res.roundPodKind === 'jackpot') playSe('jackpot');
+    else if (res.outcome === 'me') playSe('win');    // 自分が勝った時（JACKPOTはJACKPOTの音だけ）
     else if (res.losePayer === 'my') playSe('lose'); // 自分がLOSEした時だけ（JACKPOTの敗者の支払いはJACKPOTの音だけ）
     document.getElementById('myChipAvail').textContent = state.myChips;
     updateHandBadges();
@@ -3793,6 +3795,7 @@
   // デバッグ：実際のチップ・ポッドを動かさずに、勝敗演出（THROUGH/LOSE/JACKPOT）だけを単独再生する
   document.getElementById('dbgThroughBtn').addEventListener('click', () => {
     updatePodDisplay('through');
+    playSe('win');
   });
   document.getElementById('dbgLoseBtn').addEventListener('click', () => {
     updatePodDisplay('grow');
