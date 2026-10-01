@@ -1153,7 +1153,10 @@
     box-shadow: 0 4px 16px var(--shadow); font-size: 0.75rem; line-height: 1.5; display: none;
   }
   .net-notice.show { display: block; }
-  .join-row input.name-input { letter-spacing: normal; font-variant-numeric: normal; }
+  .start-btns .join-row { margin: 0; }
+  .start-btns .join-row input::placeholder { letter-spacing: normal; font-size: 0.85rem; }
+  .dev-section { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--card-border); }
+  .dev-label { font-size: 0.78rem; font-weight: 700; color: var(--text-dim); margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -1164,40 +1167,32 @@
 
   <div id="startScreen">
     <div class="goal">お互いチップ15枚からスタート！先にチップ30枚集めたら勝ち（相手のチップは0枚になっても即敗北にはならず続行）</div>
-    <div class="start-panel">
-      <div class="section-label">デッキ構築</div>
-      <p class="start-desc">対戦を始める前に、1〜8の各カードの色（赤・青・黄・緑・ピンク）を1枚ずつ選んでデッキを組みます。オンライン対戦では、部屋コードを使って別の端末の相手と対戦できます。</p>
+    <div class="start-panel online-panel">
       <div class="start-btns">
-        <button class="btn" id="onlineBtn">🌐 オンライン対戦</button>
-        <button class="btn secondary" id="startBtn">🤖 CPUと練習（ひとり用）</button>
-        <button class="btn" id="debugModeBtn" style="opacity:0.75; font-size:0.8rem;">🐞 デバッグモード: OFF</button>
+        <button class="btn" id="createRoomBtn">部屋を作る</button>
+        <div class="join-row">
+          <input id="roomCodeInput" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="部屋番号（4桁）" aria-label="部屋番号（4桁）">
+        </div>
+        <button class="btn" id="joinRoomBtn">部屋に入る</button>
+        <button class="btn secondary" id="resumeRoomBtn" style="display:none;"></button>
+      </div>
+      <div class="online-status" id="onlineStatus"></div>
+      <div class="dev-section">
+        <div class="dev-label">-開発用-</div>
+        <div class="start-btns">
+          <button class="btn secondary" id="startBtn">CPU対戦</button>
+          <button class="btn" id="debugModeBtn" style="opacity:0.75; font-size:0.8rem;">デバッグモード: OFF</button>
+        </div>
       </div>
     </div>
   </div>
 
   <div id="onlineScreen" class="hidden">
-    <div class="goal">オンライン対戦：部屋を作るか、相手から聞いた部屋コードで入室してください</div>
+    <div class="goal">オンライン対戦</div>
     <div class="start-panel online-panel">
-      <div id="onlineMenu">
-        <div class="section-label">あなたの名前（相手に表示されます）</div>
-        <div class="join-row">
-          <input id="playerNameInput" class="name-input" maxlength="16" autocomplete="nickname" placeholder="名前" aria-label="あなたの名前">
-        </div>
-        <div class="section-label" style="margin-top:18px;">新しく対戦を始める</div>
-        <button class="btn" id="createRoomBtn">部屋を作る</button>
-        <div class="section-label" style="margin-top:18px;">部屋に入る</div>
-        <div class="join-row">
-          <input id="roomCodeInput" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0000" aria-label="部屋コード（4桁）">
-          <button class="btn" id="joinRoomBtn">入室</button>
-        </div>
-        <button class="btn secondary" id="resumeRoomBtn" style="display:none; margin-top:8px;"></button>
-      </div>
-      <div id="onlineWait" class="hidden">
-        <div class="room-code-label">部屋コード</div>
-        <div class="room-code" id="roomCodeShow">----</div>
-        <div class="online-wait-text">相手にこのコードを伝えてください。<br>相手の入室を待っています…<br>※対戦が終わるまで、このページを閉じないでください</div>
-      </div>
-      <div class="online-status" id="onlineStatus"></div>
+      <div class="room-code-label">部屋番号</div>
+      <div class="room-code" id="roomCodeShow">----</div>
+      <div class="online-wait-text" id="onlineWaitText"></div>
       <button class="btn secondary" id="onlineBackBtn">戻る</button>
     </div>
   </div>
@@ -1797,23 +1792,20 @@
     const inp = document.getElementById('roomCodeInput');
     if (inp) inp.disabled = dis;
   }
-  function showOnlineMenu() {
+  function showOnlineWait(guest) {
     showScreen('online');
-    document.getElementById('onlineMenu').classList.remove('hidden');
-    document.getElementById('onlineWait').classList.add('hidden');
-  }
-  function showOnlineWait() {
-    showScreen('online');
-    document.getElementById('onlineMenu').classList.add('hidden');
-    document.getElementById('onlineWait').classList.remove('hidden');
     document.getElementById('roomCodeShow').textContent = net.code;
+    document.getElementById('onlineWaitText').innerHTML = guest
+      ? '入室しました。<br>ホストの開始を待っています…'
+      : '相手にこの番号を伝えてください。<br>相手の入室を待っています…<br>※対戦が終わるまで、このページを閉じないでください';
     setOnlineStatus('');
   }
   function getLastRoom() {
     try { const v = localStorage.getItem('nd-lastRoom'); return /^\d{4}$/.test(v || '') ? v : null; } catch (e) { return null; }
   }
-  async function openOnlineScreen() {
-    showOnlineMenu();
+  // スタート画面のオンライン対戦ボタンを使えるか確認する
+  async function initLobby() {
+    showScreen('start');
     setOnlineButtonsDisabled(true);
     document.getElementById('resumeRoomBtn').style.display = 'none';
     setOnlineStatus('接続を確認しています…');
@@ -1876,7 +1868,7 @@
   }
   async function joinRoom(code) {
     code = String(code || '').trim();
-    if (!/^\d{4}$/.test(code)) { setOnlineStatus('部屋コードは4桁の数字です'); return; }
+    if (!/^\d{4}$/.test(code)) { setOnlineStatus('部屋番号は4桁の数字です'); return; }
     setOnlineButtonsDisabled(true);
     setOnlineStatus('入室中…');
     try {
@@ -1960,9 +1952,7 @@
       if (net.role === 'host' && net.phase !== 'waiting') { net.phase = 'waiting'; showOnlineWait(); }
       if (net.role === 'guest' && net.phase !== 'guestWait') {
         net.phase = 'guestWait';
-        showOnlineMenu();
-        setOnlineButtonsDisabled(true);
-        setOnlineStatus('入室しました。ホストの開始を待っています…');
+        showOnlineWait(true);
       }
       return;
     }
@@ -1982,8 +1972,7 @@
         if (!net.priv || m.status === 'over') {
           const msg = m.status === 'over' ? 'この部屋の対戦は終了しています。' : 'この対戦の自分のデータが見つからないため再開できません。';
           leaveOnline();
-          showOnlineMenu();
-          openOnlineScreen().then(() => setOnlineStatus(msg));
+          initLobby().then(() => setOnlineStatus(msg));
           return;
         }
         net.phase = 'game';
@@ -2723,7 +2712,7 @@
     openRoleWho = null;
     document.getElementById('overlay').classList.remove('show');
     if (net.active) leaveOnline();
-    showScreen('start');
+    initLobby();
     stopBgm();
   }
 
@@ -3677,8 +3666,8 @@
 
   function updateDebugBtn() {
     document.getElementById('debugModeBtn').textContent = debugMode
-      ? '🐞 デバッグモード: ON（準備フェイズ全色選択・チップ30枚勝利条件なし）'
-      : '🐞 デバッグモード: OFF';
+      ? 'デバッグモード: ON（準備フェイズ全色選択・チップ30枚勝利条件なし）'
+      : 'デバッグモード: OFF';
     document.getElementById('debugPanel').classList.toggle('hidden', !debugMode);
   }
   document.getElementById('debugModeBtn').addEventListener('click', () => {
@@ -3687,7 +3676,6 @@
   });
 
   // ===== オンライン対戦のボタン =====
-  document.getElementById('onlineBtn').addEventListener('click', () => { openOnlineScreen(); });
   document.getElementById('createRoomBtn').addEventListener('click', () => { createRoom(); });
   document.getElementById('joinRoomBtn').addEventListener('click', () => {
     joinRoom(document.getElementById('roomCodeInput').value);
@@ -3707,7 +3695,7 @@
     if (net.active && net.role === 'host' && net.match && net.match.status === 'waiting') writeMatch({ status: 'over' });
     if (net.active) leaveOnline();
     setOnlineStatus('');
-    showScreen('start');
+    initLobby();
     stopBgm();
   });
 
@@ -3783,7 +3771,7 @@
     applyTheme(next, true);
   });
 
-  showScreen('start');
+  initLobby();
 })();
 </script>
 
@@ -3831,14 +3819,6 @@
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(() => {});
       else done();
     });
-  })();
-</script>
-<script>
-  (function () {
-    const inp = document.getElementById('playerNameInput');
-    if (!inp || !window.NumberDuelNet) return;
-    inp.value = window.NumberDuelNet.getName();
-    inp.addEventListener('change', () => window.NumberDuelNet.setName(inp.value));
   })();
 </script>
 </body>
