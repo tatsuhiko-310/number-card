@@ -1422,6 +1422,40 @@
   // ブラウザの制限で、最初のタップ以降にしか音は鳴らせない
   document.addEventListener('pointerdown', ensureAudio);
 
+  // ===== 効果音（音声ファイル）=====
+  const SE_FILES = {
+    jackpot: { src: 'assets/se-jackpot.mp3', volume: 0.9 } // JACKPOT成立時
+  };
+  const seBuffers = {};
+  function loadSe(key) {
+    const ctx = ensureAudio();
+    if (!ctx || !SE_FILES[key]) return Promise.reject(new Error('no audio'));
+    if (!seBuffers[key]) {
+      seBuffers[key] = fetch(SE_FILES[key].src)
+        .then(res => { if (!res.ok) throw new Error('se ' + res.status); return res.arrayBuffer(); })
+        .then(data => ctx.decodeAudioData(data))
+        .catch(e => { seBuffers[key] = null; throw e; });
+    }
+    return seBuffers[key];
+  }
+  function playSe(key) {
+    if (!soundOn) return;
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    loadSe(key).then(buf => {
+      if (!soundOn) return;
+      const src = ctx.createBufferSource();
+      const g = ctx.createGain();
+      g.gain.value = SE_FILES[key].volume;
+      src.buffer = buf;
+      src.connect(g);
+      g.connect(masterGain);
+      src.start(0);
+    }).catch(() => {});
+  }
+  // 最初のタップで効果音を先読みしておく（JACKPOTの瞬間に遅れなく鳴らすため）
+  document.addEventListener('pointerdown', () => { for (const k in SE_FILES) loadSe(k).catch(() => {}); }, { once: true });
+
   function getNoise(ctx) {
     if (!noiseBuf) {
       noiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.3), ctx.sampleRate);
@@ -3386,6 +3420,7 @@
     document.getElementById('myHP').textContent = state.myChips;
     document.getElementById('opHP').textContent = state.opChips;
     updatePodDisplay(res.roundPodKind);
+    if (res.roundPodKind === 'jackpot') playSe('jackpot');
     document.getElementById('myChipAvail').textContent = state.myChips;
     updateHandBadges();
     const hpId = who => (who === 'my' ? 'myHP' : 'opHP');
@@ -3763,6 +3798,7 @@
   });
   document.getElementById('dbgJackpotBtn').addEventListener('click', () => {
     updatePodDisplay('jackpot');
+    playSe('jackpot');
     flashNum('myHP', 'gain-flash');
   });
 
