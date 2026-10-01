@@ -1210,6 +1210,9 @@
         <button class="btn" id="joinRoomBtn">部屋に入る</button>
       </div>
       <div class="online-status" id="onlineStatus"></div>
+      <div class="start-btns start-group">
+        <button class="btn secondary theme-btn" id="themeBtnStart" aria-label="ライト/ダークモード切替">🌙 ダークモード OFF</button>
+      </div>
       <div class="dev-section">
         <div class="dev-label">-開発用-</div>
         <div class="start-btns">
@@ -1312,7 +1315,7 @@
 
   <div class="controls">
     <button class="btn secondary" id="soundBtn">🔊 サウンド ON</button>
-    <button class="btn secondary" id="themeBtn" aria-label="ライト/ダークモード切替">🌙 ダークモード OFF</button>
+    <button class="btn secondary theme-btn" id="themeBtn" aria-label="ライト/ダークモード切替">🌙 ダークモード OFF</button>
     <button class="btn secondary" id="resetBtn">最初からやり直す</button>
   </div>
 
@@ -3771,8 +3774,10 @@
     return systemPrefersDark() ? 'dark' : 'light';
   }
   function updateThemeBtnLabel(theme) {
-    const btn = document.getElementById('themeBtn');
-    if (btn) btn.textContent = theme === 'dark' ? '🌙 ダークモード ON' : '☀️ ダークモード OFF';
+    // スタート画面と対戦画面の切替ボタンの表示をそろえる
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.textContent = theme === 'dark' ? '🌙 ダークモード ON' : '☀️ ダークモード OFF';
+    });
   }
   function applyTheme(theme, save) {
     document.documentElement.setAttribute('data-theme', theme);
@@ -3787,10 +3792,10 @@
   } else {
     updateThemeBtnLabel(currentTheme()); // 端末設定どおり。属性は付けずシステム変更にも追従する
   }
-  document.getElementById('themeBtn').addEventListener('click', () => {
+  document.querySelectorAll('.theme-btn').forEach(btn => btn.addEventListener('click', () => {
     const next = currentTheme() === 'dark' ? 'light' : 'dark';
     applyTheme(next, true);
-  });
+  }));
 
   initLobby();
 })();
