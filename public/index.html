@@ -1424,7 +1424,8 @@
 
   // ===== 効果音（音声ファイル）=====
   const SE_FILES = {
-    jackpot: { src: 'assets/se-jackpot.mp3', volume: 0.3 } // JACKPOT成立時
+    jackpot: { src: 'assets/se-jackpot.mp3', volume: 0.3 }, // JACKPOT成立時
+    lose: { src: 'assets/se-lose.mp3', volume: 0.3 }        // LOSE（ブーストなしの負けでポッドへ支払い）
   };
   const seBuffers = {};
   function loadSe(key) {
@@ -3421,6 +3422,7 @@
     document.getElementById('opHP').textContent = state.opChips;
     updatePodDisplay(res.roundPodKind);
     if (res.roundPodKind === 'jackpot') playSe('jackpot');
+    else if (res.losePayer) playSe('lose'); // JACKPOTの敗者の支払いはJACKPOTの音だけにする
     document.getElementById('myChipAvail').textContent = state.myChips;
     updateHandBadges();
     const hpId = who => (who === 'my' ? 'myHP' : 'opHP');
@@ -3794,6 +3796,7 @@
   });
   document.getElementById('dbgLoseBtn').addEventListener('click', () => {
     updatePodDisplay('grow');
+    playSe('lose');
     flashNum('myHP', 'pay-flash');
   });
   document.getElementById('dbgJackpotBtn').addEventListener('click', () => {
