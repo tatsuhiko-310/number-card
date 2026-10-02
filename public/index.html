@@ -1222,6 +1222,52 @@
   }
   .chip-btn { background: transparent; border: 1px solid var(--cy-cyan); color: var(--cy-cyan); }
   .discard-slot { border-color: #24304d; }
+
+  /* ===== 引き分け→手札勝負（サドンデス）===== */
+  .sd-banner {
+    position: absolute;
+    left: -24px; right: -24px; top: 50%;
+    height: 54px; margin-top: -27px;
+    z-index: 6;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(90deg, rgba(255, 43, 79, 0.95), rgba(122, 60, 255, 0.95), rgba(30, 139, 255, 0.95));
+    box-shadow: 0 0 22px rgba(255, 43, 79, 0.6), 0 0 30px rgba(30, 139, 255, 0.6);
+    color: #fff;
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif;
+    font-weight: 900; font-size: clamp(0.95rem, 5vw, 1.35rem); letter-spacing: 0.08em;
+    text-shadow: 0 0 10px #fff;
+    white-space: nowrap;
+    pointer-events: none;
+    animation: sdBanner 1.25s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  }
+  .sd-banner.small { height: 40px; margin-top: -20px; font-size: clamp(0.8rem, 4vw, 1rem); }
+  @keyframes sdBanner {
+    0% { transform: translateX(-110%) skewY(-6deg); opacity: 0; }
+    22% { transform: translateX(0) skewY(-6deg); opacity: 1; }
+    78% { transform: translateX(0) skewY(-6deg); opacity: 1; }
+    100% { transform: translateX(110%) skewY(-6deg); opacity: 0; }
+  }
+  .battle-panel.tb .field-slot { flex-direction: row; gap: 16px; }
+  .battle-panel.tb .field-slot .boost { display: none; }
+  .battle-panel.tb .field-slot > .flip-card:not(.tb-card) { opacity: 0.4; filter: grayscale(0.6); transition: opacity 0.3s, filter 0.3s; }
+  .tb-card { position: relative; animation: tbIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  @keyframes tbIn { 0% { transform: translateX(70px); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+  .tb-card .tb-tag {
+    position: absolute; left: 50%; top: -15px; transform: translateX(-50%);
+    font-size: 0.6rem; font-weight: 800; color: var(--cy-cyan); white-space: nowrap; letter-spacing: 0.05em;
+    text-shadow: 0 0 6px rgba(25, 211, 255, 0.8);
+  }
+  .tb-card.me .tb-tag { top: auto; bottom: -15px; }
+  .tb-card.tb-win .flip-front { box-shadow: 0 0 18px var(--cy-cyan), 0 0 34px var(--cy-cyan); }
+  .tb-card.tb-win { animation: tbWin 0.5s ease 2; z-index: 2; }
+  @keyframes tbWin { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+  .tb-card.tb-lose { opacity: 0.35; filter: grayscale(0.8); transition: opacity 0.3s, filter 0.3s; }
+  .tb-card.tb-even { animation: tbEven 0.35s ease 2; }
+  @keyframes tbEven { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  .tb-card.tb-out { animation: none; transition: transform 0.45s ease-in, opacity 0.45s ease-in; opacity: 0; }
+  .tb-card.tb-out.me { transform: translateY(90px) scale(0.8); }
+  .tb-card.tb-out.op { transform: translateY(-90px) scale(0.8); }
+  .tb-card.tb-gone { animation: none; transition: opacity 0.25s; opacity: 0; }
 </style>
 </head>
 <body>
@@ -1365,11 +1411,11 @@
     ・<b>JACKPOT</b>＝ブースト有無を問わず、<b>ちょうど1差</b>で勝った時だけ、ポッドに溜まっている分を総取りできる（負けた側がブーストしていなければ、LOSE同様にポッドへ支払う。支払いは総取りの後）<br>
     ・<b>THROUGH</b>＝ブーストなしの通常勝利。報酬はないが損もない<br>
     ・<b>LOSE</b>＝ブーストなしで負けると、ポッドへチップを支払う。支払う枚数は<b>5ラウンドごとに1枚ずつ増える</b>（1〜5ラウンド：1枚、6〜10ラウンド：2枚、11〜15ラウンド：3枚…。持っている分だけ）<br>
-    ・<b>DRAW</b>＝引き分け。お互いが出したブーストは（LOSEと同じ扱いで）すべてポッドへ<br>
+    ・<b>引き分け</b>＝お互いの残りの手札（素の数字）を公開し、大きい方の勝ち。差がちょうど1ならJACKPOT、それ以外は通常の勝ち負けと同じ扱い。手札も同じ数字なら、山札の一番上から順に公開して決着するまで比べる（山札が空なら捨て札をシャッフルして山札にする。カードが尽きた時だけ、ブーストはすべてポッドへ流れて引き分け）。公開した手札は手札に戻り、捨て札の枠に<b style="color:var(--known)">!</b>が付く。公開した山札のカードは山札に戻り、手札に引いた時に<b style="color:var(--known)">!</b>が付く<br>
     ・それ以外の結果（JACKPOTにならなかったブースト、ブーストしての負け等）は、使ったブースト分がそのままポッドへ流れて無報酬になる<br><br>
     カード効果：現在、1〜8のどのカードにも数字比較以外の特殊効果はありません（検討中）。<br><br>
     色の役(自分の捨て札の色構成で常時判定)：<b>色トリプル</b>(同色3枚以上)。成立すると捨て札が光り、タップで確認できます。<b>赤</b>(攻め)＝JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）／<b>青</b>(守り)＝ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ）／<b>緑</b>(安定)＝THROUGH(通常勝利)時、ポッドに溜まっていれば1🪙回収できる／<b>ピンク</b>＝相手のデッキの底が見える／<b>黄</b>＝手札選択中に相手がブーストするかどうかだけ見える(枚数は伏せる)。<br><br>
-    確定情報：山札がなくなり捨て札を山札に戻した時、その時点で手札に残っていたカードの数字は、お互いに分かる。その数字は捨て札の枠に<b style="color:var(--known)">！</b>が表示され、出されるまで残る。<br><br>
+    確定情報：山札がなくなり捨て札を山札に戻した時に手札に残っていたカード、引き分けの手札勝負で公開した手札、引き分けの山札勝負で公開して後から手札に引いたカードの数字は、お互いに分かる。その数字は捨て札の枠に<b style="color:var(--known)">!</b>が表示され、出されるまで残る。<br><br>
     色：各カードには赤・青・黄・緑・ピンクいずれかの色がある（デッキ構築時に選択）。現時点では色トリプル以外の効果条件には未使用。<br><br>
     オンライン対戦：「部屋を作る」で表示される4桁のコードを相手に伝え、相手が入室したら準備フェイズ（それぞれ非公開でデッキを組む）へ進み、両者の準備が終わると対戦開始。手札のカードをタップした時点でそのラウンドの手が確定し、両者が確定したら一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになると手札からランダムに1枚、ブースト0で自動的に出す。黄の役は、相手が確定した時点でブーストの有無が見える。通信はブラウザ同士の直接通信で、部屋を作った人のブラウザが対戦データを持つため、対戦中はそのページを閉じないこと。途中で抜けても、同じブラウザから同じ部屋コードで入り直せば続きから再開できる。<br><br>
     画面：カードを選ぶ時は「手札選択」画面、カードを出すと「バトル場」画面に自動で切り替わり、決着後にまた手札選択へ戻ります。
@@ -2278,6 +2324,7 @@
       beginOnlineResolve(op.reveal);
     }
 
+    if (state.tieWait) tieTick();
     if (net.role === 'host') hostMaybeResolve();
   }
 
@@ -2306,18 +2353,29 @@
     const hs = net.seats.host, gs = net.seats.guest;
     if (!hs || !gs || !hs.reveal || !gs.reveal || hs.reveal.round !== R || gs.reveal.round !== R) return;
     if (net.hostResolvedRound >= R) return;
-    net.hostResolvedRound = R;
     const hB = Math.max(0, Math.min(hs.reveal.boost | 0, m.chips.host));
     const gB = Math.max(0, Math.min(gs.reveal.boost | 0, m.chips.guest));
+    let tie = null;
+    if (hs.reveal.card + hB === gs.reveal.card + gB) {
+      const ht = hs.tie && hs.tie.round === R ? hs.tie : null;
+      const gt = gs.tie && gs.tie.round === R ? gs.tie : null;
+      if (!ht || !gt) return;
+      tie = { my: ht.cards.map(tieNum), op: gt.cards.map(tieNum) };
+      if (decideTie(tie.my, tie.op).status === 'pending') return;
+    }
+    net.hostResolvedRound = R;
     const res = computeRoundResult({
       myCard: hs.reveal.card, opCard: gs.reveal.card, myBoost: hB, opBoost: gB,
       myChips: m.chips.host - hB, opChips: m.chips.guest - gB, pod: m.pod,
-      myDisc: hs.discard || [], opDisc: gs.discard || [], round: R
+      myDisc: hs.discard || [], opDisc: gs.discard || [], round: R, tie
     });
     const over = !m.debug && (res.myChips >= WIN_CHIPS || res.opChips >= WIN_CHIPS);
     writeMatch({ round: R + 1, chips: { host: res.myChips, guest: res.opChips }, pod: res.pod, status: over ? 'over' : 'playing', lastRound: R });
   }
 
+  async function hiddenCardHash(r, card, salt2) {
+    return commitHash(r, 'hidden', card == null ? 'none' : card, salt2);
+  }
   async function commitHash(r, card, boost, salt) {
     try {
       if (!(window.crypto && crypto.subtle && window.TextEncoder)) return null;
@@ -2332,13 +2390,16 @@
     const token = gameToken;
     const boost = Math.max(0, Math.min(state.chipSelect, state.myChips));
     const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
-    const pc = { round: R, card, boost, salt, color: state.myCardColors[card] || null };
+    const salt2 = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const pc = { round: R, card, boost, salt, salt2, color: state.myCardColors[card] || null };
     state.pendingCommit = pc;
     stopTurnTimer();
     const hash = await commitHash(R, card, boost, salt);
+    // 残りの手札は中身を見せずにハッシュだけ記録する（引き分けの手札勝負で公開した時に照合）
+    const hiddenHash = await hiddenCardHash(R, state.myHand[0], salt2);
     if (token !== gameToken || !net.active) return;
     writePriv({ pending: pc });
-    writeMySeat({ commitRound: R, commitHash: hash, boostFlag: hasColorTriple('op', 'yellow') ? boost > 0 : null });
+    writeMySeat({ commitRound: R, commitHash: hash, hiddenHash, boostFlag: hasColorTriple('op', 'yellow') ? boost > 0 : null });
     state.netPhase = 'committed';
     gameNetTick();
   }
@@ -2366,7 +2427,54 @@
     }, 500);
   }
 
+  function obtainTie(myToken) {
+    if (!net.active) return Promise.resolve(buildTieLocal());
+    return new Promise(resolve => {
+      state.tieWait = { round: state.round, resolve, done: false };
+      tieTick();
+    });
+  }
+  // オンラインの引き分け勝負：お互いに1枚ずつ（手札→山札の一番上→次…）座席に公開し、決着したら演出へ
+  function tieTick() {
+    const tw = state.tieWait;
+    if (!tw || tw.done || !net.active) return;
+    const R = tw.round;
+    const meT = net.mySeat && net.mySeat.tie && net.mySeat.tie.round === R ? net.mySeat.tie : null;
+    if (!meT) {
+      const salt2 = state.pendingCommit ? state.pendingCommit.salt2 : '';
+      writeMySeat({ tie: { round: R, cards: [tieEntry('my', 0)], salt2 } });
+      return;
+    }
+    const op = oppSeatC();
+    const opT = op && op.tie && op.tie.round === R ? op.tie : null;
+    if (!opT) return;
+    const a = meT.cards, b = opT.cards;
+    const dec = decideTie(a.map(tieNum), b.map(tieNum));
+    if (dec.status === 'pending') {
+      // ここまで同じ数字 → 自分の次のカード（山札）を公開する
+      if (a.length <= b.length) writeMySeat({ tie: Object.assign({}, meT, { cards: a.concat([tieEntry('my', a.length)]) }) });
+      return;
+    }
+    tw.done = true;
+    state.tieWait = null;
+    const len = dec.d + 1;
+    const tie = { my: a.slice(0, len), op: b.slice(0, len) };
+    // 相手の手札が確定時の記録と一致するか照合
+    const h0 = b[0] ? b[0].n : null;
+    hiddenCardHash(R, h0, opT.salt2 || '').then(h => {
+      if (h && op.hiddenHash && h !== op.hiddenHash) state.tamperNote = (state.tamperNote ? state.tamperNote + ' / ' : '') + '⚠ 相手の手札が確定時の記録と一致しません';
+      // 山札を作り直した場合は保存しておく
+      writePriv({ deck: state.myDeck.slice() });
+      tw.resolve(tie);
+    });
+  }
+
   function onlineNextRound() {
+    // 相手が引き分け勝負で公開した山札のカードは、上から1枚ずつ相手の手札に入る → 確定情報へ
+    if (state.revealedDeck.op.length) {
+      const n = state.revealedDeck.op.shift();
+      if (!state.knownHeld.op.includes(n)) state.knownHeld.op.push(n);
+    }
     drawInto(state.myHand, 'my');
     state.fieldMy = null;
     state.fieldOp = null;
@@ -2627,7 +2735,7 @@
       wrap.appendChild(row);
     };
     addRow('known', '!',
-      `<b>確定情報</b>：山札を作り直した時に${owner}の手札に残っていた数字。今も${owner}の手札にあることがお互いに分かっている（出されると消える）` +
+      `<b>確定情報</b>：山札を作り直した時に手札に残っていた数字や、引き分け勝負で公開された数字。今も${owner}の手札にあることがお互いに分かっている（出されると消える）` +
       (knownNow.length ? `<br><span class="legend-now known">いま：${knownNow.join('・')}</span>` : ''));
     addRow('peek', EYE_SVG,
       who === 'op'
@@ -2875,7 +2983,9 @@
       locked: false,
       over: false,
       returning: { my: null, op: null },     // 山札へ戻る捨て札（演出用）
-      knownHeld: { my: [], op: [] },          // 捨て札が山札へ戻った時に手札に残っていた数字（確定情報。出されるまで「！」表示）
+      knownHeld: { my: [], op: [] },          // 確定情報の数字（山札を作り直した時に手札に残っていたカード・引き分け勝負で公開した手札）。出されるまで「!」表示
+      revealedDeck: { my: [], op: [] },       // 引き分け勝負で公開した山札のカード（上から順）。手札に引いた時に確定情報になる
+      tieWait: null,                          // オンライン：引き分け勝負の進行中（決着を待つ）
       roleSeen: { my: new Set(), op: new Set() }, // 直前に成立していた役（新規成立の検出用）
       blueChargeUsed: { my: false, op: false }, // 青トリプル：今の成立中に1回分の蒸発無効を使い切ったか
       returningNow: { my: false, op: false }, // 演出中は捨て札置き場の再描画を止める
@@ -2971,17 +3081,77 @@
     if (card !== null) hand.push(card);
   }
 
-  function drawCard(who) {
+  // 山札が空なら捨て札をシャッフルして山札にする。山札を用意できなければ false
+  function refillDeck(who) {
     const deckKey = who + 'Deck';
     const discardKey = who + 'Discard';
-    if (state[deckKey].length === 0) {
-      if (state[discardKey].length === 0) return null;
-      state.returning[who] = state[discardKey].slice(); // 戻る前の捨て札を演出用に控える
-      state.knownHeld[who] = knownHeldFrom(state[discardKey]);
-      state[deckKey] = shuffle(state[discardKey]);
-      state[discardKey] = [];
+    if (state[deckKey].length > 0) return true;
+    if (state[discardKey].length === 0) return false;
+    state.returning[who] = state[discardKey].slice(); // 戻る前の捨て札を演出用に控える
+    state.knownHeld[who] = knownHeldFrom(state[discardKey]);
+    state.revealedDeck[who] = [];
+    state[deckKey] = shuffle(state[discardKey]);
+    state[discardKey] = [];
+    return true;
+  }
+
+  function drawCard(who) {
+    if (!refillDeck(who)) return null;
+    const card = state[who + 'Deck'].pop();
+    markDrawnKnown(who, card);
+    return card;
+  }
+  // 引き分け勝負で公開された山札のカードを引いたら、確定情報にする
+  function markDrawnKnown(who, card) {
+    const rv = state.revealedDeck[who];
+    const i = rv.indexOf(card);
+    if (i < 0) return;
+    rv.splice(i, 1);
+    if (!state.knownHeld[who].includes(card)) state.knownHeld[who].push(card);
+  }
+  // 出したカードは確定情報から外す
+  function unmarkKnown(who, card) {
+    const k = state.knownHeld[who];
+    const i = k.indexOf(card);
+    if (i >= 0) k.splice(i, 1);
+  }
+
+  // ===== 引き分け勝負（手札→山札の一番上→次…）=====
+  // level 0＝残りの手札、level k＝山札の上からk枚目。カードがなければ null
+  function tieEntry(who, level) {
+    if (level === 0) {
+      const h = state[who + 'Hand'][0];
+      return h == null ? null : { n: h, c: state[who + 'CardColors'][h] || null, src: 'hand' };
     }
-    return state[deckKey].pop();
+    if (!refillDeck(who)) return null;
+    const deck = state[who + 'Deck'];
+    const n = deck[deck.length - level];
+    return n == null ? null : { n, c: state[who + 'CardColors'][n] || null, src: 'deck' };
+  }
+  // CPU戦：その場で決着まで並べる
+  function buildTieLocal() {
+    const tie = { my: [], op: [] };
+    for (let lv = 0; lv < 10; lv++) {
+      tie.my.push(tieEntry('my', lv));
+      tie.op.push(tieEntry('op', lv));
+      if (decideTie(tie.my.map(tieNum), tie.op.map(tieNum)).status !== 'pending') break;
+    }
+    return tie;
+  }
+  function tieNum(e) { return e ? e.n : null; }
+  // 公開した手札は確定情報に、公開した山札のカードは引いた時に確定情報にする
+  function applyTieKnowledge(tie) {
+    ['my', 'op'].forEach(who => {
+      tie[who].forEach(e => {
+        if (!e) return;
+        if (e.c) state[who + 'CardColors'][e.n] = state[who + 'CardColors'][e.n] || e.c;
+        if (e.src === 'hand') {
+          if (!state.knownHeld[who].includes(e.n)) state.knownHeld[who].push(e.n);
+        } else if (!state.revealedDeck[who].includes(e.n)) {
+          state.revealedDeck[who].push(e.n);
+        }
+      });
+    });
   }
 
   function playRound(myCard, sourceEl) {
@@ -3120,6 +3290,8 @@
     playFlipSound(0); // カードをフリップする音
     if (!state.myDiscard.includes(myCard)) state.myDiscard.push(myCard);
     if (!state.opDiscard.includes(opCard)) state.opDiscard.push(opCard);
+    unmarkKnown('my', myCard);
+    unmarkKnown('op', opCard);
 
     renderHandsAndDiscard();
     render(true);
@@ -3131,7 +3303,20 @@
 
     const finalize = () => {
       if (myToken !== gameToken) return;
-      finalizeRound(myCard, opCard, myChipsUsed, opChipsUsed, myEffective, opEffective, myToken);
+      const done = (tie) => finalizeRound(myCard, opCard, myChipsUsed, opChipsUsed, myEffective, opEffective, myToken, tie);
+      if (myEffective !== opEffective) { done(null); return; }
+      // 引き分け：残りの手札（→山札）で勝負してから決着
+      obtainTie(myToken).then(tie => {
+        if (myToken !== gameToken) return;
+        playSuddenDeath(tie, myToken).then(() => {
+          if (myToken !== gameToken) return;
+          applyTieKnowledge(tie);
+          // 公開した手札の「!」をすぐに捨て札へ表示する
+          renderDiscardGrid('discardGridMy', state.myDiscard, state.myCardColors, 'my');
+          renderDiscardGrid('discardGridOp', state.opDiscard, state.opCardColors, 'op');
+          done(tie);
+        });
+      });
     };
 
     if (myChipsUsed > 0 || opChipsUsed > 0) {
@@ -3276,9 +3461,21 @@
     return net.active ? state.round : state.roundLog.length + 1;
   }
 
+  // 引き分け勝負の判定：数字の列を先頭から比べ、最初に違った位置で決着。
+  // どちらかのカードが尽きたら（null）決着なし＝従来のDRAW。まだ比べ終わっていなければ pending
+  function decideTie(a, b) {
+    const n = Math.min(a.length, b.length);
+    for (let i = 0; i < n; i++) {
+      if (a[i] == null || b[i] == null) return { status: 'draw', d: i };
+      if (a[i] !== b[i]) return { status: 'decided', d: i };
+    }
+    return { status: 'pending', d: n };
+  }
+
   // 勝敗と報酬の計算（画面には触らない純粋な計算）。オンラインでは両端末とホストが同じ入力で同じ結果を得る。
   // p.myChips / p.opChips はブースト消費後の枚数。p.myDisc / p.opDisc は今回出したカードを含む捨て札（{n, c}の配列）
   // p.round はラウンド番号（LOSEの支払い枚数が決まる）
+  // p.tie は引き分け時の勝負に使うカードの数字の列 { my: [手札, 山札の一番上, 次…], op: [...] }（null＝カードなし）
   function computeRoundResult(p) {
     const chips = { my: p.myChips, op: p.opChips };
     const loseCost = losePaymentFor(p.round);
@@ -3290,8 +3487,20 @@
     const res = {
       outcome: myEffective === opEffective ? 'tie' : (myEffective > opEffective ? 'me' : 'op'),
       myEffective, opEffective, notes: [], logKind: '', roundPodKind: 'through',
-      jackpotWinner: null, losePayer: null, drawBothFlash: false, carried: 0
+      jackpotWinner: null, losePayer: null, drawBothFlash: false, carried: 0, tiebreak: null
     };
+    // 引き分け：残りの手札（素の数字）で勝負。手札も同じなら山札の一番上から順に比べる
+    let diff = Math.abs(myEffective - opEffective);
+    if (res.outcome === 'tie' && p.tie) {
+      const dec = decideTie(p.tie.my, p.tie.op);
+      if (dec.status === 'decided') {
+        const a = p.tie.my[dec.d], b = p.tie.op[dec.d];
+        res.outcome = a > b ? 'me' : 'op';
+        diff = Math.abs(a - b);
+        res.tiebreak = { d: dec.d, my: a, op: b };
+        res.notes.push(`引き分け→${dec.d === 0 ? '手札' : '山札'}勝負 あなた${a} / 相手${b}`);
+      }
+    }
 
     if (res.outcome === 'tie') {
       // DRAW：場に出ていたブーストチップはすべてポッドへ（青トリプルの軽減は効かない）
@@ -3306,7 +3515,6 @@
       const loser = winner === 'my' ? 'op' : 'my';
       const winnerBoost = winner === 'my' ? p.myBoost : p.opBoost;
       const loserBoost = winner === 'my' ? p.opBoost : p.myBoost;
-      const diff = Math.abs(myEffective - opEffective);
 
       if (diff === 1) {
         // JACKPOT：ちょうど1差で勝った側が、ポッド（今回の両者のブースト分を含む）を総取り。ブースト有無は問わない
@@ -3387,7 +3595,137 @@
     return res;
   }
 
-  function finalizeRound(myCard, opCard, myChipsUsed, opChipsUsed, myEffective, opEffective, myToken) {
+  // ===== 引き分け→手札勝負の演出（A：サドンデス・カットイン）=====
+  // 帯が横切る → 残りの手札（同じ数字なら山札の一番上…）が場へ滑り込み、同時に表返し → 勝った方が光り、負けた方は暗くなる
+  // → カードは手元（山札）へ戻る。戻り値は演出が終わったら解決する Promise
+  function playSuddenDeath(tie, myToken) {
+    const panel = document.querySelector('.battle-panel');
+    const slotOp = document.getElementById('fieldOpFlip').parentElement;
+    const slotMe = document.getElementById('fieldMeFlip').parentElement;
+    const wait = (ms) => new Promise(r => setTimeout(r, ms));
+    const alive = () => myToken === gameToken;
+    const rm = document.getElementById('resultMsg');
+    const banner = (text, small) => {
+      const b = document.createElement('div');
+      b.className = 'sd-banner' + (small ? ' small' : '');
+      b.textContent = text;
+      panel.appendChild(b);
+      setTimeout(() => b.remove(), 1300);
+    };
+    const makeCard = (e, side) => {
+      const el = document.createElement('div');
+      el.className = 'flip-card placed tb-card ' + side;
+      const inner = document.createElement('div');
+      inner.className = 'flip-inner';
+      const back = document.createElement('div');
+      back.className = 'flip-face flip-back';
+      const front = document.createElement('div');
+      front.className = 'flip-face flip-front' + (e && e.c ? ' ' + e.c : '');
+      front.textContent = e ? e.n : '−';
+      inner.appendChild(back); inner.appendChild(front);
+      el.appendChild(inner);
+      const tag = document.createElement('div');
+      tag.className = 'tb-tag';
+      tag.textContent = e && e.src === 'deck' ? '山札' : '手札';
+      el.appendChild(tag);
+      return el;
+    };
+    return (async () => {
+      playSuddenDeathSound();
+      banner('DRAW ▶ SUDDEN DEATH');
+      rm.textContent = '引き分け！手札で勝負';
+      rm.className = 'result-msg draw';
+      await wait(1150);
+      if (!alive()) return;
+      panel.classList.add('tb');
+      let prev = [];
+      const n = tie.my.length;
+      for (let lv = 0; lv < n; lv++) {
+        const a = tie.my[lv], b = tie.op[lv];
+        if (lv > 0) {
+          // 同じ数字だった → 前のカードを消して、山札の一番上で再勝負
+          banner('SAME ▶ DECK TOP', true);
+          rm.textContent = '同じ数字！山札の一番上で勝負';
+          prev.forEach(el => el.classList.add('tb-gone'));
+          await wait(300);
+          prev.forEach(el => el.remove());
+          await wait(700);
+          if (!alive()) return;
+        }
+        const cOp = makeCard(b, 'op'), cMe = makeCard(a, 'me');
+        slotOp.appendChild(cOp); slotMe.appendChild(cMe);
+        prev = [cOp, cMe];
+        playSnapSound();
+        await wait(450);
+        if (!alive()) return;
+        cOp.classList.add('flipped'); cMe.classList.add('flipped');
+        playFlipSound(0);
+        await wait(600);
+        if (!alive()) return;
+        const an = a ? a.n : null, bn = b ? b.n : null;
+        if (an == null || bn == null) {
+          rm.textContent = 'カードが尽きた…引き分け';
+          break;
+        }
+        if (an === bn) {
+          cOp.classList.add('tb-even'); cMe.classList.add('tb-even');
+          await wait(700);
+          continue;
+        }
+        const meWin = an > bn;
+        (meWin ? cMe : cOp).classList.add('tb-win');
+        (meWin ? cOp : cMe).classList.add('tb-lose');
+        rm.textContent = `${a.src === 'deck' ? '山札' : '手札'}勝負 ${an} vs ${bn} → ${meWin ? 'あなたの勝ち' : '相手の勝ち'}`;
+        rm.className = 'result-msg ' + (meWin ? 'win' : 'lose');
+        await wait(1100);
+      }
+      if (!alive()) return;
+      // 手札は手元へ、山札のカードは山札へ戻る
+      prev.forEach(el => el.classList.add('tb-out'));
+      await wait(480);
+      prev.forEach(el => el.remove());
+      panel.classList.remove('tb');
+    })();
+  }
+
+  // サドンデスの帯の音：低い唸りが駆け上がる「ヴォン↑」＋ノイズの「シュバッ」
+  function playSuddenDeathSound() {
+    if (!soundOn) return;
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.Q.value = 10;
+    lp.frequency.setValueAtTime(300, t);
+    lp.frequency.exponentialRampToValueAtTime(4000, t + 0.35);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.22, t + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+    lp.connect(g); g.connect(masterGain);
+    [1, 1.01, 0.5].forEach(m => {
+      const o = ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(110 * m, t);
+      o.frequency.exponentialRampToValueAtTime(220 * m, t + 0.35);
+      o.connect(lp);
+      o.start(t); o.stop(t + 0.72);
+    });
+    const nz = ctx.createBufferSource();
+    nz.buffer = getNoise(ctx);
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 2500;
+    const gn = ctx.createGain();
+    gn.gain.setValueAtTime(0.0001, t);
+    gn.gain.exponentialRampToValueAtTime(0.18, t + 0.04);
+    gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+    nz.connect(hp); hp.connect(gn); gn.connect(masterGain);
+    nz.start(t); nz.stop(t + 0.3);
+  }
+
+  function finalizeRound(myCard, opCard, myChipsUsed, opChipsUsed, myEffective, opEffective, myToken, tie) {
     // 捨て札に行くまでは、場の数字はチップで上がった数値のまま表示する
     state.fieldMy = myEffective;
     state.fieldOp = opEffective;
@@ -3398,7 +3736,8 @@
     const res = computeRoundResult({
       myCard, opCard, myBoost: myChipsUsed, opBoost: opChipsUsed,
       myChips: state.myChips, opChips: state.opChips, pod: state.pod,
-      myDisc: discEntries('my'), opDisc: discEntries('op'), round: currentRoundNo()
+      myDisc: discEntries('my'), opDisc: discEntries('op'), round: currentRoundNo(),
+      tie: tie ? { my: tie.my.map(tieNum), op: tie.op.map(tieNum) } : null
     });
     state.myChips = res.myChips;
     state.opChips = res.opChips;
@@ -3410,14 +3749,16 @@
 
     let msg = '';
     let msgClass = '';
+    const tb = res.tiebreak;
+    const tbLabel = tb ? `（引き分け→${tb.d === 0 ? '手札' : '山札'}勝負 ${tb.my} vs ${tb.op}）` : '';
     if (outcome === 'tie') {
       msg = `あなた ${myLabel} / 相手 ${opLabel} → DRAW：${res.carried}🪙がポッドへ（ポッド計${state.pod}🪙）`;
       msgClass = 'draw';
     } else if (outcome === 'me') {
-      msg = `あなた ${myLabel} / 相手 ${opLabel} → あなたの勝ち！`;
+      msg = `あなた ${myLabel} / 相手 ${opLabel}${tbLabel} → あなたの勝ち！`;
       msgClass = 'win';
     } else {
-      msg = `あなた ${myLabel} / 相手 ${opLabel} → 相手の勝ち…`;
+      msg = `あなた ${myLabel} / 相手 ${opLabel}${tbLabel} → 相手の勝ち…`;
       msgClass = 'lose';
     }
     const noteText = res.notes.join(' / ');
@@ -3428,7 +3769,7 @@
         no: net.active ? state.round : state.roundLog.length + 1,
         result: outcome === 'tie' ? '引き分け' : (outcome === 'me' ? 'あなたの勝ち' : '相手の勝ち'),
         kind: res.logKind,
-        cards: `あなた ${myLabel} / 相手 ${opLabel}`,
+        cards: `あなた ${myLabel} / 相手 ${opLabel}${tbLabel}`,
         dMy: state.myChips - state.roundSnap.my,
         dOp: state.opChips - state.roundSnap.op,
         dPod: state.pod - state.roundSnap.pod,
