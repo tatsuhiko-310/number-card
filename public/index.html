@@ -676,7 +676,7 @@
     0%, 100% { box-shadow: 0 0 4px var(--gc), 0 0 8px var(--gc); }
     50% { box-shadow: 0 0 9px var(--gc), 0 0 20px var(--gc), 0 0 3px #fff inset; }
   }
-  /* バッジ（枠の右上に重ねる）：ピンクトリプルで見える相手のデッキの底／確定情報 */
+  /* バッジ（枠の右上に重ねる）：ピンクペアで見える相手のデッキの底／確定情報 */
   .discard-slot .peek-eye,
   .discard-slot .known-mark {
     position: absolute;
@@ -1414,9 +1414,9 @@
     ・<b>引き分け</b>＝お互いの残りの手札（素の数字）を公開し、大きい方の勝ち。差がちょうど1ならJACKPOT、それ以外は通常の勝ち負けと同じ扱い。手札も同じ数字なら、山札の一番上から順に公開して決着するまで比べる（山札が空なら捨て札をシャッフルして山札にする。カードが尽きた時だけ、ブーストはすべてポッドへ流れて引き分け）。公開した手札は手札に戻り、捨て札の枠に<b style="color:var(--known)">!</b>が付く。公開した山札のカードは山札に戻り、手札に引いた時に<b style="color:var(--known)">!</b>が付く<br>
     ・それ以外の結果（JACKPOTにならなかったブースト、ブーストしての負け等）は、使ったブースト分がそのままポッドへ流れる<br><br>
     カード効果：現在、1〜8のどのカードにも数字比較以外の特殊効果はありません（検討中）。<br><br>
-    色の役(自分の捨て札の色構成で常時判定)：<b>色トリプル</b>(同色3枚以上)。成立すると捨て札が光り、タップで確認できます。<b>赤</b>(攻め)＝JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）／<b>青</b>(守り)＝ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ）／<b>緑</b>(安定)＝THROUGH(ブーストなしの勝利)時、WINの1🪙に加えて、ポッドに残っていればさらに1🪙回収できる／<b>ピンク</b>＝相手のデッキの底が見える／<b>黄</b>＝手札選択中に相手がブーストするかどうかだけ見える(枚数は伏せる)。<br><br>
+    色の役(自分の捨て札の色構成で常時判定)：<b>色ペア</b>(同色2枚以上)。成立すると捨て札が光り、タップで確認できます。<b>赤</b>(攻め)＝JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）／<b>青</b>(守り)＝ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ）／<b>緑</b>(安定)＝THROUGH(ブーストなしの勝利)時、WINの1🪙に加えて、ポッドに残っていればさらに1🪙回収できる／<b>ピンク</b>＝相手のデッキの底が見える／<b>黄</b>＝手札選択中に相手がブーストするかどうかだけ見える(枚数は伏せる)。<br><br>
     確定情報：山札がなくなり捨て札を山札に戻した時に手札に残っていたカード、引き分けの手札勝負で公開した手札、引き分けの山札勝負で公開して後から手札に引いたカードの数字は、お互いに分かる。その数字は捨て札の枠に<b style="color:var(--known)">!</b>が表示され、出されるまで残る。<br><br>
-    色：各カードには赤・青・黄・緑・ピンクいずれかの色がある（デッキ構築時に選択）。現時点では色トリプル以外の効果条件には未使用。<br><br>
+    色：各カードには赤・青・黄・緑・ピンクいずれかの色がある（デッキ構築時に選択）。現時点では色ペア以外の効果条件には未使用。<br><br>
     オンライン対戦：「部屋を作る」で表示される4桁のコードを相手に伝え、相手が入室したら準備フェイズ（それぞれ非公開でデッキを組む）へ進み、両者の準備が終わると対戦開始。手札のカードをタップした時点でそのラウンドの手が確定し、両者が確定したら一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになると手札からランダムに1枚、ブースト0で自動的に出す。黄の役は、相手が確定した時点でブーストの有無が見える。通信はブラウザ同士の直接通信で、部屋を作った人のブラウザが対戦データを持つため、対戦中はそのページを閉じないこと。途中で抜けても、同じブラウザから同じ部屋コードで入り直せば続きから再開できる。<br><br>
     画面：カードを選ぶ時は「手札選択」画面、カードを出すと「バトル場」画面に自動で切り替わり、決着後にまた手札選択へ戻ります。
   </div>
@@ -2620,7 +2620,8 @@
     setTimeout(() => el.classList.remove(cls), 600);
   }
 
-  // === 色の役：色トリプル（捨て札に同色3枚以上）のみ。成立すれば出したカードの色を問わず常時発動 ===
+  // === 色の役：色ペア（捨て札に同色2枚以上）のみ。成立すれば出したカードの色を問わず常時発動 ===
+  const COLOR_ROLE_MIN = 2; // 色の役が成立する同色枚数
   const COLOR_TRIPLE_DESC = {
     red: '攻めの一撃：JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（相手の残りが2枚未満なら0枚になるまで）',
     blue: '守りの軽減：ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ。例：3🪙ブースト→2🪙がポッドへ、1🪙は手元に残る）',
@@ -2639,11 +2640,11 @@
     return counts;
   }
   function hasColorTriple(who, color) {
-    return (getColorCounts(who)[color] || 0) >= 3;
+    return (getColorCounts(who)[color] || 0) >= COLOR_ROLE_MIN;
   }
   function hasTripleColor(who) {
     const counts = getColorCounts(who);
-    return COLORS.find(c => counts[c] >= 3) || null;
+    return COLORS.find(c => counts[c] >= COLOR_ROLE_MIN) || null;
   }
 
   // 現在発動している役の一覧（捨て札の光り表示・役パネルの両方で使う）。同時に複数色が成立することもある
@@ -2651,8 +2652,8 @@
     const counts = getColorCounts(who);
     const roles = [];
     COLORS.forEach(color => {
-      if ((counts[color] || 0) >= 3) {
-        roles.push({ name: `色トリプル(${COLOR_LABEL[color]})`, color, count: counts[color], desc: COLOR_TRIPLE_DESC[color] });
+      if ((counts[color] || 0) >= COLOR_ROLE_MIN) {
+        roles.push({ name: `色ペア(${COLOR_LABEL[color]})`, color, count: counts[color], desc: COLOR_TRIPLE_DESC[color] });
       }
     });
     return roles;
@@ -2746,9 +2747,9 @@
       (knownNow.length ? `<br><span class="legend-now known">いま：${knownNow.join('・')}</span>` : ''));
     addRow('peek', EYE_SVG,
       who === 'op'
-        ? `<b>デッキの底</b>：あなたのピンクの役（ピンクトリプル）で見えている、相手が最後に引くカード` +
+        ? `<b>デッキの底</b>：あなたのピンクの役（ピンクペア）で見えている、相手が最後に引くカード` +
           (peekNow.length ? `<br><span class="legend-now peek">いま：${peekNow.join('・')}</span>` : '')
-        : `<b>デッキの底</b>：ピンクの役（ピンクトリプル）が成立すると、相手の捨て札に相手が最後に引くカードが表示される` +
+        : `<b>デッキの底</b>：ピンクの役（ピンクペア）が成立すると、相手の捨て札に相手が最後に引くカードが表示される` +
           (hasColorTriple(otherOf(activeViewer), 'pink') ? '<br><span class="legend-now peek">いま相手のピンクの役で、あなたのデッキの底が相手に見えている</span>' : ''));
     return wrap;
   }
@@ -2994,7 +2995,7 @@
       revealedDeck: { my: [], op: [] },       // 引き分け勝負で公開した山札のカード（上から順）。手札に引いた時に確定情報になる
       tieWait: null,                          // オンライン：引き分け勝負の進行中（決着を待つ）
       roleSeen: { my: new Set(), op: new Set() }, // 直前に成立していた役（新規成立の検出用）
-      blueChargeUsed: { my: false, op: false }, // 青トリプル：今の成立中に1回分の蒸発無効を使い切ったか
+      blueChargeUsed: { my: false, op: false }, // 青ペア：今の成立中に1回分の蒸発無効を使い切ったか
       returningNow: { my: false, op: false }, // 演出中は捨て札置き場の再描画を止める
       roundLog: [],   // ラウンドごとの収支ログ（検証用）
       roundSnap: null, // ラウンド開始時（ブースト消費前）のチップ・ポッド
@@ -3485,7 +3486,7 @@
     const loseCost = LOSE_PAYMENT;
     let pod = p.pod;
     const nm = who => (who === 'my' ? 'あなた' : '相手');
-    const has = (who, color) => ((who === 'my' ? p.myDisc : p.opDisc) || []).filter(e => e.c === color).length >= 3;
+    const has = (who, color) => ((who === 'my' ? p.myDisc : p.opDisc) || []).filter(e => e.c === color).length >= COLOR_ROLE_MIN;
     const myEffective = p.myCard + p.myBoost;
     const opEffective = p.opCard + p.opBoost;
     const res = {
@@ -3507,7 +3508,7 @@
     }
 
     if (res.outcome === 'tie') {
-      // DRAW：場に出ていたブーストチップはすべてポッドへ（青トリプルの軽減は効かない）
+      // DRAW：場に出ていたブーストチップはすべてポッドへ（青ペアの軽減は効かない）
       const carried = p.myBoost + p.opBoost;
       pod += carried;
       res.carried = carried;
@@ -3540,17 +3541,17 @@
             res.notes.push(`${nm(loser)}がポッドへ${payment}🪙支払い（JACKPOT敗者）`);
           }
         }
-        // 赤トリプル（攻め）：総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）
+        // 赤ペア（攻め）：総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）
         if (has(winner, 'red')) {
           const steal = Math.min(2, chips[loser]);
           if (steal > 0) {
             chips[loser] -= steal;
             chips[winner] += steal;
-            res.notes.push(`赤トリプル：${nm(winner)}が${nm(loser)}から${steal}🪙を直接強奪`);
+            res.notes.push(`赤ペア：${nm(winner)}が${nm(loser)}から${steal}🪙を直接強奪`);
           }
         }
       } else {
-        // 青トリプル（守り）：ブーストして負けた側は、ポッドへ流れる分が半分（端数はポッドへ）
+        // 青ペア（守り）：ブーストして負けた側は、ポッドへ流れる分が半分（端数はポッドへ）
         let loserProtected = 0;
         if (loserBoost > 0 && has(loser, 'blue')) loserProtected = Math.floor(loserBoost / 2);
         const loserToPod = loserBoost - loserProtected;
@@ -3565,7 +3566,7 @@
         }
         if (loserProtected > 0) {
           chips[loser] += loserProtected; // 手元に残る分（ブースト消費時に一度引かれているので戻す）
-          res.notes.push(`青トリプル：${nm(loser)}はブースト失敗分のうち${loserProtected}🪙を手元に残した`);
+          res.notes.push(`青ペア：${nm(loser)}はブースト失敗分のうち${loserProtected}🪙を手元に残した`);
         }
 
         if (loserBoost === 0) {
@@ -3587,12 +3588,12 @@
         } else {
           res.notes.push(`WIN：${nm(winner)}の勝利（ポッドが空のため受け取りなし）`);
         }
-        // 緑トリプル（安定）：THROUGH（ブーストなしの勝利）時、さらにポッドから1🪙回収
+        // 緑ペア（安定）：THROUGH（ブーストなしの勝利）時、さらにポッドから1🪙回収
         if (winnerBoost === 0 && has(winner, 'green') && pod > 0) {
           pod -= 1;
           chips[winner] += 1;
           res.roundPodKind = 'grow';
-          res.notes.push(`緑トリプル：${nm(winner)}がTHROUGHでポッドから追加で1🪙回収`);
+          res.notes.push(`緑ペア：${nm(winner)}がTHROUGHでポッドから追加で1🪙回収`);
         }
       }
       res.logKind = diff === 1
@@ -4064,7 +4065,7 @@
     const roleKeys = new Set(activeRoles.map(r => r.name));
     const seen = state.roleSeen[who];
     let newlyActivated = false;
-    const blueRoleKey = `色トリプル(${COLOR_LABEL.blue})`;
+    const blueRoleKey = `色ペア(${COLOR_LABEL.blue})`;
     roleKeys.forEach(k => {
       if (!seen.has(k)) {
         newlyActivated = true;
@@ -4074,7 +4075,7 @@
     state.roleSeen[who] = roleKeys;
     if (newlyActivated) playRoleUpSound();
 
-    // ピンクトリプル発動中：相手のデッキの底（次に引かれる最後のカード）の枠に目のアイコンを表示
+    // ピンクペア発動中：相手のデッキの底（次に引かれる最後のカード）の枠に目のアイコンを表示
     // activeViewer基準：今画面を見ている側がピンクを持っていれば、相手側の捨て札グリッド(who === otherOf(activeViewer))に表示する
     const peekTarget = (who === otherOf(activeViewer) && hasColorTriple(activeViewer, 'pink'))
       ? getDeckBottom(who)
