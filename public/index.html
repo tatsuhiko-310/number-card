@@ -1277,7 +1277,7 @@
   <h1 class="title-logo"><img src="assets/title-logo-clear.webp" alt="NUMBER WAR" width="960" height="169"></h1>
 
   <div id="startScreen">
-    <div class="goal">お互いチップ15枚からスタート！先にチップ30枚集めたら勝ち（相手のチップは0枚になっても即敗北にはならず続行）</div>
+    <div class="goal">お互いチップ15枚からスタート！先にチップ30枚集めたら勝ち（チップが0枚になったら負け）</div>
     <div class="start-panel online-panel">
       <div class="start-btns">
         <button class="btn" id="createRoomBtn">部屋を作る</button>
@@ -1406,7 +1406,7 @@
 
   <div class="rules">
     基本ルール：お互いチップ15枚からスタート（ラウンド開始時の参加費の支払いはなし）。1〜8のカードが1枚ずつ入った8枚のデッキを、<b>プレイヤーごとに1組ずつ</b>用意してシャッフル。それぞれ手札2枚になるよう自分のデッキから引く。出すカードを選ぶ際、所持チップを消費してその<b>ターンのみ</b>数字を+1できる（カード自体の数字は変わらず、ターン終了時は元の数字のまま捨て札へ）。お互い同時に1枚出し、数字を比較して勝敗を決める。<br><br>
-    決着：先に<b>チップ30枚</b>を集めた方の勝ち。チップが0枚になっても即敗北にはならず、勝つまでゲームは続く。<br><br>
+    決着：先に<b>チップ30枚</b>を集めた方の勝ち。ラウンド終了時に<b>チップが0枚</b>になった方は負け（お互い0枚なら引き分け）。<br><br>
     勝敗の報酬（チップブーストが鍵）：<br>
     ・<b>JACKPOT</b>＝ブースト有無を問わず、<b>ちょうど1差</b>で勝った時だけ、ポッドに溜まっている分を総取りできる（負けた側がブーストしていなければ、LOSE同様にポッドへ支払う。支払いは総取りの後）<br>
     ・<b>WIN</b>＝JACKPOT以外で勝つと、ポッドから<b>1枚</b>受け取る（ポッドが空なら受け取りなし。ブースト分・LOSEの支払いがポッドに入った後に受け取る）。ブーストなしの勝利を<b>THROUGH</b>と呼ぶ<br>
@@ -1750,6 +1750,13 @@
   const COLOR_LABEL = { red: '赤', blue: '青', yellow: '黄', green: '緑', pink: 'ピンク' };
   let debugMode = false; // デバッグモード：準備フェイズで全色から選べるようにする
   const WIN_CHIPS = 30; // 新しい勝利条件：どちらかがこの枚数のチップを集めたら決着
+  // 決着判定：チップWIN_CHIPS枚到達で勝ち、チップ0枚で負け。'my' / 'op' / 'draw'（両者0枚）/ null（続行）
+  function gameWinner(myChips, opChips) {
+    if (myChips <= 0 && opChips <= 0) return 'draw';
+    if (myChips >= WIN_CHIPS || opChips <= 0) return 'my';
+    if (opChips >= WIN_CHIPS || myChips <= 0) return 'op';
+    return null;
+  }
   // 対人戦(2人対戦・画面を渡し合う想定)に備えて、情報系の役(ピンク・黄)は「今画面を見ている側」基準で判定する。
   // 現状は常にmy(人間側)が画面を見ているが、将来オセットで表示を切り替える際はここを変更するだけでよい。
   let activeViewer = 'my';
@@ -2369,7 +2376,7 @@
       myChips: m.chips.host - hB, opChips: m.chips.guest - gB, pod: m.pod,
       myDisc: hs.discard || [], opDisc: gs.discard || [], round: R, tie
     });
-    const over = !m.debug && (res.myChips >= WIN_CHIPS || res.opChips >= WIN_CHIPS);
+    const over = !m.debug && gameWinner(res.myChips, res.opChips) !== null;
     writeMatch({ round: R + 1, chips: { host: res.myChips, guest: res.opChips }, pod: res.pod, status: over ? 'over' : 'playing', lastRound: R });
   }
 
@@ -3806,8 +3813,8 @@
       flashNum('opHP', 'pay-flash');
     }
 
-    // 決着判定：どちらかがWIN_CHIPS枚に到達したら勝利（チップ0枚になっても即敗北にはせず、続行する）
-    if (!debugMode && (state.myChips >= WIN_CHIPS || state.opChips >= WIN_CHIPS)) {
+    // 決着判定：どちらかがWIN_CHIPS枚に到達したら勝利、チップ0枚になったら敗北
+    if (!debugMode && gameWinner(state.myChips, state.opChips) !== null) {
       state.over = true;
       if (net.active) {
         stopTurnTimer();
@@ -3844,10 +3851,17 @@
     const overlay = document.getElementById('overlay');
     const title = document.getElementById('overlayTitle');
     const text = document.getElementById('overlayText');
-    if (state.myChips >= WIN_CHIPS) {
-      title.textContent = `🎉 あなたの勝ち！（チップ${WIN_CHIPS}枚達成）`;
-    } else if (state.opChips >= WIN_CHIPS) {
-      title.textContent = `😢 相手の勝ち…（チップ${WIN_CHIPS}枚達成）`;
+    const w = gameWinner(state.myChips, state.opChips);
+    if (w === 'my') {
+      title.textContent = state.myChips >= WIN_CHIPS
+        ? `🎉 あなたの勝ち！（チップ${WIN_CHIPS}枚達成）`
+        : '🎉 あなたの勝ち！（相手のチップが0枚）';
+    } else if (w === 'op') {
+      title.textContent = state.opChips >= WIN_CHIPS
+        ? `😢 相手の勝ち…（チップ${WIN_CHIPS}枚達成）`
+        : '😢 相手の勝ち…（あなたのチップが0枚）';
+    } else if (w === 'draw') {
+      title.textContent = '引き分け（お互いのチップが0枚）';
     } else {
       title.textContent = '終了';
     }
