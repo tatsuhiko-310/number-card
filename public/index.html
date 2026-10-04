@@ -1518,7 +1518,7 @@
     ・<b>7</b>　A <b>露呈・中</b>：出すと、次のラウンド自分の残りの手札の偶数・奇数が相手に見える／B <b>重圧</b>：出すと、次のラウンド自分はブーストできない<br>
     ・<b>8</b>　A <b>全公開</b>：出すと、自分の残りの手札が相手に公開される（確定情報 !）／B <b>代償・大</b>：出すと、チップ2枚をポッドへ払う<br>
     <br>
-    色の役(自分の捨て札の色構成で常時判定)：<b>色トリプル</b>(同色3枚以上)。成立すると捨て札が光り、タップで確認できます。<b>赤</b>(攻め)＝JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）／<b>青</b>(守り)＝ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ）／<b>緑</b>(安定)＝THROUGH(ブーストなしの勝利)時、WINの1🪙に加えて、ポッドに残っていればさらに1🪙回収できる／<b>黄</b>(勢い)＝ブーストして勝った時(JACKPOT以外)、ポッドへ流れるブースト分のうち1🪙が手元に戻る／<b>ピンク</b>(反撃)＝ブーストせずに負けた時(JACKPOT以外)、相手がブーストしていれば、相手のブースト分のうち1🪙がポッドではなく自分の手元に入る。役はすべてチップの出入りに関わり、情報が見える効果はカード効果だけ。<br><br>
+    色の役(自分の捨て札の色構成で常時判定)：<b>色トリプル</b>(同色3枚以上)。成立すると捨て札が光り、タップで確認できます。<b>緑</b>(コツコツ回収)＝通常勝利の時、ポッドから受け取る枚数が1🪙→2🪙／<b>赤</b>(攻めの一撃)＝JACKPOTで勝った時、総取りに加えて相手のチップを直接2🪙奪う／<b>青</b>(守り)＝通常敗北の時、ポッドへ支払う枚数が2🪙→1🪙（保険と重なれば0🪙）／<b>ピンク</b>(逆襲)＝JACKPOTで負けた時、次のラウンドに勝てば相手のチップを直接2🪙奪う／<b>黄</b>(雷光)＝引き分け→手札勝負（サドンデス）で勝った時、差が1でなくても必ずJACKPOT。役はすべてチップの出入りに関わり、情報が見える効果はカード効果だけ。<br><br>
     確定情報：山札がなくなり捨て札を山札に戻した時に手札に残っていたカード、引き分けの手札勝負で公開した手札、引き分けの山札勝負で公開して後から手札に引いたカードの数字、山札を引ききった時の最後の手札など捨て札（と山札にあると分かっているカード）から手札が絞り込めた数字は、お互いに分かる。その数字は捨て札の枠に<b style="color:var(--known)">!</b>が表示され、出されるまで残る。<br><br>
     色：各カードには赤・青・黄・緑・ピンクいずれかの色がある（デッキ構築時に選択）。現時点では色トリプル以外の効果条件には未使用。<br><br>
     オンライン対戦：「部屋を作る」で表示される4桁のコードを相手に伝え、相手が入室したら準備フェイズ（それぞれ非公開でデッキを組む）へ進み、両者の準備が終わると対戦開始。手札のカードをタップした時点でそのラウンドの手が確定し、両者が確定したら一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになると手札からランダムに1枚、ブースト0で自動的に出す。予兆（2A）は、相手が確定した時点でブースト枚数の範囲が見える。通信はブラウザ同士の直接通信で、部屋を作った人のブラウザが対戦データを持つため、対戦中はそのページを閉じないこと。途中で抜けても、同じブラウザから同じ部屋コードで入り直せば続きから再開できる。<br><br>
@@ -2414,7 +2414,7 @@
       const pc = state.pendingCommit;
       const discard = discEntries('my').filter(e => e.n !== pc.card);
       discard.push({ n: pc.card, c: pc.color, e: pc.eff || null });
-      writeMySeat({ reveal: { round: R, card: pc.card, color: pc.color, eff: pc.eff || null, boost: pc.boost, free: pc.free || 0, salt: pc.salt }, discard });
+      writeMySeat({ reveal: { round: R, card: pc.card, color: pc.color, eff: pc.eff || null, boost: pc.boost, free: pc.free || 0, rev: revengeNow('my'), salt: pc.salt }, discard });
     }
     if (state.netPhase === 'committed' && oc) {
       const rm = document.getElementById('resultMsg');
@@ -2474,7 +2474,8 @@
       myCard: hs.reveal.card, opCard: gs.reveal.card, myBoost: hB, opBoost: gB, myPaid: hP, opPaid: gP,
       myKey: hs.reveal.eff ? hs.reveal.card + hs.reveal.eff : null, opKey: gs.reveal.eff ? gs.reveal.card + gs.reveal.eff : null,
       myChips: m.chips.host - hP, opChips: m.chips.guest - gP, pod: m.pod,
-      myDisc: hs.discard || [], opDisc: gs.discard || [], round: R, tie
+      myDisc: hs.discard || [], opDisc: gs.discard || [], round: R, tie,
+      myRevenge: !!hs.reveal.rev, opRevenge: !!gs.reveal.rev
     });
     const over = !m.debug && gameWinner(res.myChips, res.opChips) !== null;
     writeMatch({ round: R + 1, chips: { host: res.myChips, guest: res.opChips }, pod: res.pod, status: over ? 'over' : 'playing', lastRound: R });
@@ -2749,11 +2750,11 @@
   // === 色の役：色トリプル（捨て札に同色3枚以上）のみ。成立すれば出したカードの色を問わず常時発動 ===
   const COLOR_ROLE_MIN = 3; // 色の役が成立する同色枚数
   const COLOR_TRIPLE_DESC = {
-    red: '攻めの一撃：JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（相手の残りが2枚未満なら0枚になるまで）',
-    blue: '守りの軽減：ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ。例：3🪙ブースト→2🪙がポッドへ、1🪙は手元に残る）',
-    green: 'コツコツ回収：THROUGH（ブーストなしの勝利）時、WINの1🪙に加えて、ポッドに残っていればさらに1🪙回収できる',
-    yellow: '勢い：ブーストして勝った時（JACKPOT以外）、ポッドへ流れるブースト分のうち1🪙が手元に戻る',
-    pink: '反撃：ブーストせずに負けた時（JACKPOT以外）、相手がブーストしていれば、相手のブースト分のうち1🪙がポッドではなく自分の手元に入る'
+    green: 'コツコツ回収：通常勝利（JACKPOT以外）の時、ポッドから受け取る枚数が1🪙→2🪙（ポッドにある分だけ）',
+    red: '攻めの一撃：JACKPOTで勝った時、総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）',
+    blue: '守り：通常敗北（JACKPOT以外）の時、ポッドへ支払う枚数が2🪙→1🪙（保険と重なれば0🪙）',
+    pink: '逆襲：JACKPOTで負けた時、次のラウンドに勝てば（どんな勝ち方でも）相手のチップを直接2🪙奪う',
+    yellow: '雷光：引き分け→手札勝負（サドンデス）で勝った時、差が1でなくても必ずJACKPOT（総取り）になる'
   };
   function getColorCounts(who) {
     const discard = state[who + 'Discard'];
@@ -3290,6 +3291,8 @@
     if (state.exposure && state.exposure.boostIntel) add('op', 'shown', '予兆：あなたのブースト枚数の範囲');
     if (opBlocked) add('op', 'rule', '撹乱：あなたの情報系の効果が効かない');
     if (myBlocked) add('me', 'rule', '撹乱：相手の情報系の効果が効かない');
+    if (revengeNow('my')) add('me', 'rule', '逆襲：このラウンド勝てば相手から2枚奪う');
+    if (revengeNow('op')) add('op', 'rule', '逆襲：相手がこのラウンド勝つと2枚奪われる');
     const r = state.rule || {};
     if (r.my && r.my.free) add('me', 'rule', '伏兵：ブースト1枚目が無料');
     if (r.my && r.my.noBoost) add('me', 'rule', '重圧：このラウンドはブーストできない');
@@ -3739,6 +3742,7 @@
   // p.tie は引き分け時の勝負に使うカードの数字の列 { my: [手札, 山札の一番上, 次…], op: [...] }（null＝カードなし）
   // p.myBoost / p.opBoost はブーストで上がった数字、p.myPaid / p.opPaid は実際に払ったチップ（伏兵の無料分を除く）
   // p.myKey / p.opKey は出したカードの効果（例 '4B'）
+  // p.myRevenge / p.opRevenge はピンクの役「逆襲」がこのラウンド有効か（前のラウンドにJACKPOTで負けた時に成立）
   function computeRoundResult(p) {
     const chips = { my: p.myChips, op: p.opChips };
     const loseCost = LOSE_PAYMENT;
@@ -3761,7 +3765,8 @@
     const res = {
       outcome: myEffective === opEffective ? 'tie' : (myEffective > opEffective ? 'me' : 'op'),
       myEffective, opEffective, notes: [], logKind: '', roundPodKind: 'through',
-      jackpotWinner: null, losePayer: null, drawBothFlash: false, carried: 0, tiebreak: null
+      jackpotWinner: null, losePayer: null, drawBothFlash: false, carried: 0, tiebreak: null,
+      revengeNext: null // ピンクの役：次のラウンドに逆襲できる側
     };
     res.notes.push(...costNotes);
     // 引き分け：残りの手札（素の数字）で勝負。手札も同じなら山札の一番上から順に比べる
@@ -3793,14 +3798,19 @@
       const winnerBoosted = (winner === 'my' ? p.myBoost : p.opBoost) > 0;
       const loserBoosted = (winner === 'my' ? p.opBoost : p.myBoost) > 0;
 
-      if (diff === 1) {
+      // 黄の役（雷光）：引き分け→手札勝負に勝てば、差が1でなくても必ずJACKPOT
+      const thunder = !!res.tiebreak && diff !== 1 && has(winner, 'yellow');
+      if (thunder) res.notes.push(`黄の役（雷光）：${nm(winner)}が手札勝負に勝ったのでJACKPOT`);
+      if (diff === 1 || thunder) {
         // JACKPOT：ちょうど1差で勝った側が、ポッド（今回の両者のブースト分を含む）を総取り。ブースト有無は問わない
         const jackpot = pod + winnerBoost + loserBoost;
         pod = 0;
         chips[winner] += jackpot;
         res.roundPodKind = 'jackpot';
         res.jackpotWinner = winner;
-        res.notes.push(winnerBoosted
+        res.notes.push(thunder
+          ? `JACKPOT！${nm(winner)}の雷光：ポッド${jackpot}🪙を総取り`
+          : winnerBoosted
           ? `JACKPOT！${nm(winner)}の+1差ブースト勝利：ポッド${jackpot}🪙を総取り`
           : `JACKPOT！${nm(winner)}のノーブースト+1差勝利：ポッド${jackpot}🪙を総取り`);
         // JACKPOTで負けた側も、ブースト有無を問わずLOSEと同様にポッドへ支払う。総取りの後に支払う（仮置き）
@@ -3813,75 +3823,67 @@
             res.notes.push(`${nm(loser)}がポッドへ${payment}🪙支払い（JACKPOT敗者${key[loser] === '4B' ? '・保険で-1' : ''}）`);
           }
         }
-        // 赤トリプル（攻め）：総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）
+        // 赤の役（攻めの一撃）：総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）
         if (has(winner, 'red')) {
           const steal = Math.min(2, chips[loser]);
           if (steal > 0) {
             chips[loser] -= steal;
             chips[winner] += steal;
-            res.notes.push(`赤トリプル：${nm(winner)}が${nm(loser)}から${steal}🪙を直接強奪`);
+            res.notes.push(`赤の役（攻めの一撃）：${nm(winner)}が${nm(loser)}から${steal}🪙を直接強奪`);
           }
         }
+        // ピンクの役（逆襲）：JACKPOTで負けた側は、次のラウンドに勝てば相手から2🪙奪える
+        if (has(loser, 'pink')) {
+          res.revengeNext = loser;
+          res.notes.push(`ピンクの役（逆襲）：${nm(loser)}は次のラウンドに勝てば${nm(winner)}から2🪙奪える`);
+        }
       } else {
-        // 青トリプル（守り）：ブーストして負けた側は、ポッドへ流れる分が半分（端数はポッドへ）
-        let loserProtected = 0;
-        if (loserBoost > 0 && has(loser, 'blue')) loserProtected = Math.floor(loserBoost / 2);
-        const loserToPod = loserBoost - loserProtected;
-        // 黄トリプル（勢い）：ブーストして勝った側は、ポッドへ流れるブースト分のうち1🪙が手元に戻る
-        const winnerKept = (winnerBoost > 0 && has(winner, 'yellow')) ? 1 : 0;
-        // ピンクトリプル（反撃）：ブーストせずに負けた側は、勝った側のブースト分のうち1🪙をポッドではなく自分の手元に受け取る
-        const loserCounter = (!loserBoosted && winnerBoost - winnerKept > 0 && has(loser, 'pink')) ? 1 : 0;
-        const winnerToPod = winnerBoost - winnerKept - loserCounter;
-        const toPod = winnerToPod + loserToPod;
+        // ブーストはすべてポッドへ
+        const toPod = winnerBoost + loserBoost;
         if (toPod > 0) {
           pod += toPod;
           res.roundPodKind = 'grow';
           const parts = [];
-          if (winnerToPod > 0) parts.push(`${nm(winner)}のブースト${winnerToPod}🪙`);
-          if (loserToPod > 0) parts.push(`${nm(loser)}のブースト${loserToPod}🪙`);
+          if (winnerBoost > 0) parts.push(`${nm(winner)}のブースト${winnerBoost}🪙`);
+          if (loserBoost > 0) parts.push(`${nm(loser)}のブースト${loserBoost}🪙`);
           res.notes.push(`${parts.join('＋')}がポッドへ`);
-        }
-        if (loserProtected > 0) {
-          chips[loser] += loserProtected; // 手元に残る分（ブースト消費時に一度引かれているので戻す）
-          res.notes.push(`青トリプル：${nm(loser)}はブースト失敗分のうち${loserProtected}🪙を手元に残した`);
-        }
-        if (winnerKept > 0) {
-          chips[winner] += winnerKept;
-          res.notes.push(`黄トリプル：${nm(winner)}はブースト分のうち${winnerKept}🪙を手元に戻した`);
-        }
-        if (loserCounter > 0) {
-          chips[loser] += loserCounter;
-          res.notes.push(`ピンクトリプル：${nm(loser)}が${nm(winner)}のブーストから${loserCounter}🪙を奪い返した`);
         }
 
         {
           // LOSE：ポッドへ支払う（固定枚数。持っている分だけ）。ブーストして負けた場合もブースト分に加えて支払う
-          const payment = Math.min(losePay(loser), chips[loser]);
+          // 青の役（守り）：通常の負けの支払いが1枚減る（保険と重なれば0枚）
+          const blue = has(loser, 'blue');
+          const payment = Math.min(Math.max(0, losePay(loser) - (blue ? 1 : 0)), chips[loser]);
           chips[loser] -= payment;
           pod += payment;
           if (payment > 0 && res.roundPodKind === 'through') res.roundPodKind = 'grow';
           res.losePayer = loser;
-          res.notes.push(`${loserBoosted ? 'ブースト負け' : 'LOSE'}：${nm(loser)}がポッドへ${payment}🪙支払い${key[loser] === '4B' ? '（保険で-1）' : ''}`);
+          const cuts = [key[loser] === '4B' ? '保険で-1' : '', blue ? '青の役で-1' : ''].filter(Boolean).join('・');
+          res.notes.push(`${loserBoosted ? 'ブースト負け' : 'LOSE'}：${payment > 0 ? `${nm(loser)}がポッドへ${payment}🪙支払い` : `${nm(loser)}の支払いなし`}${cuts ? `（${cuts}）` : ''}`);
         }
         // WIN：勝った側はポッドから受け取る（ポッドにある分だけ。LOSEの支払い・ブースト流入の後）
-        const reward = Math.min(WIN_REWARD, pod);
+        // 緑の役（コツコツ回収）：受け取りが1枚→2枚
+        const green = has(winner, 'green');
+        const reward = Math.min(WIN_REWARD + (green ? 1 : 0), pod);
         if (reward > 0) {
           pod -= reward;
           chips[winner] += reward;
           res.roundPodKind = 'grow';
-          res.notes.push(`WIN：${nm(winner)}がポッドから${reward}🪙受け取り`);
+          res.notes.push(`WIN：${nm(winner)}がポッドから${reward}🪙受け取り${green ? '（緑の役で+1）' : ''}`);
         } else {
           res.notes.push(`WIN：${nm(winner)}の勝利（ポッドが空のため受け取りなし）`);
         }
-        // 緑トリプル（安定）：THROUGH（ブーストなしの勝利）時、さらにポッドから1🪙回収
-        if (!winnerBoosted && has(winner, 'green') && pod > 0) {
-          pod -= 1;
-          chips[winner] += 1;
-          res.roundPodKind = 'grow';
-          res.notes.push(`緑トリプル：${nm(winner)}がTHROUGHでポッドから追加で1🪙回収`);
+      }
+      // ピンクの役（逆襲）：前のラウンドにJACKPOTで負けていた側が勝てば、相手から直接2🪙奪う
+      if ((winner === 'my' ? p.myRevenge : p.opRevenge)) {
+        const steal = Math.min(2, chips[loser]);
+        if (steal > 0) {
+          chips[loser] -= steal;
+          chips[winner] += steal;
+          res.notes.push(`ピンクの役（逆襲）：${nm(winner)}が${nm(loser)}から${steal}🪙を奪い返した`);
         }
       }
-      res.logKind = diff === 1
+      res.logKind = (diff === 1 || thunder)
         ? 'JACKPOT'
         : [!winnerBoosted ? 'THROUGH' : 'ブースト勝ち', !loserBoosted ? 'LOSE' : 'ブースト負け'].join(' + ');
     }
@@ -4035,7 +4037,8 @@
       myKey: effKey('my', myCard), opKey: effKey('op', opCard),
       myChips: state.myChips, opChips: state.opChips, pod: state.pod,
       myDisc: discEntries('my'), opDisc: discEntries('op'), round: currentRoundNo(),
-      tie: tie ? { my: tie.my.map(tieNum), op: tie.op.map(tieNum) } : null
+      tie: tie ? { my: tie.my.map(tieNum), op: tie.op.map(tieNum) } : null,
+      myRevenge: revengeNow('my'), opRevenge: revengeNow('op')
     });
     state.myChips = res.myChips;
     state.opChips = res.opChips;
@@ -4047,7 +4050,8 @@
       my: { n: myCard, key: effKey('my', myCard) },
       op: { n: opCard, key: effKey('op', opCard) },
       winner: outcome === 'me' ? 'my' : (outcome === 'op' ? 'op' : null),
-      hidden: { my: state.myHand.length ? state.myHand[0] : null, op: (!net.active && state.opHand.length) ? state.opHand[0] : null }
+      hidden: { my: state.myHand.length ? state.myHand[0] : null, op: (!net.active && state.opHand.length) ? state.opHand[0] : null },
+      revenge: res.revengeNext // ピンクの役：次のラウンドに逆襲できる側（'my' / 'op' / null）
     };
 
     const myLabel = myChipsUsed > 0 ? `${myCard}(+${myChipsUsed}🪙=${myEffective})` : `${myCard}`;
@@ -4198,6 +4202,10 @@
       if (pv[who].key === '8A') ex.reveal = (ex.reveal || []).concat([{ n: hid, src: '全公開' }]);
     }
     return ex;
+  }
+  // ピンクの役「逆襲」がこのラウンド有効か（前のラウンドにJACKPOTで負けた時に成立）
+  function revengeNow(who) {
+    return !!(state && state.prev && state.prev.revenge === who);
   }
   // このラウンドの自分（who）の制限：伏兵（2B）＝1枚目無料、重圧（7B）＝ブースト不可
   function computeRules() {
