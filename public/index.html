@@ -3643,9 +3643,9 @@
       const maxBoost = Math.min(3, avail);
       chips = Math.floor(Math.random() * maxBoost) + 1;
     }
-    // ハッキング：手持ちチップが6枚以下になったら、ランダムで使う（ブーストとは併用しない）
+    // ハッキング：手持ちチップが6枚以下、かつ出すカードが4以下の時に、ランダムで使う（ブーストとは併用しない）
     state.opPendingHack = false;
-    if (state.hacks.op > 0 && state.opChips <= CPU_HACK_CHIP_MAX && Math.random() < CPU_HACK_RATE) {
+    if (state.hacks.op > 0 && state.opChips <= CPU_HACK_CHIP_MAX && state.opPendingCard <= CPU_HACK_CARD_MAX && Math.random() < CPU_HACK_RATE) {
       state.opPendingHack = true;
       chips = 0;
     }
@@ -4145,7 +4145,8 @@
   // ハッキングチップ：使ったラウンドは勝敗がアベコベ（低い方が勝ち）。ブーストとは併用不可
   const HACK_START = 2;
   const CPU_HACK_CHIP_MAX = 6;  // CPUがハッキングを使い始める手持ちチップ数
-  const CPU_HACK_RATE = 0.35;   // 条件を満たしたラウンドで使う確率
+  const CPU_HACK_CARD_MAX = 4;  // CPUがハッキングを使う、出すカードの上限
+  const CPU_HACK_RATE = 0.6;    // 条件を満たしたラウンドで使う確率
   // 負けた側がポッドへ支払う枚数（固定）
   const LOSE_PAYMENT = 2;
   // 勝った時（JACKPOT以外）にポッドから受け取る枚数
