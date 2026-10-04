@@ -1530,7 +1530,7 @@
     ・<b>8</b>　A <b>全公開</b>：出すと、自分の残りの手札が相手に公開される（確定情報 !）／B <b>代償・大</b>：出すと、チップ2枚をポッドへ払う<br>
     <br>
     色の役(自分の捨て札の色構成で常時判定)：<b>色トリプル</b>(同色3枚以上)。成立すると捨て札が光り、タップで確認できます。<b>赤</b>(攻め)＝JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）／<b>青</b>(守り)＝ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ）／<b>緑</b>(安定)＝THROUGH(ブーストなしの勝利)時、WINの1🪙に加えて、ポッドに残っていればさらに1🪙回収できる／<b>ピンク</b>＝相手のデッキの底が見える／<b>黄</b>＝手札選択中に相手がブーストするかどうかだけ見える(枚数は伏せる)。<br><br>
-    確定情報：山札がなくなり捨て札を山札に戻した時に手札に残っていたカード、引き分けの手札勝負で公開した手札、引き分けの山札勝負で公開して後から手札に引いたカードの数字は、お互いに分かる。その数字は捨て札の枠に<b style="color:var(--known)">!</b>が表示され、出されるまで残る。<br><br>
+    確定情報：山札がなくなり捨て札を山札に戻した時に手札に残っていたカード、引き分けの手札勝負で公開した手札、引き分けの山札勝負で公開して後から手札に引いたカードの数字、山札を引ききった時の最後の手札など捨て札（と山札にあると分かっているカード）から手札が絞り込めた数字は、お互いに分かる。その数字は捨て札の枠に<b style="color:var(--known)">!</b>が表示され、出されるまで残る。<br><br>
     色：各カードには赤・青・黄・緑・ピンクいずれかの色がある（デッキ構築時に選択）。現時点では色トリプル以外の効果条件には未使用。<br><br>
     オンライン対戦：「部屋を作る」で表示される4桁のコードを相手に伝え、相手が入室したら準備フェイズ（それぞれ非公開でデッキを組む）へ進み、両者の準備が終わると対戦開始。手札のカードをタップした時点でそのラウンドの手が確定し、両者が確定したら一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになると手札からランダムに1枚、ブースト0で自動的に出す。黄の役は、相手が確定した時点でブーストの有無が見える。通信はブラウザ同士の直接通信で、部屋を作った人のブラウザが対戦データを持つため、対戦中はそのページを閉じないこと。途中で抜けても、同じブラウザから同じ部屋コードで入り直せば続きから再開できる。<br><br>
     画面：カードを選ぶ時は「手札選択」画面、カードを出すと「バトル場」画面に自動で切り替わり、決着後にまた手札選択へ戻ります。
@@ -2943,7 +2943,7 @@
       wrap.appendChild(row);
     };
     addRow('known', '!',
-      `<b>確定情報</b>：山札を作り直した時に手札に残っていた数字や、引き分け勝負で公開された数字。今も${owner}の手札にあることがお互いに分かっている（出されると消える）` +
+      `<b>確定情報</b>：山札を作り直した時に手札に残っていた数字や、引き分け勝負で公開された数字、山札を引ききるなどして捨て札から絞り込めた数字。今も${owner}の手札にあることがお互いに分かっている（出されると消える）` +
       (knownNow.length ? `<br><span class="legend-now known">いま：${knownNow.join('・')}</span>` : ''));
     addRow('peek', EYE_SVG,
       who === 'op'
@@ -4457,6 +4457,23 @@
     return out;
   }
 
+  // 公開情報だけで手札が確定する数字（山札を引ききった最後の2枚など）
+  // 1〜8から「捨て札」「山札にあると分かっているカード」を除いた残りが手札の枚数と同じなら、残りはすべて手札
+  function deducedHeld(who) {
+    const disc = state[who + 'Discard'] || [];
+    // 公開済みの場のカードは捨て札に入っているので、手札は1枚。裏向きの場のカードは手札に含めて数える
+    const handCount = state.fieldRevealed ? 1 : 2;
+    const inDeck = new Set((state.revealedDeck && state.revealedDeck[who]) || []);
+    // ピンクの役で相手に見えているデッキの底
+    if (hasColorTriple(otherOf(who), 'pink') && !(state.prev && state.prev[who].key === '1B')) {
+      const b = getDeckBottom(who);
+      if (b != null) inDeck.add(b);
+    }
+    const rest = [];
+    for (let n = 1; n <= 8; n++) if (!disc.includes(n) && !inDeck.has(n)) rest.push(n);
+    return rest.length === handCount ? rest : [];
+  }
+
   function renderDiscardGrid(elementId, discardArr, colorMap, who) {
     if (state.returningNow[who]) return; // 演出中。終了時に最新状態で描き直す
     const grid = document.getElementById(elementId);
@@ -4520,6 +4537,7 @@
       ? getDeckBottom(who)
       : null;
 
+    const deduced = deducedHeld(who);
     for (let n = 1; n <= 8; n++) {
       const slot = document.createElement('div');
       const isFilled = discardArr.includes(n);
@@ -4529,7 +4547,7 @@
         if (glowColors.has(colorMap[n])) cls += ' glow';
       }
       // 確定情報の数字：まだ出されていなければ「！」を重ねる
-      const isKnown = !isFilled && ((state.knownHeld && state.knownHeld[who]) || []).includes(n);
+      const isKnown = !isFilled && (((state.knownHeld && state.knownHeld[who]) || []).includes(n) || deduced.includes(n));
       if (isKnown) cls += ' known';
       slot.className = cls;
       slot.textContent = n;
