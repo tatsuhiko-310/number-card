@@ -3972,7 +3972,7 @@
       const panel = document.querySelector('.battle-panel');
       const b = document.createElement('div');
       b.className = 'sd-banner hack';
-      b.textContent = myHack && opHack ? 'DOUBLE HACK!!' : (myHack ? 'HACK!! 勝敗反転' : 'HACKED!! 勝敗反転');
+      b.textContent = myHack && opHack ? 'DOUBLE HACK!!' : (myHack ? 'HACK!!' : 'HACKED!!');
       panel.appendChild(b);
       panel.classList.add('hacked');
       setTimeout(() => { b.remove(); panel.classList.remove('hacked'); }, 1300);
