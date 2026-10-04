@@ -1514,8 +1514,8 @@
     86% { transform: translate(2px, 1px); opacity: 1; }
   }
   /* 役の説明：成立しているレベルを強調 */
-  .role-lv { opacity: 0.55; }
-  .role-lv.on { opacity: 1; color: #fff; }
+  .role-lv { opacity: 0.4; filter: grayscale(1); }
+  .role-lv.on { opacity: 1; filter: none; color: #fff; }
   .role-lv b { font-size: 0.58rem; padding: 0 4px; margin-right: 3px; border-radius: 4px; border: 1px solid currentColor; }
   /* 役パネルは盤面の中に収め、はみ出す分はスクロール */
   .role-panel { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; }
@@ -1811,7 +1811,7 @@
     ・<b>7</b>　<b>露呈・中</b>：出すと、次のラウンド自分の残りの手札の偶数・奇数が相手に見える／<b>重圧</b>：出すと、次のラウンド自分はブーストできない<br>
     ・<b>8</b>　<b>全公開</b>：出すと、自分の残りの手札が相手に公開される（確定情報 !）／<b>代償・大</b>：出すと、チップ2枚をポッドへ払う<br>
     <br>
-    色の役(自分の捨て札の色構成で常時判定)：同色<b>2枚以上</b>で成立。成立すると捨て札が光り、タップで確認できます。成立している間は毎ラウンド、相手の情報が見える（ポッドの下に水色で表示）。同色<b>3枚</b>でLv2になり、さらに情報が増える。<b>青</b>(観測)＝相手の手札の大小（小1〜4・大5〜8の枚数）、Lv2で一番大きい数字も／<b>ピンク</b>(透視)＝相手の手札の偶奇（偶数・奇数の枚数）、Lv2で一番小さい数字も／<b>緑</b>(解析)＝相手の手札の合計、Lv2で自分の手札に相手の手札とちょうど1差のカードがあるかも／<b>黄</b>(先読み)＝相手の山札の一番底、Lv2で一番上も／<b>赤</b>(予兆)＝相手が手を確定した後、ブースト枚数の目安（しない／1〜2枚／3枚以上）、Lv2で正確な枚数。複数の色が成立していれば全部見える。役はチップの出入りには関わらない。<br>ボーナス <b>Enhance（エンハンス）</b>：役とは別枠で、捨て札に同色<b>4枚以上</b>（色は問わない）で成立。JACKPOTで勝った時、総取りに加えて相手のチップを直接<b>2🪙</b>奪う（相手の持っている分だけ）<br><br>
+    色の役(自分の捨て札の色構成で常時判定)：同色<b>2枚以上</b>で成立。成立すると捨て札が光り、タップで確認できます。成立している間は毎ラウンド、相手の情報が見える（ポッドの下に水色で表示）。同色2枚でLv2、<b>3枚</b>でLv3になり、さらに情報が増える。<b>青</b>(観測)＝相手の手札の大小（小1〜4・大5〜8の枚数）、Lv3で一番大きい数字も／<b>ピンク</b>(透視)＝相手の手札の偶奇（偶数・奇数の枚数）、Lv3で一番小さい数字も／<b>緑</b>(解析)＝相手の手札の合計、Lv3で自分の手札に相手の手札とちょうど1差のカードがあるかも／<b>黄</b>(先読み)＝相手の山札の一番底、Lv3で一番上も／<b>赤</b>(予兆)＝相手が手を確定した後、ブースト枚数の目安（しない／1〜2枚／3枚以上）、Lv3で正確な枚数。複数の色が成立していれば全部見える。役はチップの出入りには関わらない。<br>ボーナス <b>Enhance（エンハンス）</b>：役とは別枠で、捨て札に同色<b>4枚以上</b>（色は問わない）で成立。JACKPOTで勝った時、総取りに加えて相手のチップを直接<b>2🪙</b>奪う（相手の持っている分だけ）<br><br>
     確定情報：山札がなくなり捨て札を山札に戻した時に手札に残っていたカード、引き分けの手札勝負で公開した手札、引き分けの山札勝負で公開して後から手札に引いたカードの数字、山札を引ききった時の最後の手札など捨て札（と山札にあると分かっているカード）から手札が絞り込めた数字は、お互いに分かる。その数字は捨て札の枠に<b style="color:var(--known)">!</b>が表示され、出されるまで残る。<br><br>
     色：各カードには赤・青・黄・緑・ピンクいずれかの色がある（デッキ構築時に選択）。現時点では色の役以外の効果条件には未使用。<br><br>
     オンライン対戦：「部屋を作る」で表示される4桁のコードを相手に伝え、相手が入室したら準備フェイズ（それぞれ非公開でデッキを組む）へ進み、両者の準備が終わると対戦開始。手札のカードをタップした時点でそのラウンドの手が確定し、両者が確定したら一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになると手札からランダムに1枚、ブースト0で自動的に出す。予兆は、相手が確定した時点でブースト枚数の範囲が見える。通信はブラウザ同士の直接通信で、部屋を作った人のブラウザが対戦データを持つため、対戦中はそのページを閉じないこと。途中で抜けても、同じブラウザから同じ部屋コードで入り直せば続きから再開できる。<br><br>
@@ -3143,7 +3143,7 @@
       if (!info) return;
       panel.insertAdjacentHTML('beforeend', `<div class="role-item compact ${r.color}">
         <div class="role-cnt on">${r.count}<small>枚</small></div>
-        <div><div class="role-item-name">${COLOR_LABEL[r.color]}：${info.name} Lv${roleLevel(r.count)}<span class="role-trig">${info.trig}</span></div>
+        <div><div class="role-item-name">${COLOR_LABEL[r.color]}：${info.name}</div>
         <div class="role-item-desc">${roleDescHtml(info, roleLevel(r.count))}</div></div></div>`);
     });
     const enh = getEnhance(who);
@@ -3378,7 +3378,7 @@
   })();
 
   // ===== デッキ構築：役一覧（今のデッキの色の枚数つき） =====
-  // 色の役：同色2枚でLv1、3枚でLv2（Lv2はLv1の情報に加えて見える）
+  // 色の役：同色2枚でLv2、3枚でLv3（Lv3はLv2の情報に加えて見える）。内部の段階は roleLevel()=1/2
   const ROLE_LIST = [
     { color: 'blue', name: '観測', trig: '毎ラウンド', lv1: '相手の手札の大小（小1〜4・大5〜8の枚数）', lv2: '＋相手の手札で一番大きい数字' },
     { color: 'pink', name: '透視', trig: '毎ラウンド', lv1: '相手の手札の偶奇（偶数・奇数の枚数）', lv2: '＋相手の手札で一番小さい数字' },
@@ -3390,7 +3390,8 @@
   const roleLevel = (count) => (count >= ROLE_LV2_MIN ? 2 : (count >= COLOR_ROLE_MIN ? 1 : 0));
   // 役の説明（2枚／3枚）。lv を渡すと、成立しているレベルを強調する
   function roleDescHtml(r, lv) {
-    return `<span class="role-lv${lv >= 1 ? ' on' : ''}"><b>${COLOR_ROLE_MIN}枚</b> ${r.lv1}</span><br><span class="role-lv${lv >= 2 ? ' on' : ''}"><b>${ROLE_LV2_MIN}枚</b> ${r.lv2}</span>`;
+    // 表記は枚数に合わせて Lv2（2枚）／Lv3（3枚）。発動していない段階はグレーアウト
+    return `<span class="role-lv${lv >= 1 ? ' on' : ''}"><b>Lv${COLOR_ROLE_MIN}</b> ${r.lv1}</span><br><span class="role-lv${lv >= 2 ? ' on' : ''}"><b>Lv${ROLE_LV2_MIN}</b> ${r.lv2.replace(/^＋/, '')}</span>`;
   }
   const ENHANCE_DESC = `同色${ENHANCE_MIN}枚以上：JACKPOTで勝った時、相手のチップを直接${ENHANCE_STEAL}枚奪う`;
   const roleName = (color) => (ROLE_LIST.find(r => r.color === color) || {}).name || '';
@@ -3401,7 +3402,7 @@
       const n = counts[r.color] || 0;
       return `<div class="role-item ${r.color}">
         <div class="role-cnt${n >= COLOR_ROLE_MIN ? ' on' : ''}">${n}<small>枚</small></div>
-        <div><div class="role-item-name">${COLOR_LABEL[r.color]}：${r.name}<span class="role-trig">${r.trig}</span></div>
+        <div><div class="role-item-name">${COLOR_LABEL[r.color]}：${r.name}</div>
         <div class="role-item-desc">${roleDescHtml(r, roleLevel(n))}</div></div></div>`;
     }).join('');
   }
@@ -3740,9 +3741,9 @@
       if (ex.roleAdj) {
         if (reader === 'me') {
           const hit = state.myHand.filter(n => ex.roleAdj.includes(n));
-          add(reader, kind, `緑の役Lv2：${hit.length ? `あなたの ${hit.join('・')} は相手の手札と1差（JACKPOTの狙い目）` : 'あなたの手札に、相手の手札と1差のカードはない'}`);
+          add(reader, kind, `緑の役Lv3：${hit.length ? `あなたの ${hit.join('・')} は相手の手札と1差（JACKPOTの狙い目）` : 'あなたの手札に、相手の手札と1差のカードはない'}`);
         } else {
-          add(reader, kind, `緑の役Lv2：${whoLabel}の手札と1差のカードがあるか`);
+          add(reader, kind, `緑の役Lv3：${whoLabel}の手札と1差のカードがあるか`);
         }
       }
       const dk = (n) => (n == null ? '（空）' : n);
@@ -4879,14 +4880,14 @@
     if (by('3A')) { const d = state[who + 'Deck']; ex.deckTop = d.length ? d[d.length - 1] : null; }
     if (by('2A')) ex.boostIntel = true;
     // 色の役（相手の捨て札に同色2枚以上）：相手に見える情報
-    // 2枚でLv1、3枚でLv2
+    // 2枚でLv2、3枚でLv3（roleLevel は 1 / 2）
     const lv = (color) => (blocked ? 0 : roleLevel(getColorCounts(other)[color] || 0));
     if (lv('blue') >= 1) ex.roleHilo = { lo: hand.filter(n => n <= 4).length, hi: hand.filter(n => n >= 5).length };
     if (lv('blue') >= 2 && hand.length) ex.roleMax = Math.max(...hand);
     if (lv('pink') >= 1) ex.roleParity = { even: hand.filter(n => n % 2 === 0).length, odd: hand.filter(n => n % 2 === 1).length };
     if (lv('pink') >= 2 && hand.length) ex.roleMin = Math.min(...hand);
     if (lv('green') >= 1) ex.roleSum = hand.reduce((a, b) => a + b, 0);
-    // 緑Lv2：相手の手札とちょうど1差になる数字の候補（見る側が自分の手札と照らし合わせる）
+    // 緑Lv3：相手の手札とちょうど1差になる数字の候補（見る側が自分の手札と照らし合わせる）
     if (lv('green') >= 2) ex.roleAdj = [...new Set(hand.flatMap(n => [n - 1, n + 1]).filter(n => n >= 1 && n <= 8))].sort((a, b) => a - b);
     if (lv('yellow') >= 1) { const d = state[who + 'Deck']; ex.roleDeckBottom = d.length ? d[0] : null; }
     if (lv('yellow') >= 2) { const d = state[who + 'Deck']; ex.roleDeckTop = d.length ? d[d.length - 1] : null; }
