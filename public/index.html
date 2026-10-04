@@ -1500,6 +1500,19 @@
   .board.hack-glitching .flip-card { filter: drop-shadow(-4px 0 rgba(255, 0, 60, 0.7)) drop-shadow(4px 0 rgba(0, 220, 255, 0.7)); }
   .board.hack-glitching .flip-front { text-shadow: -3px 0 rgba(255, 0, 60, 0.95), 3px 0 rgba(0, 220, 255, 0.95); }
   @keyframes hackShake { 0% { transform: translateX(var(--gx, 0)); } 50% { transform: translateX(calc(var(--gx, 0) * -1)) skewX(-1deg); } 100% { transform: translateX(0); } }
+  /* 遊び方：ハッキングのページ（HACKの文字がグリッチする） */
+  .ht-hack {
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.9rem; letter-spacing: 0.08em; color: #fff;
+    text-shadow: -2px 0 rgba(255, 0, 60, 0.9), 2px 0 rgba(0, 220, 255, 0.9), 0 0 10px rgba(57, 255, 158, 0.8);
+    animation: htHack 1.6s steps(1) infinite;
+  }
+  @keyframes htHack {
+    0%, 70%, 100% { transform: translate(0); opacity: 1; }
+    74% { transform: translate(-3px, 1px) skewX(-8deg); }
+    78% { transform: translate(3px, -1px); opacity: 0.6; }
+    82% { transform: translate(-1px, 0) skewX(6deg); }
+    86% { transform: translate(2px, 1px); opacity: 1; }
+  }
   /* 役パネルは盤面の中に収め、はみ出す分はスクロール */
   .role-panel { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; }
   .rp-note { font-size: 0.62rem; color: var(--text-dim); }
@@ -1587,6 +1600,20 @@
             </ul>
           </section>
           <section class="howto-page">
+            <h2 class="howto-title">ハッキング</h2>
+            <div class="howto-visual">
+              <div class="ht-side"><div class="ht-card blue">1</div><div class="ht-tag win">WIN</div></div>
+              <div class="ht-hack">HACK</div>
+              <div class="ht-side"><div class="ht-card red">8</div><div class="ht-tag lose">LOSE</div></div>
+            </div>
+            <ul class="howto-text">
+              <li>通常のチップとは別枠で<b>2枚</b>持ってスタート</li>
+              <li>使うと<b>勝敗がアベコベ</b>（低い方が勝ち）</li>
+              <li>ブーストとは併用できない</li>
+              <li class="howto-em">相手のブーストを吸収して大逆転だ！</li>
+            </ul>
+          </section>
+          <section class="howto-page">
             <h2 class="howto-title">デッキ構築</h2>
             <div class="ht-strips">
               <div class="ht-strip red"></div><div class="ht-strip blue"></div><div class="ht-strip yellow"></div><div class="ht-strip pink"></div><div class="ht-strip green"></div>
@@ -1599,7 +1626,7 @@
           </section>
           </div>
         </div>
-        <div class="howto-dots" id="howtoDots"><button type="button" aria-label="1ページ目"></button><button type="button" aria-label="2ページ目"></button><button type="button" aria-label="3ページ目"></button><button type="button" aria-label="4ページ目"></button></div>
+        <div class="howto-dots" id="howtoDots"><button type="button" aria-label="1ページ目"></button><button type="button" aria-label="2ページ目"></button><button type="button" aria-label="3ページ目"></button><button type="button" aria-label="4ページ目"></button><button type="button" aria-label="5ページ目"></button></div>
       </div>
       <div class="howto-div"></div>
       <div class="start-btns">
