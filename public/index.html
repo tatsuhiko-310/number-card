@@ -3013,7 +3013,7 @@
       const d = effectDef(n, ab);
       const col = state[who + 'CardColors'][n];
       det.innerHTML = `<b>${n}</b>${col ? `<span class="rp-col ${col}">${COLOR_LABEL[col]}</span>` : ''}` +
-        (d ? `<span class="rp-eff">${ab}：${d.name}</span><br>${d.desc}` : '：効果なし');
+        (d ? `<span class="rp-eff">${d.name}</span><br>${d.desc}` : '：効果なし');
     }
     wrap.appendChild(det);
     return wrap;
