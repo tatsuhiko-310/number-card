@@ -1619,7 +1619,7 @@
               <div class="ht-strip red"></div><div class="ht-strip blue"></div><div class="ht-strip yellow"></div><div class="ht-strip pink"></div><div class="ht-strip green"></div>
             </div>
             <ul class="howto-text">
-              <li>カードごとに<b>色</b>と<b>効果</b>を選んでデッキを組む</li>
+              <li>カードごとに<b>色</b>を選んでデッキを組む</li>
               <li>同じ色が3枚そろうと<b>色の役</b>が発動</li>
               <li class="howto-em">毎回違う戦略で勝負しよう！</li>
             </ul>
@@ -1682,7 +1682,7 @@
       <div class="prep-head">
         <div class="prep-title">
           <div class="prep-title-main">デッキ構築 <span class="prep-count" id="prepCount">1/8</span></div>
-          <div class="prep-title-sub">1〜8の色と効果を選ぶ</div>
+          <div class="prep-title-sub" id="prepSub">1〜8の色と効果を選ぶ</div>
         </div>
         <button type="button" class="role-list-btn" id="effListBtn">効果一覧</button>
         <button type="button" class="role-list-btn" id="roleListBtn">役一覧</button>
@@ -1796,7 +1796,7 @@
     ・<b>LOSE</b>＝負けると、ポッドへチップを<b>2枚</b>支払う（持っている分だけ）。ブーストして負けた場合は、ブースト分に加えて<b>2枚</b>支払う<br>
     ・<b>引き分け</b>＝お互いの残りの手札（素の数字）を公開し、大きい方の勝ち。差がちょうど1ならJACKPOT、それ以外は通常の勝ち負けと同じ扱い。手札も同じ数字なら、山札の一番上から順に公開して決着するまで比べる（山札が空なら捨て札をシャッフルして山札にする。カードが尽きた時だけ、ブーストはすべてポッドへ流れて引き分け）。公開した手札は手札に戻り、捨て札の枠に<b style="color:var(--known)">!</b>が付く。公開した山札のカードは山札に戻り、手札に引いた時に<b style="color:var(--known)">!</b>が付く<br>
     ・それ以外の結果（JACKPOTにならなかったブースト、ブーストしての負け等）は、使ったブースト分がそのままポッドへ流れる（ブーストしての負けは、さらにLOSEの2枚も支払う）<br><br>
-    カード効果：各数字に2種類の効果があり、デッキ構築で<b>色とセットで</b>どちらかを選ぶ。相手がどちらを選んだかは、そのカードが出された時に分かる（捨て札をタップして開くパネルで、カードをタップすると効果が見られる。一度出たカードの色と効果は山札に戻っても記録される）。発動中の効果はポッドの下に1行ずつ表示される（左の線が青＝相手が発動、赤＝自分が発動／文字が水色＝相手の情報が見える、オレンジ＝自分の情報が相手に見えている、黄色＝このラウンドのルール）。<br>
+    カード効果（<b>デバッグモード専用</b>。バランス調整中のため通常の対戦では使われない）：各数字に2種類の効果があり、デッキ構築で<b>色とセットで</b>どちらかを選ぶ。相手がどちらを選んだかは、そのカードが出された時に分かる（捨て札をタップして開くパネルで、カードをタップすると効果が見られる。一度出たカードの色と効果は山札に戻っても記録される）。発動中の効果はポッドの下に1行ずつ表示される（左の線が青＝相手が発動、赤＝自分が発動／文字が水色＝相手の情報が見える、オレンジ＝自分の情報が相手に見えている、黄色＝このラウンドのルール）。<br>
     ・<b>1</b>　<b>回収</b>：出した後、ドローの代わりに自分の捨て札から1枚（1以外）を選んで手札に加える。加えたカードは確定情報（!）になる。捨て札に1しかなければ普通に引く／<b>撹乱</b>：次のラウンド、相手の情報系の効果が自分に効かない<br>
     ・<b>2</b>　<b>予兆</b>：次のラウンド、相手がブーストするか（枚数の範囲も）が見える／<b>伏兵</b>：次のラウンド、自分のブースト1枚目が無料<br>
     ・<b>3</b>　<b>先読み</b>：次のラウンド、相手の山札の一番上が見える／<b>仕込み</b>：出した後、自分の山札の一番上を見て、そのまま残すか一番下へ送るか選べる<br>
@@ -3272,21 +3272,22 @@
     prepMyEffects = {};
     prepStep = 1;
     prepPeekNum = null;
+    // カード効果はデバッグモード専用：通常モードでは効果一覧ボタンと案内を隠す
+    document.getElementById('effListBtn').classList.toggle('hidden', !debugMode);
+    document.getElementById('prepSub').textContent = debugMode ? '1〜8の色と効果を選ぶ' : '1〜8の色を選ぶ';
     showScreen('prep');
     renderPrepStep();
   }
 
-  // デッキ構築の選択肢：ランダムな2色に、効果AとBを1つずつ割り当てる（どちらの色がAになるかもランダム）
-  // デバッグモードでは全色×A/Bを並べる
+  // デッキ構築の選択肢：ランダムな2色。
+  // カード効果はバランス未調整のためデバッグモード専用：全色×効果A/Bを並べる（通常モードは効果なし）
   function prepOptionsFor() {
     if (debugMode) {
       const all = [];
       COLORS.forEach(color => ['A', 'B'].forEach(eff => all.push({ color, eff })));
       return all;
     }
-    const cols = pickTwoRandomColors();
-    const effs = Math.random() < 0.5 ? ['A', 'B'] : ['B', 'A'];
-    return cols.map((color, i) => ({ color, eff: effs[i] })).sort((a, b) => (a.eff < b.eff ? -1 : 1));
+    return pickTwoRandomColors().map(color => ({ color, eff: null }));
   }
 
   // ===== 遊び方（スタート画面に常に表示。自動送り・スワイプ・ドットで切り替え） =====
@@ -3434,8 +3435,9 @@
       btn.addEventListener('click', () => choosePrepColor(color, btn, eff));
       option.appendChild(btn);
 
-      // 選ぶと付く効果（名前と説明）
+      // 選ぶと付く効果（名前と説明）。効果なし（通常モード）の時は出さない
       const d = effectDef(prepStep, eff);
+      if (!d) { choicesEl.appendChild(option); return; }
       const effectsEl = document.createElement('div');
       effectsEl.className = 'prep-option-effects';
       const nameRow = document.createElement('div');
@@ -3463,7 +3465,7 @@
     const d = n != null ? effectDef(n, prepMyEffects[n]) : null;
     if (!d) {
       el.className = 'prep-peek dim';
-      el.textContent = prepStep > 1 ? '選んだカードをタップすると効果を確認できます' : '';
+      el.textContent = prepStep > 1 && debugMode ? '選んだカードをタップすると効果を確認できます' : '';
       return;
     }
     const col = prepMyColors[n];
@@ -5234,7 +5236,7 @@
 
   function updateDebugBtn() {
     const btn = document.getElementById('debugModeBtn');
-    const label = debugMode ? 'デバッグモード: ON（準備フェイズ全色選択・決着なし）' : 'デバッグモード: OFF';
+    const label = debugMode ? 'デバッグモード: ON（準備フェイズ全色選択・カード効果あり・決着なし）' : 'デバッグモード: OFF';
     btn.classList.toggle('on', debugMode);
     btn.setAttribute('aria-pressed', debugMode ? 'true' : 'false');
     btn.setAttribute('aria-label', label);
