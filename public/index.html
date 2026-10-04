@@ -1312,27 +1312,37 @@
   .zone-side { padding: 8px 12px; }
   .zone-mid { padding: 10px 10px 18px; }
   /* 効果の行が出ている時は「出すカードを選んでください」を省いて場所を空ける */
-  .select-panel:has(.eff-row:not(.empty)) .select-prompt { display: none; }
+  .select-panel .select-prompt { display: none; }
   /* デッキ構築：画面の高さが低い時は枠を小さくして選択肢まで収める */
   .prep-grid { max-width: min(340px, 42dvh); gap: 8px; margin-bottom: 8px; }
   .prep-peek { margin-top: 0; min-height: 0; }
   /* ポッドまわり：発動中の効果（上＝ENEMY、下＝PLAYER） */
-  .eff-board { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; }
-  .eff-row { display: flex; align-items: stretch; gap: 0; max-width: 100%; border-radius: 8px; overflow: hidden; font-size: 0.62rem; line-height: 1.35; }
-  .eff-row.empty { display: none; }
-  .eff-row .eff-side {
-    display: flex; align-items: center; padding: 0 6px; flex-shrink: 0;
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.5rem; letter-spacing: 0.06em; color: #fff;
+  /* ポッド＋発動中の効果を1つのブロックに（幅は手札2枚分にそろえる） */
+  .eff-board {
+    width: calc(2 * min(136px, 39vw, 15.5dvh) + 16px); max-width: 100%;
+    border: 1px solid var(--cy-cyan); border-radius: 12px; overflow: hidden;
+    background: rgba(11, 16, 32, 0.92); box-shadow: 0 0 12px rgba(25, 211, 255, 0.35);
   }
-  .eff-row .eff-items { padding: 3px 8px; text-align: left; min-width: 0; }
-  .eff-row.op { border: 1px solid var(--cy-blue); background: rgba(30, 139, 255, 0.10); box-shadow: 0 0 8px rgba(30, 139, 255, 0.3); }
+  .eff-board .pod-mini {
+    display: flex; justify-content: center; align-items: baseline; gap: 4px;
+    background: none; border: none; box-shadow: none; border-radius: 0; padding: 3px 0 2px;
+  }
+  .eff-row { display: grid; grid-template-columns: 17px minmax(0, 1fr); border-top: 1px solid rgba(25, 211, 255, 0.25); font-size: 0.6rem; line-height: 1.35; }
+  .eff-row .eff-side {
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.42rem; letter-spacing: 0.08em; color: #fff;
+    writing-mode: vertical-rl; transform: rotate(180deg); padding: 3px 0;
+  }
+  .eff-row .eff-items { padding: 3px 6px; text-align: left; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+  .eff-row.op { background: rgba(30, 139, 255, 0.10); }
   .eff-row.op .eff-side { background: var(--cy-blue); }
-  .eff-row.me { border: 1px solid var(--cy-red); background: rgba(255, 43, 79, 0.10); box-shadow: 0 0 8px rgba(255, 43, 79, 0.3); }
+  .eff-row.me { background: rgba(255, 43, 79, 0.10); }
   .eff-row.me .eff-side { background: var(--cy-red); }
   .eff-item { color: var(--text); }
   .eff-item.see { color: var(--cy-cyan); font-weight: 700; }
   .eff-item.shown { color: var(--known); }
   .eff-item.rule { color: #ffe066; font-weight: 700; }
+  .eff-item.none { color: var(--text-dim); opacity: 0.7; }
   /* 役パネルは盤面の中に収め、はみ出す分はスクロール */
   .role-panel { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; }
   .rp-note { font-size: 0.62rem; color: var(--text-dim); }
@@ -1450,8 +1460,8 @@
 
       <div class="select-panel">
         <div class="eff-board" id="effBoard">
-          <div class="eff-row op" id="effRowOp"></div>
           <div class="pod-mini" id="podMini">ポッド <span id="podValueMini">00</span>🪙</div>
+          <div class="eff-row op" id="effRowOp"></div>
           <div class="eff-row me" id="effRowMe"></div>
         </div>
         <div class="select-prompt" id="selectPrompt">出すカードを選んでください</div>
@@ -3349,10 +3359,9 @@
     const icon = { see: '👁', shown: '⚠', rule: '◆' };
     const fill = (row, side, label) => {
       const list = items[side];
-      row.innerHTML = list.length
-        ? `<span class="eff-side">${label}</span><div class="eff-items">${list.map(it => `<div class="eff-item ${it.kind}">${icon[it.kind]} ${esc(it.text)}</div>`).join('')}</div>`
-        : '';
-      row.classList.toggle('empty', !list.length);
+      row.innerHTML = `<span class="eff-side">${label}</span><div class="eff-items">` +
+        (list.length ? list.map(it => `<div class="eff-item ${it.kind}">${icon[it.kind]} ${esc(it.text)}</div>`).join('') : '<div class="eff-item none">発動中の効果なし</div>') +
+        '</div>';
     };
     fill(rowOp, 'op', 'ENEMY');
     fill(rowMe, 'me', 'PLAYER');
@@ -3373,8 +3382,8 @@
       const card = sp.querySelector('button.card');
       if (over <= 0 || !card) return;
       const w = card.getBoundingClientRect().width;
-      if (w <= 56) return;
-      sp.style.setProperty('--hand-w', Math.max(56, Math.floor(w - over / 1.4 - 1)) + 'px');
+      if (w <= 48) return;
+      sp.style.setProperty('--hand-w', Math.max(48, Math.floor(w - over / 1.4 - 1)) + 'px');
     }
   }
   window.addEventListener('resize', () => { if (state) fitSelectPanel(); });
