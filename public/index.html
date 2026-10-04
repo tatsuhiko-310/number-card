@@ -2145,6 +2145,7 @@
 
   const COLORS = ['red', 'blue', 'yellow', 'green', 'pink'];
   const COLOR_LABEL = { red: '赤', blue: '青', yellow: '黄', green: '緑', pink: 'ピンク' };
+  const COLOR_EN = { red: 'RED', blue: 'BLUE', yellow: 'YELLOW', green: 'GREEN', pink: 'PINK' }; // 役一覧の見出し用
   let debugMode = false; // デバッグモード：準備フェイズで全色から選べるようにする
   // 決着判定：ラウンド終了時に相手のチップを0枚にした方の勝ち。'my' / 'op' / 'draw'（両者0枚）/ null（続行）
   function gameWinner(myChips, opChips) {
@@ -3143,7 +3144,7 @@
       if (!info) return;
       panel.insertAdjacentHTML('beforeend', `<div class="role-item compact ${r.color}">
         <div class="role-cnt on">${r.count}<small>枚</small></div>
-        <div><div class="role-item-name">${COLOR_LABEL[r.color]}：${info.name}</div>
+        <div><div class="role-item-name">${COLOR_EN[r.color]}：${info.name}</div>
         <div class="role-item-desc">${roleDescHtml(info, roleLevel(r.count))}</div></div></div>`);
     });
     const enh = getEnhance(who);
@@ -3402,7 +3403,7 @@
       const n = counts[r.color] || 0;
       return `<div class="role-item ${r.color}">
         <div class="role-cnt${n >= COLOR_ROLE_MIN ? ' on' : ''}">${n}<small>枚</small></div>
-        <div><div class="role-item-name">${COLOR_LABEL[r.color]}：${r.name}</div>
+        <div><div class="role-item-name">${COLOR_EN[r.color]}：${r.name}</div>
         <div class="role-item-desc">${roleDescHtml(r, roleLevel(n))}</div></div></div>`;
     }).join('');
   }
