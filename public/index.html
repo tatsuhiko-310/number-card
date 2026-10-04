@@ -1428,6 +1428,23 @@
   .ht-tag { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.66rem; font-weight: 900; letter-spacing: 0.08em; padding: 2px 10px; border-radius: 999px; }
   .ht-tag.win { color: #0b1020; background: var(--win, #3ddc84); }
   .ht-tag.lose { color: #fff; background: var(--lose); }
+  .ht-boost-demo { position: relative; gap: 22px; }
+  .ht-chipcount {
+    width: 52px; height: 72px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 1.6rem; font-weight: 900;
+    color: var(--cy-red); text-shadow: 0 0 12px rgba(255, 43, 79, 0.9);
+  }
+  .ht-chiplabel { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.12em; color: var(--text-dim); }
+  .ht-arrow { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; color: var(--text-dim); }
+  .ht-boost-tag { min-height: 1.1em; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.66rem; font-weight: 900; color: var(--gold); }
+  .ht-card.bump, .ht-chipcount.bump { animation: htBump 0.28s ease; }
+  @keyframes htBump { 0% { transform: scale(1); } 45% { transform: scale(1.22); } 100% { transform: scale(1); } }
+  .ht-card.boosted { --hc: var(--gold); }
+  .ht-fly-chip {
+    position: absolute; left: 0; top: 0; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; pointer-events: none; z-index: 2;
+    background: radial-gradient(circle at 35% 30%, #ffd0da 0%, var(--cy-red) 55%, #8a1428 100%);
+    border: 2px solid #a01a30; box-shadow: 0 0 10px rgba(255, 43, 79, 0.7);
+  }
   .ht-boost {
     font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.8rem; font-weight: 900; color: var(--gold);
     padding: 3px 10px; border-radius: 999px; border: 2px solid var(--gold); box-shadow: 0 0 10px rgba(255, 200, 60, 0.5);
@@ -1524,14 +1541,16 @@
           </section>
           <section class="howto-page">
             <h2 class="howto-title">チップでブースト</h2>
-            <div class="howto-visual">
-              <div class="ht-side"><div class="ht-card blue">5</div></div>
-              <div class="ht-boost">+2</div>
-              <div class="ht-side"><div class="ht-card blue">7</div></div>
+            <!-- 図解：持ちチップ → チップが飛ぶ → カードの数字が上がる（ゲーム内のブースト演出と同じ動き） -->
+            <div class="howto-visual ht-boost-demo" id="htBoostDemo">
+              <div class="ht-side"><div class="ht-chipcount" id="htChipCount">15</div><div class="ht-chiplabel">CHIP</div></div>
+              <div class="ht-arrow">→</div>
+              <div class="ht-side"><div class="ht-card blue" id="htBoostCard">5</div><div class="ht-boost-tag" id="htBoostTag"></div></div>
             </div>
             <ul class="howto-text">
               <li>持ちチップ<b>1枚</b>につき数字を<b>+1</b>できる</li>
               <li>ブーストは<b>そのラウンドだけ</b>有効</li>
+              <li>使ったチップは<b>POT</b>に送られるので注意！</li>
               <li class="howto-em">チップを賭けて、相手を上回れ！</li>
             </ul>
           </section>
@@ -1547,7 +1566,6 @@
               <li><b>ちょうど1差</b>で勝つとJACKPOT！</li>
               <li class="howto-em">POTに溜まったチップを<b>総取り</b>だ！</li>
               <li>勝つためだけの<b>過度なブースト</b>は損</li>
-              <li>使ったチップはPOTに送られてしまう</li>
             </ul>
           </section>
           <section class="howto-page">
@@ -3227,8 +3245,50 @@
       page = (i + total) % total;
       track.style.transform = `translateX(${-100 * page}%)`;
       dots.forEach((d, k) => d.classList.toggle('on', k === page));
+      if (page === 1) runDemo(); else stopDemo();
     };
     const restart = () => { clearInterval(timer); timer = setInterval(() => show(page + 1), AUTO_MS); };
+    // 2ページ目の図解：チップが1枚ずつカードへ飛び、持ちチップが減ってカードの数字が上がる（ゲーム内の演出と同じ流れ）
+    const demo = document.getElementById('htBoostDemo');
+    const countEl = document.getElementById('htChipCount');
+    const cardEl = document.getElementById('htBoostCard');
+    const tagEl = document.getElementById('htBoostTag');
+    let demoToken = 0;
+    const bump = (el) => { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); };
+    const wait = (ms) => new Promise(r => setTimeout(r, ms));
+    const center = (el) => {
+      const d = demo.getBoundingClientRect(), r = el.getBoundingClientRect();
+      return { x: r.left - d.left + r.width / 2, y: r.top - d.top + r.height / 2 };
+    };
+    async function runDemo() {
+      const my = ++demoToken;
+      const alive = () => my === demoToken;
+      while (alive()) {
+        countEl.textContent = '15'; cardEl.textContent = '5'; tagEl.textContent = ''; cardEl.classList.remove('boosted');
+        await wait(700);
+        for (let k = 1; k <= 2 && alive(); k++) {
+          const a = center(countEl), b = center(cardEl);
+          const chip = document.createElement('div');
+          chip.className = 'ht-fly-chip';
+          demo.appendChild(chip);
+          countEl.textContent = String(15 - k); bump(countEl); // 飛び立つ時に持ちチップが減る
+          const lift = -28;
+          const anim = chip.animate([
+            { transform: `translate(${a.x}px, ${a.y}px) scale(0.9)`, opacity: 1 },
+            { transform: `translate(${(a.x + b.x) / 2}px, ${Math.min(a.y, b.y) + lift}px) scale(1.15)`, opacity: 1, offset: 0.5 },
+            { transform: `translate(${b.x}px, ${b.y}px) scale(0.7)`, opacity: 0.2 }
+          ], { duration: 460, easing: 'ease-in-out' });
+          await anim.finished.catch(() => {});
+          chip.remove();
+          if (!alive()) return;
+          cardEl.textContent = String(5 + k); cardEl.classList.add('boosted'); bump(cardEl); // 着地でカードの数字が上がる
+          tagEl.textContent = `+${k}`;
+          await wait(240);
+        }
+        await wait(1800);
+      }
+    }
+    const stopDemo = () => { demoToken++; demo.querySelectorAll('.ht-fly-chip').forEach(c => c.remove()); };
     dots.forEach((d, k) => d.addEventListener('click', () => { show(k); restart(); }));
     let sx = null, sy = 0;
     const vp = document.getElementById('howtoViewport');
