@@ -1297,8 +1297,8 @@
   /* ===== 一画面に収めるための詰め（情報量が増えた分、高さに合わせて縮める） ===== */
   .side-col .num { font-size: clamp(3rem, min(26vw, 12.5dvh), 8rem); }
   .select-panel { gap: clamp(6px, 1.8dvh, 14px); }
-  .select-panel .hand-card-wrap { width: min(136px, 39vw, 15.5dvh); gap: 4px; }
-  .select-panel button.card { font-size: clamp(2.2rem, 6dvh, 3.2rem); }
+  .select-panel .hand-card-wrap { width: min(136px, 39vw, 15.5dvh); gap: 4px; align-items: center; }
+  .select-panel button.card { font-size: clamp(2.2rem, 6dvh, 3.2rem); width: var(--hand-w, 100%); }
   .select-panel .card-effect-label { font-size: 0.62rem; line-height: 1.25; }
   .card-effect-label .eff-desc {
     font-size: 0.54rem;
@@ -1310,10 +1310,29 @@
   .color-info-hint { margin-top: 0; font-size: 0.64rem; line-height: 1.35; max-width: 100%; }
   .pod-mini { padding: 2px 10px; }
   .zone-side { padding: 8px 12px; }
-  .zone-mid { padding: 4px 10px 18px; }
+  .zone-mid { padding: 10px 10px 18px; }
+  /* 効果の行が出ている時は「出すカードを選んでください」を省いて場所を空ける */
+  .select-panel:has(.eff-row:not(.empty)) .select-prompt { display: none; }
   /* デッキ構築：画面の高さが低い時は枠を小さくして選択肢まで収める */
   .prep-grid { max-width: min(340px, 42dvh); gap: 8px; margin-bottom: 8px; }
   .prep-peek { margin-top: 0; min-height: 0; }
+  /* ポッドまわり：発動中の効果（上＝ENEMY、下＝PLAYER） */
+  .eff-board { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; }
+  .eff-row { display: flex; align-items: stretch; gap: 0; max-width: 100%; border-radius: 8px; overflow: hidden; font-size: 0.62rem; line-height: 1.35; }
+  .eff-row.empty { display: none; }
+  .eff-row .eff-side {
+    display: flex; align-items: center; padding: 0 6px; flex-shrink: 0;
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.5rem; letter-spacing: 0.06em; color: #fff;
+  }
+  .eff-row .eff-items { padding: 3px 8px; text-align: left; min-width: 0; }
+  .eff-row.op { border: 1px solid var(--cy-blue); background: rgba(30, 139, 255, 0.10); box-shadow: 0 0 8px rgba(30, 139, 255, 0.3); }
+  .eff-row.op .eff-side { background: var(--cy-blue); }
+  .eff-row.me { border: 1px solid var(--cy-red); background: rgba(255, 43, 79, 0.10); box-shadow: 0 0 8px rgba(255, 43, 79, 0.3); }
+  .eff-row.me .eff-side { background: var(--cy-red); }
+  .eff-item { color: var(--text); }
+  .eff-item.see { color: var(--cy-cyan); font-weight: 700; }
+  .eff-item.shown { color: var(--known); }
+  .eff-item.rule { color: #ffe066; font-weight: 700; }
   /* 役パネルは盤面の中に収め、はみ出す分はスクロール */
   .role-panel { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; }
   .rp-note { font-size: 0.62rem; color: var(--text-dim); }
@@ -1430,7 +1449,11 @@
       </div>
 
       <div class="select-panel">
-        <div class="pod-mini" id="podMini">ポッド <span id="podValueMini">00</span>🪙</div>
+        <div class="eff-board" id="effBoard">
+          <div class="eff-row op" id="effRowOp"></div>
+          <div class="pod-mini" id="podMini">ポッド <span id="podValueMini">00</span>🪙</div>
+          <div class="eff-row me" id="effRowMe"></div>
+        </div>
         <div class="select-prompt" id="selectPrompt">出すカードを選んでください</div>
         <div class="card-row" id="myHand"></div>
         <div class="chip-selector">
@@ -1440,7 +1463,6 @@
             <button class="chip-btn" id="chipPlus">+</button>
           </div>
         </div>
-        <div class="color-info-hint" id="colorInfoHint" style="display:none;"></div>
       </div>
       <div class="role-hint" id="roleHint">▲ タップで役を確認</div>
       <div class="role-panel" id="rolePanel"></div>
@@ -1485,7 +1507,7 @@
     ・<b>LOSE</b>＝負けると、ポッドへチップを<b>2枚</b>支払う（持っている分だけ）。ブーストして負けた場合は、ブースト分に加えて<b>2枚</b>支払う<br>
     ・<b>引き分け</b>＝お互いの残りの手札（素の数字）を公開し、大きい方の勝ち。差がちょうど1ならJACKPOT、それ以外は通常の勝ち負けと同じ扱い。手札も同じ数字なら、山札の一番上から順に公開して決着するまで比べる（山札が空なら捨て札をシャッフルして山札にする。カードが尽きた時だけ、ブーストはすべてポッドへ流れて引き分け）。公開した手札は手札に戻り、捨て札の枠に<b style="color:var(--known)">!</b>が付く。公開した山札のカードは山札に戻り、手札に引いた時に<b style="color:var(--known)">!</b>が付く<br>
     ・それ以外の結果（JACKPOTにならなかったブースト、ブーストしての負け等）は、使ったブースト分がそのままポッドへ流れる（ブーストしての負けは、さらにLOSEの2枚も支払う）<br><br>
-    カード効果：各数字にA・B2種類の効果があり、デッキ構築で<b>色とセットで</b>どちらかを選ぶ。相手がどちらを選んだかは、そのカードが出された時に分かる（捨て札をタップして開くパネルで、カードをタップすると効果が見られる。一度出たカードの色と効果は山札に戻っても記録される）。見えている情報は手札選択画面に表示される。<br>
+    カード効果：各数字にA・B2種類の効果があり、デッキ構築で<b>色とセットで</b>どちらかを選ぶ。相手がどちらを選んだかは、そのカードが出された時に分かる（捨て札をタップして開くパネルで、カードをタップすると効果が見られる。一度出たカードの色と効果は山札に戻っても記録される）。発動中の効果はポッドの上下に表示される（ENEMY＝相手が発動、PLAYER＝自分が発動／👁＝相手の情報が見える、⚠＝自分の情報が相手に見えている、◆＝このラウンドのルール）。<br>
     ・<b>1</b>　A <b>偵察</b>：次のラウンド、相手の手札2枚の偶数・奇数の内訳が見える／B <b>撹乱</b>：次のラウンド、相手の情報系の効果・役（黄・ピンク含む）が自分に効かない<br>
     ・<b>2</b>　A <b>予兆</b>：次のラウンド、相手がブーストするか（枚数の範囲も）が見える／B <b>伏兵</b>：次のラウンド、自分のブースト1枚目が無料<br>
     ・<b>3</b>　A <b>先読み</b>：次のラウンド、相手の山札の一番上が見える／B <b>仕込み</b>：出した後、自分の山札の一番上を見て、そのまま残すか一番下へ送るか選べる<br>
@@ -3262,71 +3284,100 @@
 
   // 黄・ピンクの役が発動中なら、選択フェイズ中にヒントを表示する（ピンクの「見える」側は捨て札グリッドの目のアイコンで表現）
   // 自分の役で相手の情報が見える場合と、相手の役で自分の情報が見えてしまっている場合の両方を表示する（対人戦でどちらが役を揃えても機能するように）
+  // 発動中のカード効果・役を、ポッドの上(ENEMY＝相手が発動)と下(PLAYER＝自分が発動)にまとめて表示
+  //   👁 ＝ 自分に見えている相手の情報 ／ ⚠ ＝ 相手に見えている自分の情報 ／ ◆ ＝ このラウンドのルール
   function refreshColorInfoHint() {
-    const el = document.getElementById('colorInfoHint');
-    if (!el || !state) return;
+    const rowOp = document.getElementById('effRowOp');
+    const rowMe = document.getElementById('effRowMe');
+    if (!rowOp || !rowMe || !state) return;
     if (net.active) readOpIntel();
     const me = activeViewer;
     const opp = otherOf(me);
     const pv = state.prev;
     const opBlocked = !!(pv && pv.op.key === '1B');  // 相手の撹乱：自分の情報系の効果・役が効かない
     const myBlocked = !!(pv && pv.my.key === '1B');  // 自分の撹乱：相手の情報系の効果・役が効かない
-    const see = [];   // 見えている相手の情報
-    const shown = []; // 相手に見えている自分の情報
-    const rules = []; // このラウンドの自分の制限・特典
+    const items = { me: [], op: [] };
+    const add = (side, kind, text) => items[side].push({ kind, text });
     const hl = (n) => (n === 'hi' ? '大(5〜8)' : '小(1〜4)');
     const pr = (n) => (n === 'even' ? '偶数' : '奇数');
-    const describe = (ex, list, whoLabel) => {
+    // ex：whoLabel の手札について見えている情報。読む側の効果は reader、自分をさらす効果は owner が発動したもの
+    const describe = (ex, whoLabel, reader, owner, kind) => {
       if (!ex) return;
-      if (ex.parity) list.push(`偵察：${whoLabel}の手札は 偶数${ex.parity.even}枚・奇数${ex.parity.odd}枚`);
-      if (ex.hilo) list.push(`観測：${whoLabel}の手札は 小(1〜4)${ex.hilo.lo}枚・大(5〜8)${ex.hilo.hi}枚`);
-      if (ex.sum != null) list.push(`解析：${whoLabel}の手札の合計は ${ex.sum}`);
-      if ('deckTop' in ex) list.push(`先読み：${whoLabel}の山札の一番上は ${ex.deckTop == null ? '（山札が空）' : ex.deckTop}`);
-      if (ex.hidHilo) list.push(`露呈：${whoLabel}の手札の1枚は ${hl(ex.hidHilo)}`);
-      if (ex.hidParity) list.push(`露呈：${whoLabel}の手札の1枚は ${pr(ex.hidParity)}`);
-      (ex.reveal || []).forEach(r => list.push(`${r.src}：${whoLabel}の手札の ${r.n} が確定（!）`));
+      if (ex.parity) add(reader, kind, `偵察：${whoLabel}の手札は 偶数${ex.parity.even}枚・奇数${ex.parity.odd}枚`);
+      if (ex.hilo) add(reader, kind, `観測：${whoLabel}の手札は 小${ex.hilo.lo}枚・大${ex.hilo.hi}枚`);
+      if (ex.sum != null) add(reader, kind, `解析：${whoLabel}の手札の合計は ${ex.sum}`);
+      if ('deckTop' in ex) add(reader, kind, `先読み：${whoLabel}の山札の一番上は ${ex.deckTop == null ? '（空）' : ex.deckTop}`);
+      if (ex.hidHilo) add(owner, kind, `露呈：${whoLabel}の手札の1枚は ${hl(ex.hidHilo)}`);
+      if (ex.hidParity) add(owner, kind, `露呈：${whoLabel}の手札の1枚は ${pr(ex.hidParity)}`);
+      (ex.reveal || []).forEach(r => add(r.src === '記録' ? reader : owner, kind, `${r.src}：${whoLabel}の手札の ${r.n} が確定（!）`));
     };
-    describe(state.intel, see, '相手');
-    describe(state.exposure, shown, 'あなた');
+    describe(state.intel, '相手', 'me', 'op', 'see');
+    describe(state.exposure, 'あなた', 'op', 'me', 'shown');
 
     // 予兆（2A）・黄の役：相手のブースト
     const intelBoost = !!(state.intel && state.intel.boostIntel);
     const yellow = hasColorTriple(me, 'yellow') && !opBlocked;
     if (intelBoost || yellow) {
       const tag = intelBoost ? '予兆' : '黄の役';
+      let t;
       if (net.active) {
         const op = oppSeatC();
         if (op && op.commitRound === state.round) {
-          if (intelBoost && op.boostRange) see.push(`${tag}：相手は${op.boostRange}`);
-          else if (typeof op.boostFlag === 'boolean') see.push(`${tag}：相手は${op.boostFlag ? 'ブーストする' : 'ブーストしない'}`);
-          else see.push(`${tag}：相手は確定済み（ブースト情報なし）`);
+          if (intelBoost && op.boostRange) t = `相手は${op.boostRange}`;
+          else if (typeof op.boostFlag === 'boolean') t = `相手は${op.boostFlag ? 'ブーストする' : 'ブーストしない'}`;
+          else t = '相手は確定済み（ブースト情報なし）';
         } else {
-          see.push(`${tag}：相手はまだ選択中（確定すると${intelBoost ? 'ブーストの枚数の範囲' : 'ブーストの有無'}が見える）`);
+          t = `相手の選択待ち（確定すると${intelBoost ? 'ブースト枚数の範囲' : 'ブーストの有無'}が見える）`;
         }
       } else {
-        see.push(intelBoost ? `${tag}：相手は${boostRangeText(state.opPendingChips)}予定` : `${tag}：相手は${state.opPendingChips > 0 ? 'ブーストする' : 'ブーストしない'}予定`);
+        t = intelBoost ? `相手は${boostRangeText(state.opPendingChips)}予定` : `相手は${state.opPendingChips > 0 ? 'ブーストする' : 'ブーストしない'}予定`;
       }
+      add('me', 'see', `${tag}：${t}`);
     }
-    if (state.exposure && state.exposure.boostIntel) shown.push('予兆：あなたのブーストの枚数の範囲');
-    else if (hasColorTriple(opp, 'yellow') && !myBlocked) shown.push('黄の役：あなたがブーストするかどうか');
-    if (hasColorTriple(opp, 'pink') && !myBlocked) shown.push('ピンクの役：あなたのデッキの底');
-    if (opBlocked && (hasColorTriple(me, 'yellow') || hasColorTriple(me, 'pink') || (pv && /^[1-5]A$|^5B$/.test(pv.my.key || '')))) {
-      see.push('撹乱：相手の撹乱で、このラウンドは相手の情報が見えない');
-    }
-    if (myBlocked) rules.push('撹乱：このラウンドは相手の情報系の効果・役が効かない');
-    const r = state.rule ? state.rule.my : null;
-    if (r && r.free) rules.push('伏兵：このラウンドはブースト1枚目が無料');
-    if (r && r.noBoost) rules.push('重圧：このラウンドはブーストできない');
+    if (state.exposure && state.exposure.boostIntel) add('op', 'shown', '予兆：あなたのブースト枚数の範囲');
+    else if (hasColorTriple(opp, 'yellow') && !myBlocked) add('op', 'shown', '黄の役：あなたがブーストするか');
+    if (hasColorTriple(opp, 'pink') && !myBlocked) add('op', 'shown', 'ピンクの役：あなたのデッキの底');
+    if (opBlocked) add('op', 'rule', '撹乱：あなたの情報系の効果・役が効かない');
+    if (myBlocked) add('me', 'rule', '撹乱：相手の情報系の効果・役が効かない');
+    const r = state.rule || {};
+    if (r.my && r.my.free) add('me', 'rule', '伏兵：ブースト1枚目が無料');
+    if (r.my && r.my.noBoost) add('me', 'rule', '重圧：このラウンドはブーストできない');
+    if (r.op && r.op.free) add('op', 'rule', '伏兵：相手のブースト1枚目が無料');
+    if (r.op && r.op.noBoost) add('op', 'rule', '重圧：相手はこのラウンドブーストできない');
 
     const esc = (t) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-    const html = [
-      ...see.map(t => `<div class="intel-see">👁 ${esc(t)}</div>`),
-      ...rules.map(t => `<div class="intel-see">◆ ${esc(t)}</div>`),
-      ...(shown.length ? [`<div class="intel-shown">相手に見えている：${shown.map(esc).join(' ／ ')}</div>`] : [])
-    ].join('');
-    el.innerHTML = html;
-    el.style.display = html ? '' : 'none';
+    const icon = { see: '👁', shown: '⚠', rule: '◆' };
+    const fill = (row, side, label) => {
+      const list = items[side];
+      row.innerHTML = list.length
+        ? `<span class="eff-side">${label}</span><div class="eff-items">${list.map(it => `<div class="eff-item ${it.kind}">${icon[it.kind]} ${esc(it.text)}</div>`).join('')}</div>`
+        : '';
+      row.classList.toggle('empty', !list.length);
+    };
+    fill(rowOp, 'op', 'ENEMY');
+    fill(rowMe, 'me', 'PLAYER');
+    fitSelectPanel();
   }
+
+  // 効果の行が増えて手札選択がはみ出す時は、手札カードを小さくして盤面に収める
+  function fitSelectPanel() {
+    const mid = document.querySelector('.zone-mid');
+    const sp = document.querySelector('.select-panel');
+    if (!mid || !sp) return;
+    sp.style.removeProperty('--hand-w');
+    const cs = getComputedStyle(mid);
+    const avail = mid.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    // 念のため収まるまで数回詰める
+    for (let i = 0; i < 4; i++) {
+      const over = sp.scrollHeight - avail;
+      const card = sp.querySelector('button.card');
+      if (over <= 0 || !card) return;
+      const w = card.getBoundingClientRect().width;
+      if (w <= 56) return;
+      sp.style.setProperty('--hand-w', Math.max(56, Math.floor(w - over / 1.4 - 1)) + 'px');
+    }
+  }
+  window.addEventListener('resize', () => { if (state) fitSelectPanel(); });
 
   function drawInto(hand, who) {
     const card = drawCard(who);
