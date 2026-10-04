@@ -1471,6 +1471,9 @@
   .stack-dialog .box p { margin: 0 0 14px; font-size: 0.8rem; color: var(--text-dim); line-height: 1.5; }
   .stack-dialog .top-card { margin: 0 auto 16px; width: 70px; }
   .stack-dialog .btns { display: flex; gap: 10px; justify-content: center; }
+  /* 回収（1A）の選択 */
+  .stack-dialog .recall-cards { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .stack-dialog .recall-cards .card { width: 54px; height: 76px; font-size: 1.5rem; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -1689,12 +1692,12 @@
     ・<b>引き分け</b>＝お互いの残りの手札（素の数字）を公開し、大きい方の勝ち。差がちょうど1ならJACKPOT、それ以外は通常の勝ち負けと同じ扱い。手札も同じ数字なら、山札の一番上から順に公開して決着するまで比べる（山札が空なら捨て札をシャッフルして山札にする。カードが尽きた時だけ、ブーストはすべてポッドへ流れて引き分け）。公開した手札は手札に戻り、捨て札の枠に<b style="color:var(--known)">!</b>が付く。公開した山札のカードは山札に戻り、手札に引いた時に<b style="color:var(--known)">!</b>が付く<br>
     ・それ以外の結果（JACKPOTにならなかったブースト、ブーストしての負け等）は、使ったブースト分がそのままポッドへ流れる（ブーストしての負けは、さらにLOSEの2枚も支払う）<br><br>
     カード効果：各数字に2種類の効果があり、デッキ構築で<b>色とセットで</b>どちらかを選ぶ。相手がどちらを選んだかは、そのカードが出された時に分かる（捨て札をタップして開くパネルで、カードをタップすると効果が見られる。一度出たカードの色と効果は山札に戻っても記録される）。発動中の効果はポッドの上下に表示される（ENEMY＝相手が発動、PLAYER＝自分が発動／水色＝相手の情報が見える、オレンジ＝自分の情報が相手に見えている、黄色＝このラウンドのルール）。<br>
-    ・<b>1</b>　<b>偵察</b>：次のラウンド、相手の手札2枚の偶数・奇数の内訳が見える／<b>撹乱</b>：次のラウンド、相手の情報系の効果が自分に効かない<br>
+    ・<b>1</b>　<b>回収</b>：出した後、ドローの代わりに自分の捨て札から1枚（1以外）を選んで手札に加える。加えたカードは確定情報（!）になる。捨て札に1しかなければ普通に引く／<b>撹乱</b>：次のラウンド、相手の情報系の効果が自分に効かない<br>
     ・<b>2</b>　<b>予兆</b>：次のラウンド、相手がブーストするか（枚数の範囲も）が見える／<b>伏兵</b>：次のラウンド、自分のブースト1枚目が無料<br>
     ・<b>3</b>　<b>先読み</b>：次のラウンド、相手の山札の一番上が見える／<b>仕込み</b>：出した後、自分の山札の一番上を見て、そのまま残すか一番下へ送るか選べる<br>
     ・<b>4</b>　<b>観測</b>：次のラウンド、相手の手札2枚の大小（1〜4／5〜8）の内訳が見える／<b>保険</b>：このカードで負けたら、LOSEの支払いが1枚減る<br>
     ・<b>5</b>　<b>解析</b>：次のラウンド、相手の手札2枚の合計が見える／<b>記録</b>：このカードで勝ったら、相手の残りの手札1枚が確定情報（!）になる<br>
-    ・<b>6</b>　<b>露呈・小</b>：出すと、次のラウンド自分の残りの手札の大小が相手に見える／<b>代償・小</b>：出すと、チップ1枚をポッドへ払う<br>
+    ・<b>6</b>　<b>露呈・小</b>：出すと、次のラウンド自分の残りの手札の大小が相手に見える／<b>掘削</b>：出した後、自分の山札の一番上を公開して捨て札へ送る（山札が空なら何もしない。勝敗が決まった後に送るので、そのラウンドの色の役には数えない）<br>
     ・<b>7</b>　<b>露呈・中</b>：出すと、次のラウンド自分の残りの手札の偶数・奇数が相手に見える／<b>重圧</b>：出すと、次のラウンド自分はブーストできない<br>
     ・<b>8</b>　<b>全公開</b>：出すと、自分の残りの手札が相手に公開される（確定情報 !）／<b>代償・大</b>：出すと、チップ2枚をポッドへ払う<br>
     <br>
@@ -2496,18 +2499,33 @@
     let pending = pv.pending || null;
     if ((pv.drawnRound || 1) < R) {
       // 前ラウンドの決着後、ドローする前に中断していた → ここでドローして続きから
+      // 前ラウンドに出したカードの掘削（6B）・回収（1A）もここで行う
+      let lastKey = null;
       if (pending && pending.round < R) {
         const i = state.myHand.indexOf(pending.card);
         if (i >= 0) state.myHand.splice(i, 1);
+        if (pending.eff) lastKey = pending.card + pending.eff;
         pending = null;
       }
-      while (state.myHand.length < 2) {
-        const before = state.myHand.length;
-        drawInto(state.myHand, 'my');
-        if (state.myHand.length === before) break;
-      }
-      persistAfterRoundDraw();
+      const token = gameToken;
+      state.netPhase = 'resolving';
+      (m.status === 'over' ? Promise.resolve() : selfPostRound(lastKey, token)).then(() => {
+        if (token !== gameToken) return;
+        while (state.myHand.length < 2) {
+          const before = state.myHand.length;
+          drawInto(state.myHand, 'my');
+          if (state.myHand.length === before) break;
+        }
+        persistAfterRoundDraw();
+        state.netPhase = null;
+        resumeOnlineRound(m, pending);
+      });
+      return;
     }
+    resumeOnlineRound(m, pending);
+  }
+  function resumeOnlineRound(m, pending) {
+    const R = m.round;
     if (m.status === 'over') {
       state.over = true;
       render();
@@ -2544,7 +2562,9 @@
     const opSeen = {};
     Object.keys(state.opSeen).forEach(n => { opSeen[n] = { c: state.opCardColors[n] || null, e: state.opCardEffects[n] || null }; });
     writePriv({ deck: state.myDeck.slice(), hand: state.myHand.slice(), pending: null, drawnRound: state.round, log: state.roundLog, prev: state.prev, opSeen });
-    writeMySeat({ discard: discEntries('my') });
+    // 回収（1A）した数字も伝える（相手が「山札へ戻った」と取り違えないように）
+    writeMySeat({ discard: discEntries('my'), recall: state.recalledNow != null ? { n: state.recalledNow } : null });
+    state.recalledNow = null;
   }
 
   // 相手の捨て札を共有データに合わせる（山札へ戻った時は戻る演出）
@@ -2553,7 +2573,11 @@
     const incoming = (op.discard || []).map(e => e.n);
     const cur = state.opDiscard;
     if (incoming.length === cur.length && incoming.every((n, i) => n === cur[i])) return;
-    if (cur.length && cur.some(n => !incoming.includes(n))) {
+    const removed = cur.filter(n => !incoming.includes(n));
+    if (removed.length === 1 && op.recall && op.recall.n === removed[0]) {
+      // 回収（1A）：捨て札から相手の手札へ → 確定情報
+      if (!state.knownHeld.op.includes(removed[0])) state.knownHeld.op.push(removed[0]);
+    } else if (removed.length) {
       state.returning.op = cur.slice();
       state.knownHeld.op = knownHeldFrom(cur);
     }
@@ -2769,11 +2793,15 @@
 
   function onlineNextRound() {
     // 相手が引き分け勝負で公開した山札のカードは、上から1枚ずつ相手の手札に入る → 確定情報へ
-    if (state.revealedDeck.op.length) {
+    // （相手の掘削なら一番上は捨て札へ、回収なら相手は引かない）
+    const pv = state.prev;
+    if (pv && pv.op.key === '6B' && state.revealedDeck.op.length) state.revealedDeck.op.shift();
+    if (!state.opRecallPending && state.revealedDeck.op.length) {
       const n = state.revealedDeck.op.shift();
       if (!state.knownHeld.op.includes(n)) state.knownHeld.op.push(n);
     }
-    drawInto(state.myHand, 'my');
+    state.opRecallPending = false;
+    if (state.myHand.length < 2) drawInto(state.myHand, 'my');
     state.fieldMy = null;
     state.fieldOp = null;
     state.fieldMyCardId = null;
@@ -2846,9 +2874,9 @@
   }
 
   // ===== カード効果（各数字にA/Bの2パターン。デッキ構築で色とセットで選ぶ）=====
-  // 小さい数字は「情報を得る／守る」、大きい数字は「強いが代償（情報を渡す／チップを払う）」
+  // 小さい数字は「情報を得る／守る／カードを取り戻す」、大きい数字は「強いが代償（情報を渡す／チップを払う／カードを失う）」
   const EFFECT_DEFS = {
-    1: { A: { name: '偵察', desc: '次のラウンド、相手の手札2枚の偶数・奇数の内訳が見える' },
+    1: { A: { name: '回収', desc: '出した後、ドローの代わりに自分の捨て札から1枚（1以外）を選んで手札に加える。加えたカードは確定情報（!）になる' },
          B: { name: '撹乱', desc: '次のラウンド、相手の情報系の効果が自分に効かない' } },
     2: { A: { name: '予兆', desc: '次のラウンド、相手がブーストするか（枚数の範囲も）が見える' },
          B: { name: '伏兵', desc: '次のラウンド、自分のブースト1枚目が無料' } },
@@ -2859,7 +2887,7 @@
     5: { A: { name: '解析', desc: '次のラウンド、相手の手札2枚の合計が見える' },
          B: { name: '記録', desc: 'このカードで勝ったら、相手の残りの手札1枚が確定情報（!）になる' } },
     6: { A: { name: '露呈・小', desc: '出すと、次のラウンド自分の残りの手札の大小が相手に見える' },
-         B: { name: '代償・小', desc: '出すと、チップ1枚をポッドへ払う' } },
+         B: { name: '掘削', desc: '出した後、自分の山札の一番上を公開して捨て札へ送る（山札が空なら何もしない）' } },
     7: { A: { name: '露呈・中', desc: '出すと、次のラウンド自分の残りの手札の偶数・奇数が相手に見える' },
          B: { name: '重圧', desc: '出すと、次のラウンド自分はブーストできない' } },
     8: { A: { name: '全公開', desc: '出すと、自分の残りの手札が相手に公開される（確定情報 !）' },
@@ -3506,7 +3534,6 @@
     // ex：whoLabel の手札について見えている情報。読む側の効果は reader、自分をさらす効果は owner が発動したもの
     const describe = (ex, whoLabel, reader, owner, kind) => {
       if (!ex) return;
-      if (ex.parity) add(reader, kind, `偵察：${whoLabel}の手札は 偶数${ex.parity.even}枚・奇数${ex.parity.odd}枚`);
       if (ex.hilo) add(reader, kind, `観測：${whoLabel}の手札は 小${ex.hilo.lo}枚・大${ex.hilo.hi}枚`);
       if (ex.sum != null) add(reader, kind, `解析：${whoLabel}の手札の合計は ${ex.sum}`);
       if ('deckTop' in ex) add(reader, kind, `先読み：${whoLabel}の山札の一番上は ${ex.deckTop == null ? '（空）' : ex.deckTop}`);
@@ -3996,10 +4023,10 @@
     const nm = who => (who === 'my' ? 'あなた' : '相手');
     const paid = { my: p.myPaid != null ? p.myPaid : p.myBoost, op: p.opPaid != null ? p.opPaid : p.opBoost };
     const key = { my: p.myKey || null, op: p.opKey || null };
-    // 代償（6B・8B）：出したらチップをポッドへ払う
+    // 代償・大（8B）：出したらチップをポッドへ払う
     const costNotes = [];
     ['my', 'op'].forEach(w => {
-      const cost = key[w] === '6B' ? 1 : (key[w] === '8B' ? 2 : 0);
+      const cost = key[w] === '8B' ? 2 : 0;
       const pay = Math.min(cost, chips[w]);
       if (pay > 0) { chips[w] -= pay; pod += pay; costNotes.push(`${effectDef(+key[w][0], 'B').name}：${nm(w)}がポッドへ${pay}🪙`); }
     });
@@ -4401,11 +4428,12 @@
 
     setTimeout(() => {
       if (myToken !== gameToken) return;
-      stackChoice(myToken).then(() => {
+      postRoundEffects(myToken).then(() => {
       if (myToken !== gameToken) return;
       if (net.active) { onlineNextRound(); return; }
-      drawInto(state.myHand, 'my');
-      drawInto(state.opHand, 'op');
+      // 回収（1A）で手札に加えた時は引かない
+      if (state.myHand.length < 2) drawInto(state.myHand, 'my');
+      if (state.opHand.length < 2) drawInto(state.opHand, 'op');
       state.fieldMy = null;
       state.fieldOp = null;
       state.fieldMyCardId = null;
@@ -4419,6 +4447,90 @@
       startRound();
       });
     }, 1100);
+  }
+
+  // 決着後・ドロー前の効果：仕込み（3B）→ 掘削（6B）→ 回収（1A）
+  function postRoundEffects(myToken) {
+    const pv = state.prev;
+    // オンラインでは、相手が回収するかどうかを相手の捨て札（このラウンドの分まで）から決めておく
+    state.opRecallPending = !!(pv && pv.op.key === '1A' && recallCandidates('op').length);
+    return stackChoice(myToken).then(() => {
+      if (myToken !== gameToken || !pv) return;
+      if (!net.active) {
+        // CPU：掘削は自動、回収は捨て札の一番大きい数字を選ぶ
+        if (pv.op.key === '6B') { const n = digTop('op'); if (n != null) logEffectDetail('op', '掘削', `掘削：${n}が捨て札へ`); }
+        if (pv.op.key === '1A') {
+          const c = recallCandidates('op');
+          if (c.length) { const n = Math.max(...c); applyRecall('op', n); logEffectDetail('op', '回収', `回収：${n}を手札へ`); }
+        }
+      }
+      return selfPostRound(pv.my.key, myToken);
+    }).then(() => { renderHandsAndDiscard(); });
+  }
+  // 自分の掘削（6B）・回収（1A）。key は直前に出したカードの効果
+  function selfPostRound(key, myToken) {
+    if (key === '6B') {
+      const n = digTop('my');
+      if (n != null) logEffectDetail('me', '掘削', `掘削：${n}が捨て札へ`);
+      return Promise.resolve();
+    }
+    if (key !== '1A') return Promise.resolve();
+    const cands = recallCandidates('my').sort((a, b) => a - b);
+    if (!cands.length) return Promise.resolve();
+    return new Promise(resolve => {
+      const wrap = document.createElement('div');
+      wrap.className = 'stack-dialog';
+      const cards = cands.map(n => `<button class="card ${state.myCardColors[n] || ''}" data-n="${n}">${n}</button>`).join('');
+      wrap.innerHTML = `<div class="box overlay-card"><h3>回収</h3><p>捨て札から手札に加えるカードを選んでください。<br>選んだカードは相手にも分かります（!）</p>
+        <div class="recall-cards">${cards}</div></div>`;
+      document.body.appendChild(wrap);
+      wrap.addEventListener('click', (e) => {
+        const b = e.target && e.target.closest ? e.target.closest('[data-n]') : null;
+        if (!b) return;
+        playSelectSound();
+        wrap.remove();
+        if (myToken === gameToken) {
+          const n = +b.dataset.n;
+          applyRecall('my', n);
+          if (net.active) state.recalledNow = n;
+          logEffectDetail('me', '回収', `回収：${n}を手札へ`);
+        }
+        resolve();
+      });
+    });
+  }
+  // 掘削：山札の一番上を捨て札へ送る。山札が空なら何もしない。送った数字を返す
+  function digTop(who) {
+    const deck = state[who + 'Deck'];
+    if (!deck.length) return null;
+    const n = deck.pop();
+    const rv = state.revealedDeck[who];
+    const i = rv.indexOf(n);
+    if (i >= 0) rv.splice(i, 1);
+    if (!state[who + 'Discard'].includes(n)) state[who + 'Discard'].push(n);
+    if (who === 'op') state.opSeen[n] = true;
+    return n;
+  }
+  // 回収で選べるカード：捨て札のうち1以外
+  function recallCandidates(who) {
+    return state[who + 'Discard'].filter(n => n !== 1);
+  }
+  // 回収：捨て札から手札へ。手札に加えたカードは確定情報（!）
+  function applyRecall(who, n) {
+    const d = state[who + 'Discard'];
+    const i = d.indexOf(n);
+    if (i < 0) return;
+    d.splice(i, 1);
+    state[who + 'Hand'].push(n);
+    if (!state.knownHeld[who].includes(n)) state.knownHeld[who].push(n);
+  }
+  // 直前のラウンドのログの効果名に、動いたカードを書き足す
+  function logEffectDetail(side, name, text) {
+    const last = state.roundLog[state.roundLog.length - 1];
+    const eff = last && last.v && last.v.eff ? last.v.eff.find(e => e.side === side && e.t === name) : null;
+    if (!eff) return;
+    eff.t = text;
+    renderRoundLog();
   }
 
   // 仕込み（3B）：出した後、自分の山札の一番上を見て、そのまま残すか一番下へ送るか選ぶ（CPUはランダム）
@@ -4461,7 +4573,6 @@
     const blocked = pv[who].key === '1B'; // 撹乱：相手の情報系の効果が効かない
     ex.blocked = blocked;
     const by = (k) => !blocked && pv[other].key === k;
-    if (by('1A')) ex.parity = { even: hand.filter(n => n % 2 === 0).length, odd: hand.filter(n => n % 2 === 1).length };
     if (by('4A')) ex.hilo = { lo: hand.filter(n => n <= 4).length, hi: hand.filter(n => n >= 5).length };
     if (by('5A')) ex.sum = hand.reduce((a, b) => a + b, 0);
     if (by('3A')) { const d = state[who + 'Deck']; ex.deckTop = d.length ? d[d.length - 1] : null; }
