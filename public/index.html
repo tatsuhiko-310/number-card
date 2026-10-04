@@ -1673,7 +1673,6 @@
         <div class="role-list-title"><span>色の役 一覧</span><button type="button" class="role-list-x" id="roleListClose" aria-label="閉じる">✕</button></div>
         <div class="role-list-sub">捨て札に同じ色が2枚以上たまると発動し、相手の情報が見える。左の数字は今のデッキに入っている枚数</div>
         <div id="roleListRows"></div>
-        <div class="role-list-sub">ボーナス <b>Enhance（エンハンス）</b>：捨て札に同じ色が4枚以上たまると、JACKPOTで勝った時に相手のチップを直接2枚奪う（色は問わない）</div>
       </div>
     </div>
     <div class="role-list-ov" id="effListOv" aria-hidden="true">
@@ -1811,7 +1810,7 @@
     ・<b>7</b>　<b>露呈・中</b>：出すと、次のラウンド自分の残りの手札の偶数・奇数が相手に見える／<b>重圧</b>：出すと、次のラウンド自分はブーストできない<br>
     ・<b>8</b>　<b>全公開</b>：出すと、自分の残りの手札が相手に公開される（確定情報 !）／<b>代償・大</b>：出すと、チップ2枚をポッドへ払う<br>
     <br>
-    色の役(自分の捨て札の色構成で常時判定)：同色<b>2枚以上</b>で成立。成立すると捨て札が光り、タップで確認できます。成立している間は毎ラウンド、相手の情報が見える（ポッドの下に水色で表示）。同色2枚でLv2、<b>3枚</b>でLv3になり、さらに情報が増える。<b>青</b>(観測)＝相手の手札の大小（小1〜4・大5〜8の枚数）、Lv3で一番大きい数字も／<b>ピンク</b>(透視)＝相手の手札の偶奇（偶数・奇数の枚数）、Lv3で一番小さい数字も／<b>緑</b>(解析)＝相手の手札の合計、Lv3で自分の手札に相手の手札とちょうど1差のカードがあるかも／<b>黄</b>(先読み)＝相手の山札の一番底、Lv3で一番上も／<b>赤</b>(予兆)＝相手が手を確定した後、ブースト枚数の目安（しない／1〜2枚／3枚以上）、Lv3で正確な枚数。複数の色が成立していれば全部見える。役はチップの出入りには関わらない。<br>ボーナス <b>Enhance（エンハンス）</b>：役とは別枠で、捨て札に同色<b>4枚以上</b>（色は問わない）で成立。JACKPOTで勝った時、総取りに加えて相手のチップを直接<b>2🪙</b>奪う（相手の持っている分だけ）<br><br>
+    色の役(自分の捨て札の色構成で常時判定)：同色<b>2枚以上</b>で成立。成立すると捨て札が光り、タップで確認できます。成立している間は毎ラウンド、相手の情報が見える（ポッドの下に水色で表示）。同色2枚でLv2、<b>3枚</b>でLv3になり、さらに情報が増える。<b>青</b>(観測)＝相手の手札の大小（小1〜4・大5〜8の枚数）、Lv3で一番大きい数字も／<b>ピンク</b>(透視)＝相手の手札の偶奇（偶数・奇数の枚数）、Lv3で一番小さい数字も／<b>緑</b>(解析)＝相手の手札の合計、Lv3で自分の手札に相手の手札とちょうど1差のカードがあるかも／<b>黄</b>(先読み)＝相手の山札の一番底、Lv3で一番上も／<b>赤</b>(予兆)＝相手が手を確定した後、ブースト枚数の目安（しない／1〜2枚／3枚以上）、Lv3で正確な枚数。複数の色が成立していれば全部見える。Lv3まではチップの出入りには関わらない。<br>どの色も同色<b>4枚</b>でLv4になり、JACKPOTで勝った時、総取りに加えて相手のチップを直接<b>2🪙</b>奪う（相手の持っている分だけ）<br><br>
     確定情報：山札がなくなり捨て札を山札に戻した時に手札に残っていたカード、引き分けの手札勝負で公開した手札、引き分けの山札勝負で公開して後から手札に引いたカードの数字、山札を引ききった時の最後の手札など捨て札（と山札にあると分かっているカード）から手札が絞り込めた数字は、お互いに分かる。その数字は捨て札の枠に<b style="color:var(--known)">!</b>が表示され、出されるまで残る。<br><br>
     色：各カードには赤・青・黄・緑・ピンクいずれかの色がある（デッキ構築時に選択）。現時点では色の役以外の効果条件には未使用。<br><br>
     オンライン対戦：「部屋を作る」で表示される4桁のコードを相手に伝え、相手が入室したら準備フェイズ（それぞれ非公開でデッキを組む）へ進み、両者の準備が終わると対戦開始。手札のカードをタップした時点でそのラウンドの手が確定し、両者が確定したら一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになると手札からランダムに1枚、ブースト0で自動的に出す。予兆は、相手が確定した時点でブースト枚数の範囲が見える。通信はブラウザ同士の直接通信で、部屋を作った人のブラウザが対戦データを持つため、対戦中はそのページを閉じないこと。途中で抜けても、同じブラウザから同じ部屋コードで入り直せば続きから再開できる。<br><br>
@@ -3077,10 +3076,10 @@
 
   // === 色の役：捨て札に同色2枚以上で成立。成立している間は毎ラウンド、相手の情報が1つ見える（情報系） ===
   const COLOR_ROLE_MIN = 2; // 色の役が成立する同色枚数
-  // === ボーナス Enhance（エンハンス）：捨て札に同色4枚以上で成立（役とは別枠）。JACKPOTで勝った時、相手のチップを直接2🪙奪う ===
+  // === 色の役 Lv4：捨て札に同色4枚以上で成立（どの色でも同じ効果）。JACKPOTで勝った時、相手のチップを直接2🪙奪う ===
   const ENHANCE_MIN = 4;
   const ENHANCE_STEAL = 2;
-  // 捨て札（{n, c} の配列）で Enhance が成立している色。なければ null
+  // 捨て札（{n, c} の配列）で Lv4 が成立している色。なければ null
   function enhanceColorOf(entries) {
     const counts = {};
     (entries || []).forEach(e => { if (e.c) counts[e.c] = (counts[e.c] || 0) + 1; });
@@ -3147,13 +3146,6 @@
         <div><div class="role-item-name">${COLOR_EN[r.color]}：${info.name}</div>
         <div class="role-item-desc">${roleDescHtml(info, roleLevel(r.count))}</div></div></div>`);
     });
-    const enh = getEnhance(who);
-    if (enh) {
-      panel.insertAdjacentHTML('beforeend', `<div class="role-item compact ${enh.color}">
-        <div class="role-cnt on">${enh.count}<small>枚</small></div>
-        <div><div class="role-item-name">Enhance（エンハンス）<span class="role-trig">ボーナス</span></div>
-        <div class="role-item-desc">${ENHANCE_DESC}</div></div></div>`);
-    }
     panel.appendChild(buildCardList(who));
     panel.appendChild(buildMarkLegend(who));
   }
@@ -3388,13 +3380,13 @@
     { color: 'red', name: '予兆', trig: '相手の確定後', lv1: '相手のブースト枚数の目安（しない／1〜2枚／3枚以上）', lv2: '＋ブーストの正確な枚数' }
   ];
   const ROLE_LV2_MIN = COLOR_ROLE_MIN + 1;
-  const roleLevel = (count) => (count >= ROLE_LV2_MIN ? 2 : (count >= COLOR_ROLE_MIN ? 1 : 0));
+  const roleLevel = (count) => (count >= ENHANCE_MIN ? 3 : (count >= ROLE_LV2_MIN ? 2 : (count >= COLOR_ROLE_MIN ? 1 : 0)));
+  const ROLE_LV4_DESC = `JACKPOT勝利で相手のチップを${ENHANCE_STEAL}枚奪う`;
   // 役の説明（2枚／3枚）。lv を渡すと、成立しているレベルを強調する
   function roleDescHtml(r, lv) {
     // 表記は枚数に合わせて Lv2（2枚）／Lv3（3枚）。発動していない段階はグレーアウト
-    return `<span class="role-lv${lv >= 1 ? ' on' : ''}"><b>Lv${COLOR_ROLE_MIN}</b> ${r.lv1}</span><br><span class="role-lv${lv >= 2 ? ' on' : ''}"><b>Lv${ROLE_LV2_MIN}</b> ${r.lv2.replace(/^＋/, '')}</span>`;
+    return `<span class="role-lv${lv >= 1 ? ' on' : ''}"><b>Lv${COLOR_ROLE_MIN}</b> ${r.lv1}</span><br><span class="role-lv${lv >= 2 ? ' on' : ''}"><b>Lv${ROLE_LV2_MIN}</b> ${r.lv2.replace(/^＋/, '')}</span><br><span class="role-lv${lv >= 3 ? ' on' : ''}"><b>Lv${ENHANCE_MIN}</b> ${ROLE_LV4_DESC}</span>`;
   }
-  const ENHANCE_DESC = `同色${ENHANCE_MIN}枚以上：JACKPOTで勝った時、相手のチップを直接${ENHANCE_STEAL}枚奪う`;
   const roleName = (color) => (ROLE_LIST.find(r => r.color === color) || {}).name || '';
   function renderRoleList() {
     const counts = {};
@@ -3777,8 +3769,9 @@
     if (opBlocked) add('op', 'rule', '撹乱：あなたの情報系の効果が効かない');
     if (myBlocked) add('me', 'rule', '撹乱：相手の情報系の効果が効かない');
     const r = state.rule || {};
-    if (getEnhance('my')) add('me', 'rule', `Enhance：JACKPOTで勝てば相手から${ENHANCE_STEAL}枚奪う`);
-    if (getEnhance('op')) add('op', 'rule', `Enhance：相手がJACKPOTで勝つと${ENHANCE_STEAL}枚奪われる`);
+    const lv4My = getEnhance('my'), lv4Op = getEnhance('op');
+    if (lv4My) add('me', 'rule', `${COLOR_EN[lv4My.color]} Lv4：JACKPOTで勝てば相手から${ENHANCE_STEAL}枚奪う`);
+    if (lv4Op) add('op', 'rule', `${COLOR_EN[lv4Op.color]} Lv4：相手がJACKPOTで勝つと${ENHANCE_STEAL}枚奪われる`);
     if (r.my && r.my.free) add('me', 'rule', '伏兵：ブースト1枚目が無料');
     if (r.my && r.my.noBoost) add('me', 'rule', '重圧：このラウンドはブーストできない');
     if (r.op && r.op.free) add('op', 'rule', '伏兵：相手のブースト1枚目が無料');
@@ -4329,13 +4322,13 @@
             res.notes.push(`${nm(loser)}がポッドへ${payment}🪙支払い（JACKPOT敗者${key[loser] === '4B' ? '・保険で-1' : ''}）`);
           }
         }
-        // ボーナス Enhance：勝った側の捨て札に同色4枚以上なら、総取りに加えて相手のチップを直接奪う（0枚になるまで）
+        // 色の役 Lv4：勝った側の捨て札に同色4枚以上なら、総取りに加えて相手のチップを直接奪う（0枚になるまで）
         if (enhanceColorOf(winner === 'my' ? p.myDisc : p.opDisc)) {
           const steal = Math.min(ENHANCE_STEAL, chips[loser]);
           if (steal > 0) {
             chips[loser] -= steal;
             chips[winner] += steal;
-            res.notes.push(`Enhance：${nm(winner)}が${nm(loser)}から${steal}🪙を直接奪取`);
+            res.notes.push(`色の役Lv4：${nm(winner)}が${nm(loser)}から${steal}🪙を直接奪取`);
           }
         }
       } else {
@@ -4609,6 +4602,8 @@
     res.notes.forEach(n => {
       const m = n.match(/^(赤|青|黄|緑|ピンク)の役（(.+?)）：(あなた|相手)/);
       if (m) out.push({ side: m[3] === 'あなた' ? 'me' : 'op', t: `${m[1]}の役：${m[2]}` });
+      const m4 = n.match(/^色の役Lv4：(あなた|相手)が/);
+      if (m4) out.push({ side: m4[1] === 'あなた' ? 'me' : 'op', t: '色の役Lv4：2枚奪取' });
       if (n.includes('緑の役で+1') && winSide) out.push({ side: winSide, t: '緑の役：コツコツ回収' });
       if (n.includes('青の役で-1') && loseSide) out.push({ side: loseSide, t: '青の役：守り' });
     });
