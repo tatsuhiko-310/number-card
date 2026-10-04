@@ -1309,35 +1309,24 @@
   /* デッキ構築：画面の高さが低い時は枠を小さくして選択肢まで収める */
   .prep-grid { max-width: min(340px, 42dvh); gap: 8px; margin-bottom: 8px; }
   .prep-peek { margin-top: 0; min-height: 0; }
-  /* ポッドまわり：発動中の効果（上＝ENEMY、下＝PLAYER） */
-  /* ポッド＋発動中の効果を1つのブロックに（幅は手札2枚分にそろえる） */
+  /* ポッドまわり：POT の下に発動中の効果を1効果＝1行で並べる（枠なし・文字だけ） */
+  /* 幅は手札2枚分にそろえる。左の縦線の色で誰が発動したかを示す（青＝相手、赤＝自分） */
   .eff-board {
     width: calc(2 * min(136px, 39vw, 15.5dvh) + 16px); max-width: 100%;
-    border: 1px solid var(--cy-cyan); border-radius: 12px; overflow: hidden;
-    background: rgba(11, 16, 32, 0.92); box-shadow: 0 0 12px rgba(25, 211, 255, 0.35);
+    display: flex; flex-direction: column; align-items: stretch; gap: 2px;
   }
-  /* 数字をブロックの中央に置き、POT はその左に添える */
   .eff-board .pod-mini {
-    display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; column-gap: 8px;
-    background: none; border: none; box-shadow: none; border-radius: 0; padding: 3px 0 2px;
+    align-self: center; background: none; border: none; box-shadow: none; border-radius: 0; padding: 0 0 1px;
   }
-  .eff-row { display: grid; grid-template-columns: 17px minmax(0, 1fr); border-top: 1px solid rgba(25, 211, 255, 0.25); font-size: 0.6rem; line-height: 1.35; }
-  .eff-row .eff-side {
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.42rem; letter-spacing: 0.08em; color: #fff;
-    writing-mode: vertical-rl; transform: rotate(180deg); padding: 3px 0;
-  }
-  .eff-row .eff-items { padding: 3px 6px; text-align: left; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-  .eff-row.op { background: rgba(30, 139, 255, 0.10); }
-  .eff-row.op .eff-side { background: var(--cy-blue); }
-  .eff-row.me { background: rgba(255, 43, 79, 0.10); }
-  .eff-row.me .eff-side { background: var(--cy-red); }
-  .eff-item { color: var(--text); }
+  .eff-board .pod-label { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.7rem; letter-spacing: 0.12em; color: var(--text-dim); }
+  .eff-row { display: flex; flex-direction: column; gap: 2px; font-size: 0.6rem; line-height: 1.35; text-align: left; }
+  .eff-row:empty { display: none; }
+  .eff-item { color: var(--text); padding-left: 6px; border-left: 3px solid; overflow-wrap: anywhere; }
+  .eff-row.op .eff-item { border-left-color: var(--cy-blue); }
+  .eff-row.me .eff-item { border-left-color: var(--cy-red); }
   .eff-item.see { color: var(--cy-cyan); font-weight: 700; }
   .eff-item.shown { color: var(--known); }
   .eff-item.rule { color: #ffe066; font-weight: 700; }
-  .eff-board .pod-label { justify-self: end; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.7rem; letter-spacing: 0.12em; color: var(--text-dim); }
-  .eff-item.none { color: var(--text-dim); opacity: 0.7; }
   /* ===== デッキ構築：役一覧 ===== */
   .prep-head { display: flex; justify-content: flex-end; align-items: center; gap: 8px; max-width: min(340px, 42dvh); margin: 0 auto 12px; padding-bottom: 10px; border-bottom: 1px solid var(--card-border); }
   /* デッキ構築の見出し（準備フェイズであることと進み具合を示す） */
@@ -1750,7 +1739,7 @@
     ・<b>LOSE</b>＝負けると、ポッドへチップを<b>2枚</b>支払う（持っている分だけ）。ブーストして負けた場合は、ブースト分に加えて<b>2枚</b>支払う<br>
     ・<b>引き分け</b>＝お互いの残りの手札（素の数字）を公開し、大きい方の勝ち。差がちょうど1ならJACKPOT、それ以外は通常の勝ち負けと同じ扱い。手札も同じ数字なら、山札の一番上から順に公開して決着するまで比べる（山札が空なら捨て札をシャッフルして山札にする。カードが尽きた時だけ、ブーストはすべてポッドへ流れて引き分け）。公開した手札は手札に戻り、捨て札の枠に<b style="color:var(--known)">!</b>が付く。公開した山札のカードは山札に戻り、手札に引いた時に<b style="color:var(--known)">!</b>が付く<br>
     ・それ以外の結果（JACKPOTにならなかったブースト、ブーストしての負け等）は、使ったブースト分がそのままポッドへ流れる（ブーストしての負けは、さらにLOSEの2枚も支払う）<br><br>
-    カード効果：各数字に2種類の効果があり、デッキ構築で<b>色とセットで</b>どちらかを選ぶ。相手がどちらを選んだかは、そのカードが出された時に分かる（捨て札をタップして開くパネルで、カードをタップすると効果が見られる。一度出たカードの色と効果は山札に戻っても記録される）。発動中の効果はポッドの上下に表示される（ENEMY＝相手が発動、PLAYER＝自分が発動／水色＝相手の情報が見える、オレンジ＝自分の情報が相手に見えている、黄色＝このラウンドのルール）。<br>
+    カード効果：各数字に2種類の効果があり、デッキ構築で<b>色とセットで</b>どちらかを選ぶ。相手がどちらを選んだかは、そのカードが出された時に分かる（捨て札をタップして開くパネルで、カードをタップすると効果が見られる。一度出たカードの色と効果は山札に戻っても記録される）。発動中の効果はポッドの下に1行ずつ表示される（左の線が青＝相手が発動、赤＝自分が発動／文字が水色＝相手の情報が見える、オレンジ＝自分の情報が相手に見えている、黄色＝このラウンドのルール）。<br>
     ・<b>1</b>　<b>回収</b>：出した後、ドローの代わりに自分の捨て札から1枚（1以外）を選んで手札に加える。加えたカードは確定情報（!）になる。捨て札に1しかなければ普通に引く／<b>撹乱</b>：次のラウンド、相手の情報系の効果が自分に効かない<br>
     ・<b>2</b>　<b>予兆</b>：次のラウンド、相手がブーストするか（枚数の範囲も）が見える／<b>伏兵</b>：次のラウンド、自分のブースト1枚目が無料<br>
     ・<b>3</b>　<b>先読み</b>：次のラウンド、相手の山札の一番上が見える／<b>仕込み</b>：出した後、自分の山札の一番上を見て、そのまま残すか一番下へ送るか選べる<br>
@@ -3617,7 +3606,7 @@
     state.opPendingFree = rule.free && chips > 0;
   }
 
-  // 発動中のカード効果を、ポッドの上(ENEMY＝相手が発動)と下(PLAYER＝自分が発動)にまとめて表示
+  // 発動中のカード効果を、ポッドの下に1効果＝1行で表示（左の縦線：青＝相手が発動、赤＝自分が発動）
   //   水色 ＝ 自分に見えている相手の情報 ／ オレンジ ＝ 相手に見えている自分の情報 ／ 黄色 ＝ このラウンドのルール
   function refreshColorInfoHint() {
     const rowOp = document.getElementById('effRowOp');
@@ -3673,14 +3662,13 @@
     if (r.op && r.op.noBoost) add('op', 'rule', '重圧：相手はこのラウンドブーストできない');
 
     const esc = (t) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-    const fill = (row, side, label) => {
+    const fill = (row, side) => {
       const list = items[side];
-      row.innerHTML = `<span class="eff-side">${label}</span><div class="eff-items">` +
-        (list.length ? list.map(it => `<div class="eff-item ${it.kind}">${esc(it.text)}</div>`).join('') : '<div class="eff-item none">発動中の効果なし</div>') +
-        '</div>';
+      // 効果がない側は空にして行ごと消す（:empty で非表示）
+      row.innerHTML = list.map(it => `<div class="eff-item ${it.kind}">${esc(it.text)}</div>`).join('');
     };
-    fill(rowOp, 'op', 'ENEMY');
-    fill(rowMe, 'me', 'PLAYER');
+    fill(rowOp, 'op');
+    fill(rowMe, 'me');
     fitSelectPanel();
   }
 
