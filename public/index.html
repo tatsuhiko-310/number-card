@@ -325,6 +325,16 @@
     color: var(--text-dim);
     letter-spacing: 0.03em;
   }
+  /* 手札の上に出す英語の見出し（「手札を選択」） */
+  .select-label {
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif;
+    font-weight: 900;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    color: var(--cy-cyan);
+    text-shadow: 0 0 8px rgba(25, 211, 255, 0.45);
+    line-height: 1;
+  }
   .wrap.in-game > h1 { display: none; }
 
   .status-badges {
@@ -887,7 +897,7 @@
     padding: 6px 10px;
     opacity: 0.85;
   }
-  .board.hide-hand .select-panel #myHand { display: none; }
+  .board.hide-hand .select-panel #myHand, .board.hide-hand .select-panel .select-label { display: none; }
 
   .start-panel, .prep-panel {
     background: var(--bg2);
@@ -1647,6 +1657,7 @@
           <div class="eff-row me" id="effRowMe"></div>
         </div>
         <div class="select-prompt" id="selectPrompt">出すカードを選んでください</div>
+        <div class="select-label">SELECT YOUR CARD</div>
         <div class="card-row" id="myHand"></div>
         <div class="chip-selector">
           <div class="chip-controls">
