@@ -1486,6 +1486,20 @@
   .sd-banner.hack { background: linear-gradient(90deg, rgba(4, 30, 18, 0.95), rgba(57, 255, 158, 0.95), rgba(4, 30, 18, 0.95)); color: #04130b; text-shadow: 0 0 8px #fff; box-shadow: 0 0 26px rgba(57, 255, 158, 0.8); }
   .battle-panel.hacked .flip-card { animation: hackGlitch 0.5s steps(2) 2; }
   @keyframes hackGlitch { 0% { transform: translate(0); filter: none; } 25% { transform: translate(-3px, 1px); filter: hue-rotate(90deg); } 50% { transform: translate(3px, -1px); } 75% { transform: translate(-1px, 2px); filter: hue-rotate(-60deg); } 100% { transform: translate(0); filter: none; } }
+  /* ハッキング演出（RGBずれ＋スライス） */
+  .hack-glitch { position: fixed; z-index: 85; pointer-events: none; overflow: hidden; border-radius: 16px; }
+  .hack-glitch-bar { position: absolute; left: -30px; right: -30px; mix-blend-mode: screen; }
+  .hack-glitch-title {
+    position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); z-index: 1; text-align: center;
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: clamp(2rem, 11vw, 3rem); letter-spacing: 0.08em; color: #fff;
+    text-shadow: -4px 0 rgba(255, 0, 60, 0.9), 4px 0 rgba(0, 220, 255, 0.9), 0 0 18px rgba(57, 255, 158, 0.8);
+    animation: hackTitle 0.14s steps(2) infinite;
+  }
+  @keyframes hackTitle { 0% { transform: translate(-3px, -50%); } 50% { transform: translate(3px, calc(-50% + 1px)); } 100% { transform: translate(-1px, -50%); } }
+  .board.hack-glitching { animation: hackShake 0.14s steps(2) infinite; }
+  .board.hack-glitching .flip-card { filter: drop-shadow(-4px 0 rgba(255, 0, 60, 0.7)) drop-shadow(4px 0 rgba(0, 220, 255, 0.7)); }
+  .board.hack-glitching .flip-front { text-shadow: -3px 0 rgba(255, 0, 60, 0.95), 3px 0 rgba(0, 220, 255, 0.95); }
+  @keyframes hackShake { 0% { transform: translateX(var(--gx, 0)); } 50% { transform: translateX(calc(var(--gx, 0) * -1)) skewX(-1deg); } 100% { transform: translateX(0); } }
   /* 役パネルは盤面の中に収め、はみ出す分はスクロール */
   .role-panel { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; }
   .rp-note { font-size: 0.62rem; color: var(--text-dim); }
@@ -3966,20 +3980,15 @@
     rm0.textContent = (myChipsUsed > 0 || opChipsUsed > 0) ? 'チップを集計中…' : '';
     rm0.className = 'result-msg';
     updateHackUI();
-    // ハッキングの演出：カード公開と同時にバナーとグリッチ
-    const hackDelay = state.roundHack ? 1300 : 0;
-    if (state.roundHack) {
-      const panel = document.querySelector('.battle-panel');
-      const b = document.createElement('div');
-      b.className = 'sd-banner hack';
-      b.textContent = myHack && opHack ? 'DOUBLE HACK!!' : (myHack ? 'HACK!!' : 'HACKED!!');
-      panel.appendChild(b);
-      panel.classList.add('hacked');
-      setTimeout(() => { b.remove(); panel.classList.remove('hacked'); }, 1300);
-      playSuddenDeathSound();
-    }
+    const hackText = myHack && opHack ? 'DOUBLE HACK!!' : (myHack ? 'HACK!!' : 'HACKED!!');
 
+    // ハッキングの演出は、ブースト演出が終わってから勝敗判定の前に入れる
     const finalize = () => {
+      if (myToken !== gameToken) return;
+      if (!state.roundHack) { judge(); return; }
+      playHackGlitch(hackText, myToken).then(() => { if (myToken === gameToken) judge(); });
+    };
+    const judge = () => {
       if (myToken !== gameToken) return;
       const done = (tie) => finalizeRound(myCard, opCard, myChipsUsed, opChipsUsed, myEffective, opEffective, myToken, tie);
       if (myEffective !== opEffective) { done(null); return; }
@@ -4001,9 +4010,9 @@
       setTimeout(() => {
         if (myToken !== gameToken) return;
         animateChipCount(myCard, opCard, myChipsUsed, opChipsUsed, myToken, finalize);
-      }, 1500 + hackDelay);
+      }, 1500);
     } else {
-      setTimeout(finalize, 250 + hackDelay);
+      setTimeout(finalize, 250);
     }
   }
 
@@ -4322,6 +4331,87 @@
     res.opChips = chips.op;
     res.pod = pod;
     return res;
+  }
+
+  // ===== ハッキングの演出（A：RGBずれ＋スライス）=====
+  // 盤面が横の帯に裂けて左右にずれ、色がにじむ。カードと文字は赤・水色の2色にブレる。約1.1秒で元に戻る
+  function playHackGlitch(text, myToken) {
+    return new Promise(resolve => {
+      const board = document.getElementById('board');
+      if (!board) { resolve(); return; }
+      const br = board.getBoundingClientRect();
+      const layer = document.createElement('div');
+      layer.className = 'hack-glitch';
+      Object.assign(layer.style, { left: br.left + 'px', top: br.top + 'px', width: br.width + 'px', height: br.height + 'px' });
+      const title = document.createElement('div');
+      title.className = 'hack-glitch-title';
+      title.textContent = text;
+      layer.appendChild(title);
+      document.body.appendChild(layer);
+      board.classList.add('hack-glitching');
+      playHackSound();
+      const colors = ['rgba(255, 0, 60, 0.55)', 'rgba(0, 220, 255, 0.5)', 'rgba(57, 255, 158, 0.45)'];
+      const bars = [];
+      // 帯をランダムに作り直してずらす（約70msごと）
+      const frame = () => {
+        bars.forEach(b => b.remove());
+        bars.length = 0;
+        const n = 4 + Math.floor(Math.random() * 4);
+        for (let i = 0; i < n; i++) {
+          const b = document.createElement('div');
+          b.className = 'hack-glitch-bar';
+          const h = 4 + Math.random() * 40;
+          b.style.top = (Math.random() * (br.height - h)) + 'px';
+          b.style.height = h + 'px';
+          b.style.transform = `translateX(${(Math.random() - 0.5) * 60}px)`;
+          b.style.background = colors[i % colors.length];
+          layer.appendChild(b);
+          bars.push(b);
+        }
+        board.style.setProperty('--gx', ((Math.random() - 0.5) * 14).toFixed(1) + 'px');
+        board.style.setProperty('--gc', `inset(${(Math.random() * 60).toFixed(0)}% 0 ${(Math.random() * 30).toFixed(0)}% 0)`);
+      };
+      frame();
+      const timer = setInterval(frame, 70);
+      setTimeout(() => {
+        clearInterval(timer);
+        layer.remove();
+        board.classList.remove('hack-glitching');
+        board.style.removeProperty('--gx');
+        board.style.removeProperty('--gc');
+        resolve();
+      }, 1100);
+    });
+  }
+  // ハッキングの音：短いデジタルノイズと不安定な電子音
+  function playHackSound() {
+    if (!soundOn) return;
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    for (let i = 0; i < 6; i++) {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'square';
+      const st = t + i * 0.09;
+      o.frequency.setValueAtTime(200 + Math.random() * 1600, st);
+      g.gain.setValueAtTime(0.0001, st);
+      g.gain.exponentialRampToValueAtTime(0.08, st + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, st + 0.07);
+      o.connect(g); g.connect(masterGain);
+      o.start(st); o.stop(st + 0.08);
+    }
+    const nz = ctx.createBufferSource();
+    nz.buffer = getNoise(ctx);
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 3000;
+    const gn = ctx.createGain();
+    gn.gain.setValueAtTime(0.0001, t);
+    gn.gain.exponentialRampToValueAtTime(0.15, t + 0.03);
+    gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+    nz.connect(bp); bp.connect(gn); gn.connect(masterGain);
+    nz.start(t); nz.stop(t + 0.62);
   }
 
   // ===== 引き分け→手札勝負の演出（A：サドンデス・カットイン）=====
