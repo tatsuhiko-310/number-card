@@ -1329,7 +1329,12 @@
   .eff-board .pod-label { justify-self: end; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.7rem; letter-spacing: 0.12em; color: var(--text-dim); }
   .eff-item.none { color: var(--text-dim); opacity: 0.7; }
   /* ===== デッキ構築：役一覧 ===== */
-  .prep-head { display: flex; justify-content: flex-end; align-items: center; gap: 8px; max-width: min(340px, 42dvh); margin: 0 auto 12px; }
+  .prep-head { display: flex; justify-content: flex-end; align-items: center; gap: 8px; max-width: min(340px, 42dvh); margin: 0 auto 12px; padding-bottom: 10px; border-bottom: 1px solid var(--card-border); }
+  /* デッキ構築の見出し（準備フェイズであることと進み具合を示す） */
+  .prep-title { margin-right: auto; text-align: left; min-width: 0; }
+  .prep-title-main { font-weight: 900; font-size: 0.95rem; color: var(--text); }
+  .prep-count { margin-left: 4px; color: var(--cy-cyan); font-variant-numeric: tabular-nums; }
+  .prep-title-sub { font-size: 0.62rem; color: var(--text-dim); }
   .role-list-btn {
     font: inherit; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; cursor: pointer;
     border: 1px solid var(--cy-cyan); background: rgba(25, 211, 255, 0.06); color: var(--cy-cyan); box-shadow: 0 0 8px rgba(25, 211, 255, 0.35);
@@ -1580,9 +1585,12 @@
         <div id="effListRows"></div>
       </div>
     </div>
-    <div class="goal">準備フェイズ：カードの色を選んでデッキを組んでください</div>
     <div class="prep-panel" id="prepPanel">
       <div class="prep-head">
+        <div class="prep-title">
+          <div class="prep-title-main">デッキ構築 <span class="prep-count" id="prepCount">1/8</span></div>
+          <div class="prep-title-sub">1〜8の色と効果を選ぶ</div>
+        </div>
         <button type="button" class="role-list-btn" id="effListBtn">効果一覧</button>
         <button type="button" class="role-list-btn" id="roleListBtn">役一覧</button>
       </div>
@@ -3322,6 +3330,7 @@
   function renderPrepGrid(justLandedNum) {
     const grid = document.getElementById('prepGrid');
     grid.innerHTML = '';
+    document.getElementById('prepCount').textContent = Math.min(prepStep, 8) + '/8';
     if (prepPeekNum != null && prepPeekNum >= prepStep) prepPeekNum = null;
     for (let n = 1; n <= 8; n++) {
       const slot = document.createElement('div');
