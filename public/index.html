@@ -1268,6 +1268,39 @@
   .tb-card.tb-out.me { transform: translateY(90px) scale(0.8); }
   .tb-card.tb-out.op { transform: translateY(-90px) scale(0.8); }
   .tb-card.tb-gone { animation: none; transition: opacity 0.25s; opacity: 0; }
+
+  /* ===== カード効果の表示 ===== */
+  .prep-option { width: 136px; }
+  .prep-choices.many .prep-option { width: 100px; }
+  .prep-effect-name { color: var(--cy-cyan); font-size: 0.74rem; padding-bottom: 4px; }
+  .prep-effect-row:not(.prep-effect-name) { font-weight: 500; color: var(--text); font-size: 0.64rem; }
+  .prep-slot { position: relative; }
+  .prep-slot .prep-slot-eff {
+    position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%);
+    font-size: 0.5rem; font-weight: 800; color: var(--cy-cyan); white-space: nowrap; letter-spacing: 0;
+  }
+  .card-effect-label .eff-name { display: block; color: var(--cy-cyan); font-weight: 800; }
+  .card-effect-label .eff-desc { display: block; font-size: 0.56rem; line-height: 1.3; margin-top: 2px; }
+  /* 捨て札の枠：出されたカードの効果名 */
+  .discard-slot .slot-eff {
+    position: absolute; left: 50%; bottom: 1px; transform: translateX(-50%);
+    font-size: 0.42rem; font-weight: 800; letter-spacing: -0.02em; color: var(--cy-cyan); white-space: nowrap; line-height: 1;
+    pointer-events: none;
+  }
+  /* 情報（効果・役で見えていること） */
+  .color-info-hint { line-height: 1.5; }
+  .color-info-hint .intel-see { color: var(--cy-cyan); font-weight: 700; }
+  .color-info-hint .intel-shown { color: var(--known); }
+  /* 仕込み（3B）の選択 */
+  .stack-dialog {
+    position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center;
+    background: rgba(0, 0, 0, 0.55); padding: 20px;
+  }
+  .stack-dialog .box { max-width: 300px; text-align: center; padding: 22px 18px; }
+  .stack-dialog .box h3 { margin: 0 0 6px; font-size: 1rem; color: var(--cy-cyan); }
+  .stack-dialog .box p { margin: 0 0 14px; font-size: 0.8rem; color: var(--text-dim); line-height: 1.5; }
+  .stack-dialog .top-card { margin: 0 auto 16px; width: 70px; }
+  .stack-dialog .btns { display: flex; gap: 10px; justify-content: center; }
 </style>
 </head>
 <body>
@@ -1413,7 +1446,16 @@
     ・<b>LOSE</b>＝負けると、ポッドへチップを<b>2枚</b>支払う（持っている分だけ）。ブーストして負けた場合は、ブースト分に加えて<b>2枚</b>支払う<br>
     ・<b>引き分け</b>＝お互いの残りの手札（素の数字）を公開し、大きい方の勝ち。差がちょうど1ならJACKPOT、それ以外は通常の勝ち負けと同じ扱い。手札も同じ数字なら、山札の一番上から順に公開して決着するまで比べる（山札が空なら捨て札をシャッフルして山札にする。カードが尽きた時だけ、ブーストはすべてポッドへ流れて引き分け）。公開した手札は手札に戻り、捨て札の枠に<b style="color:var(--known)">!</b>が付く。公開した山札のカードは山札に戻り、手札に引いた時に<b style="color:var(--known)">!</b>が付く<br>
     ・それ以外の結果（JACKPOTにならなかったブースト、ブーストしての負け等）は、使ったブースト分がそのままポッドへ流れる（ブーストしての負けは、さらにLOSEの2枚も支払う）<br><br>
-    カード効果：現在、1〜8のどのカードにも数字比較以外の特殊効果はありません（検討中）。<br><br>
+    カード効果：各数字にA・B2種類の効果があり、デッキ構築で<b>色とセットで</b>どちらかを選ぶ。相手がどちらを選んだかは、そのカードが出された時に分かる（捨て札の枠に効果名が表示される）。見えている情報は手札選択画面に表示される。<br>
+    ・<b>1</b>　A <b>偵察</b>：次のラウンド、相手の手札2枚の偶数・奇数の内訳が見える／B <b>撹乱</b>：次のラウンド、相手の情報系の効果・役（黄・ピンク含む）が自分に効かない<br>
+    ・<b>2</b>　A <b>予兆</b>：次のラウンド、相手がブーストするか（枚数の範囲も）が見える／B <b>伏兵</b>：次のラウンド、自分のブースト1枚目が無料<br>
+    ・<b>3</b>　A <b>先読み</b>：次のラウンド、相手の山札の一番上が見える／B <b>仕込み</b>：出した後、自分の山札の一番上を見て、そのまま残すか一番下へ送るか選べる<br>
+    ・<b>4</b>　A <b>観測</b>：次のラウンド、相手の手札2枚の大小（1〜4／5〜8）の内訳が見える／B <b>保険</b>：このカードで負けたら、LOSEの支払いが1枚減る<br>
+    ・<b>5</b>　A <b>解析</b>：次のラウンド、相手の手札2枚の合計が見える／B <b>記録</b>：このカードで勝ったら、相手の残りの手札1枚が確定情報（!）になる<br>
+    ・<b>6</b>　A <b>露呈・小</b>：出すと、次のラウンド自分の残りの手札の大小が相手に見える／B <b>代償・小</b>：出すと、チップ1枚をポッドへ払う<br>
+    ・<b>7</b>　A <b>露呈・中</b>：出すと、次のラウンド自分の残りの手札の偶数・奇数が相手に見える／B <b>重圧</b>：出すと、次のラウンド自分はブーストできない<br>
+    ・<b>8</b>　A <b>全公開</b>：出すと、自分の残りの手札が相手に公開される（確定情報 !）／B <b>代償・大</b>：出すと、チップ2枚をポッドへ払う<br>
+    <br>
     色の役(自分の捨て札の色構成で常時判定)：<b>色トリプル</b>(同色3枚以上)。成立すると捨て札が光り、タップで確認できます。<b>赤</b>(攻め)＝JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）／<b>青</b>(守り)＝ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ）／<b>緑</b>(安定)＝THROUGH(ブーストなしの勝利)時、WINの1🪙に加えて、ポッドに残っていればさらに1🪙回収できる／<b>ピンク</b>＝相手のデッキの底が見える／<b>黄</b>＝手札選択中に相手がブーストするかどうかだけ見える(枚数は伏せる)。<br><br>
     確定情報：山札がなくなり捨て札を山札に戻した時に手札に残っていたカード、引き分けの手札勝負で公開した手札、引き分けの山札勝負で公開して後から手札に引いたカードの数字は、お互いに分かる。その数字は捨て札の枠に<b style="color:var(--known)">!</b>が表示され、出されるまで残る。<br><br>
     色：各カードには赤・青・黄・緑・ピンクいずれかの色がある（デッキ構築時に選択）。現時点では色トリプル以外の効果条件には未使用。<br><br>
@@ -1764,6 +1806,8 @@
   let prepOpColors = {};
   let prepStep = 1;
   let prepCurrentOptions = [];
+  let prepMyEffects = {};
+  let prepOpEffects = {};
 
   // ===================================================================
   // オンライン対戦
@@ -2170,7 +2214,7 @@
   function onlineFinishPrep() {
     const deck = shuffle([1, 2, 3, 4, 5, 6, 7, 8]);
     const hand = [deck.pop(), deck.pop()];
-    writePriv({ colors: Object.assign({}, prepMyColors), deck, hand, pending: null, drawnRound: 1, log: [] });
+    writePriv({ colors: Object.assign({}, prepMyColors), effects: Object.assign({}, prepMyEffects), deck, hand, pending: null, drawnRound: 1, log: [], prev: null });
     writeMySeat({ prepDone: true, discard: [], commitRound: 0, commitHash: null, boostFlag: null, reveal: null, deckBottom: null });
     net.phase = 'prepWait';
     showPrepWait();
@@ -2188,9 +2232,10 @@
     const R = m.round;
     const my = net.mySeat || {};
     const op = oppSeatC() || {};
-    const opColors = {};
-    (op.discard || []).forEach(e => { if (e.c) opColors[e.n] = e.c; });
-    state = makeState(Object.assign({}, pv.colors), opColors);
+    const opColors = {}, opEffects = {};
+    (op.discard || []).forEach(e => { if (e.c) opColors[e.n] = e.c; if (e.e) opEffects[e.n] = e.e; });
+    state = makeState(Object.assign({}, pv.colors), opColors, Object.assign({}, pv.effects || {}), opEffects);
+    state.prev = pv.prev || null;
     Object.assign(state, {
       myDeck: (pv.deck || []).slice(),
       myHand: (pv.hand || []).slice(),
@@ -2232,6 +2277,7 @@
       const i = state.myHand.indexOf(pending.card);
       if (i >= 0) state.myHand.splice(i, 1);
       state.pendingCommit = pending;
+      prepareRoundIntel();
       state.chipSelect = pending.boost;
       state.locked = true;
       state.netPhase = 'committed';
@@ -2254,17 +2300,17 @@
 
   function myDeckBottomPublic() {
     // 相手がピンクの役を持っている時だけ、自分のデッキの底を公開する
-    if (!state || !hasColorTriple('op', 'pink')) return null;
+    if (!state || !hasColorTriple('op', 'pink') || (state.prev && state.prev.my.key === '1B')) return null;
     return state.myDeck.length ? state.myDeck[0] : null;
   }
   function persistAfterRoundDraw() {
-    writePriv({ deck: state.myDeck.slice(), hand: state.myHand.slice(), pending: null, drawnRound: state.round, log: state.roundLog });
+    writePriv({ deck: state.myDeck.slice(), hand: state.myHand.slice(), pending: null, drawnRound: state.round, log: state.roundLog, prev: state.prev });
     writeMySeat({ discard: discEntries('my'), deckBottom: myDeckBottomPublic() });
   }
 
   // 相手の捨て札を共有データに合わせる（山札へ戻った時は戻る演出）
   function syncOpDiscard(op) {
-    (op.discard || []).forEach(e => { if (e.c) state.opCardColors[e.n] = e.c; });
+    (op.discard || []).forEach(e => { if (e.c) state.opCardColors[e.n] = e.c; if (e.e) state.opCardEffects[e.n] = e.e; });
     const incoming = (op.discard || []).map(e => e.n);
     const cur = state.opDiscard;
     const bottom = getDeckBottom('op');
@@ -2315,8 +2361,8 @@
       net.revealWrittenRound = R;
       const pc = state.pendingCommit;
       const discard = discEntries('my').filter(e => e.n !== pc.card);
-      discard.push({ n: pc.card, c: pc.color });
-      writeMySeat({ reveal: { round: R, card: pc.card, color: pc.color, boost: pc.boost, salt: pc.salt }, discard });
+      discard.push({ n: pc.card, c: pc.color, e: pc.eff || null });
+      writeMySeat({ reveal: { round: R, card: pc.card, color: pc.color, eff: pc.eff || null, boost: pc.boost, free: pc.free || 0, salt: pc.salt }, discard });
     }
     if (state.netPhase === 'committed' && oc) {
       const rm = document.getElementById('resultMsg');
@@ -2359,8 +2405,10 @@
     const hs = net.seats.host, gs = net.seats.guest;
     if (!hs || !gs || !hs.reveal || !gs.reveal || hs.reveal.round !== R || gs.reveal.round !== R) return;
     if (net.hostResolvedRound >= R) return;
-    const hB = Math.max(0, Math.min(hs.reveal.boost | 0, m.chips.host));
-    const gB = Math.max(0, Math.min(gs.reveal.boost | 0, m.chips.guest));
+    const hFree = hs.reveal.free ? 1 : 0, gFree = gs.reveal.free ? 1 : 0;
+    const hB = Math.max(0, Math.min(hs.reveal.boost | 0, m.chips.host + hFree));
+    const gB = Math.max(0, Math.min(gs.reveal.boost | 0, m.chips.guest + gFree));
+    const hP = Math.max(0, hB - hFree), gP = Math.max(0, gB - gFree);
     let tie = null;
     if (hs.reveal.card + hB === gs.reveal.card + gB) {
       const ht = hs.tie && hs.tie.round === R ? hs.tie : null;
@@ -2371,8 +2419,9 @@
     }
     net.hostResolvedRound = R;
     const res = computeRoundResult({
-      myCard: hs.reveal.card, opCard: gs.reveal.card, myBoost: hB, opBoost: gB,
-      myChips: m.chips.host - hB, opChips: m.chips.guest - gB, pod: m.pod,
+      myCard: hs.reveal.card, opCard: gs.reveal.card, myBoost: hB, opBoost: gB, myPaid: hP, opPaid: gP,
+      myKey: hs.reveal.eff ? hs.reveal.card + hs.reveal.eff : null, opKey: gs.reveal.eff ? gs.reveal.card + gs.reveal.eff : null,
+      myChips: m.chips.host - hP, opChips: m.chips.guest - gP, pod: m.pod,
       myDisc: hs.discard || [], opDisc: gs.discard || [], round: R, tie
     });
     const over = !m.debug && gameWinner(res.myChips, res.opChips) !== null;
@@ -2394,10 +2443,11 @@
   async function onlineCommit(card) {
     const R = state.round;
     const token = gameToken;
-    const boost = Math.max(0, Math.min(state.chipSelect, state.myChips));
+    const free = state.rule && state.rule.my.free ? 1 : 0;
+    const boost = Math.max(0, Math.min(state.chipSelect, maxBoostNow()));
     const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
     const salt2 = Math.random().toString(36).slice(2) + Date.now().toString(36);
-    const pc = { round: R, card, boost, salt, salt2, color: state.myCardColors[card] || null };
+    const pc = { round: R, card, boost, free: free && boost > 0 ? 1 : 0, salt, salt2, color: state.myCardColors[card] || null, eff: state.myCardEffects[card] || null };
     state.pendingCommit = pc;
     stopTurnTimer();
     const hash = await commitHash(R, card, boost, salt);
@@ -2405,7 +2455,12 @@
     const hiddenHash = await hiddenCardHash(R, state.myHand[0], salt2);
     if (token !== gameToken || !net.active) return;
     writePriv({ pending: pc });
-    writeMySeat({ commitRound: R, commitHash: hash, hiddenHash, boostFlag: hasColorTriple('op', 'yellow') ? boost > 0 : null });
+    // 相手の黄の役・予兆（2A）が効いていれば、ブーストの有無（予兆は枚数の範囲も）を公開する。撹乱中は公開しない
+    const ex = state.exposure || {};
+    const showFlag = !ex.blocked && (hasColorTriple('op', 'yellow') || ex.boostIntel);
+    writeMySeat({ commitRound: R, commitHash: hash, hiddenHash,
+      boostFlag: showFlag ? boost > 0 : null,
+      boostRange: !ex.blocked && ex.boostIntel ? boostRangeText(boost) : null });
     state.netPhase = 'committed';
     gameNetTick();
   }
@@ -2419,7 +2474,9 @@
     if (token !== gameToken) return;
     state.tamperNote = (h && op && op.commitHash && h !== op.commitHash) ? '⚠ 相手の公開内容が確定時の記録と一致しません' : '';
     if (oppReveal.color) state.opCardColors[oppReveal.card] = oppReveal.color;
+    if (oppReveal.eff) state.opCardEffects[oppReveal.card] = oppReveal.eff;
     state.opPendingChips = oppReveal.boost | 0;
+    state.opPendingFree = !!oppReveal.free;
     state.chipSelect = state.pendingCommit.boost;
     state.fieldOpPlaced = true;
     state.fieldMyPlaced = true;
@@ -2553,16 +2610,32 @@
     el.textContent = st ? `${name}・${st}` : name;
   }
 
-  const CARD_EFFECTS = {
-    1: [],
-    2: [],
-    3: [],
-    4: [],
-    5: [],
-    6: [],
-    7: [],
-    8: []
+  // ===== カード効果（各数字にA/Bの2パターン。デッキ構築で色とセットで選ぶ）=====
+  // 小さい数字は「情報を得る／守る」、大きい数字は「強いが代償（情報を渡す／チップを払う）」
+  const EFFECT_DEFS = {
+    1: { A: { name: '偵察', desc: '次のラウンド、相手の手札2枚の偶数・奇数の内訳が見える' },
+         B: { name: '撹乱', desc: '次のラウンド、相手の情報系の効果・役（黄・ピンク含む）が自分に効かない' } },
+    2: { A: { name: '予兆', desc: '次のラウンド、相手がブーストするか（枚数の範囲も）が見える' },
+         B: { name: '伏兵', desc: '次のラウンド、自分のブースト1枚目が無料' } },
+    3: { A: { name: '先読み', desc: '次のラウンド、相手の山札の一番上が見える' },
+         B: { name: '仕込み', desc: '出した後、自分の山札の一番上を見て、そのまま残すか一番下へ送るか選べる' } },
+    4: { A: { name: '観測', desc: '次のラウンド、相手の手札2枚の大小（1〜4／5〜8）の内訳が見える' },
+         B: { name: '保険', desc: 'このカードで負けたら、LOSEの支払いが1枚減る' } },
+    5: { A: { name: '解析', desc: '次のラウンド、相手の手札2枚の合計が見える' },
+         B: { name: '記録', desc: 'このカードで勝ったら、相手の残りの手札1枚が確定情報（!）になる' } },
+    6: { A: { name: '露呈・小', desc: '出すと、次のラウンド自分の残りの手札の大小が相手に見える' },
+         B: { name: '代償・小', desc: '出すと、チップ1枚をポッドへ払う' } },
+    7: { A: { name: '露呈・中', desc: '出すと、次のラウンド自分の残りの手札の偶数・奇数が相手に見える' },
+         B: { name: '重圧', desc: '出すと、次のラウンド自分はブーストできない' } },
+    8: { A: { name: '全公開', desc: '出すと、自分の残りの手札が相手に公開される（確定情報 !）' },
+         B: { name: '代償・大', desc: '出すと、チップ2枚をポッドへ払う' } }
   };
+  function effectDef(n, ab) { return (EFFECT_DEFS[n] && EFFECT_DEFS[n][ab]) || null; }
+  // そのプレイヤーのカード n の効果キー（例 '6B'）。分からなければ null
+  function effKey(who, n) {
+    const ab = state && state[who + 'CardEffects'] ? state[who + 'CardEffects'][n] : null;
+    return ab ? n + ab : null;
+  }
 
   // 色ごとの効果（最大2つ、現時点では未実装のためすべて空）
   const COLOR_EFFECTS = {
@@ -2573,8 +2646,10 @@
     pink: []
   };
 
+  // 手札のカードの下に出す効果名（自分のカード）
   function getCardEffectTexts(c) {
-    return CARD_EFFECTS[c] || [];
+    const d = state ? effectDef(c, state.myCardEffects[c]) : null;
+    return d ? [d.name] : [];
   }
 
   // ダメージは表示上だけ3桁増やす（内部計算はそのまま）
@@ -2799,19 +2874,36 @@
   function startPrepPhase(online) {
     startBgm('prep');
     prepOpColors = {};
+    prepOpEffects = {};
     if (!online) {
-      // CPUの色はランダムに（同じ「2色から1色選ぶ」方式で内部的に決定）自動で組む
+      // CPUは同じ「色＋効果の2択」をランダムに選んで自動で組む
       for (let n = 1; n <= 8; n++) {
-        const options = pickTwoRandomColors();
-        prepOpColors[n] = options[Math.floor(Math.random() * options.length)];
+        const options = prepOptionsFor();
+        const pick = options[Math.floor(Math.random() * options.length)];
+        prepOpColors[n] = pick.color;
+        prepOpEffects[n] = pick.eff;
       }
     }
     document.getElementById('prepPanel').classList.remove('waiting');
     document.getElementById('prepWait').classList.add('hidden');
     prepMyColors = {};
+    prepMyEffects = {};
     prepStep = 1;
     showScreen('prep');
     renderPrepStep();
+  }
+
+  // デッキ構築の選択肢：ランダムな2色に、効果AとBを1つずつ割り当てる（どちらの色がAになるかもランダム）
+  // デバッグモードでは全色×A/Bを並べる
+  function prepOptionsFor() {
+    if (debugMode) {
+      const all = [];
+      COLORS.forEach(color => ['A', 'B'].forEach(eff => all.push({ color, eff })));
+      return all;
+    }
+    const cols = pickTwoRandomColors();
+    const effs = Math.random() < 0.5 ? ['A', 'B'] : ['B', 'A'];
+    return cols.map((color, i) => ({ color, eff: effs[i] })).sort((a, b) => (a.eff < b.eff ? -1 : 1));
   }
 
   function renderPrepStep(justLandedNum) {
@@ -2822,41 +2914,36 @@
     document.getElementById('prepProgress').textContent = `カード ${prepStep} / 8`;
     renderPrepGrid(justLandedNum);
 
-    prepCurrentOptions = debugMode ? COLORS.slice() : pickTwoRandomColors();
+    prepCurrentOptions = prepOptionsFor();
     const choicesEl = document.getElementById('prepChoices');
     choicesEl.innerHTML = '';
     choicesEl.style.pointerEvents = '';
-    prepCurrentOptions.forEach((color, idx) => {
+    choicesEl.classList.toggle('many', prepCurrentOptions.length > 2);
+    prepCurrentOptions.forEach(({ color, eff }) => {
       const option = document.createElement('div');
       option.className = 'prep-option';
 
       const btn = document.createElement('button');
       btn.className = 'prep-choice-btn ' + color;
       btn.textContent = prepStep;
-      btn.addEventListener('click', () => choosePrepColor(color, btn));
+      btn.addEventListener('click', () => choosePrepColor(color, btn, eff));
       option.appendChild(btn);
 
+      // 選ぶと付く効果（名前と説明）
+      const d = effectDef(prepStep, eff);
       const effectsEl = document.createElement('div');
       effectsEl.className = 'prep-option-effects';
-      // このカード番号に固定で付く効果（例：4の逆転）と、色ごとの効果をあわせて表示
-      const effects = [...getCardEffectTexts(prepStep), ...(COLOR_EFFECTS[color] || [])];
-      for (let i = 0; i < 2; i++) {
-        if (i === 1) {
-          const divider = document.createElement('div');
-          divider.className = 'prep-effect-divider';
-          effectsEl.appendChild(divider);
-        }
-        const row = document.createElement('div');
-        const text = effects[i];
-        if (text) {
-          row.className = 'prep-effect-row';
-          row.textContent = text;
-        } else {
-          row.className = 'prep-effect-row empty';
-          row.textContent = '━';
-        }
-        effectsEl.appendChild(row);
-      }
+      const nameRow = document.createElement('div');
+      nameRow.className = 'prep-effect-row prep-effect-name';
+      nameRow.textContent = d ? `${eff}：${d.name}` : '━';
+      effectsEl.appendChild(nameRow);
+      const divider = document.createElement('div');
+      divider.className = 'prep-effect-divider';
+      effectsEl.appendChild(divider);
+      const descRow = document.createElement('div');
+      descRow.className = 'prep-effect-row';
+      descRow.textContent = d ? d.desc : '';
+      effectsEl.appendChild(descRow);
       option.appendChild(effectsEl);
 
       choicesEl.appendChild(option);
@@ -2873,6 +2960,13 @@
       if (n < prepStep) {
         slot.className = 'prep-slot filled ' + prepMyColors[n] + (n === justLandedNum ? ' just-landed' : '');
         slot.textContent = n;
+        const d = effectDef(n, prepMyEffects[n]);
+        if (d) {
+          const tag = document.createElement('span');
+          tag.className = 'prep-slot-eff';
+          tag.textContent = d.name;
+          slot.appendChild(tag);
+        }
       } else if (n === prepStep) {
         slot.className = 'prep-slot active';
         slot.textContent = n;
@@ -2884,7 +2978,7 @@
     }
   }
 
-  function choosePrepColor(color, btnEl) {
+  function choosePrepColor(color, btnEl, eff) {
     const startRect = btnEl.getBoundingClientRect();
     const targetSlot = document.getElementById('prepSlot' + prepStep);
     const landedNum = prepStep;
@@ -2897,6 +2991,7 @@
     flyChoiceToSlot(startRect, targetSlot, color, landedNum, () => {
       playSnapSound(); // 枠に入る時：カチッとハマる音
       prepMyColors[landedNum] = color;
+      prepMyEffects[landedNum] = eff;
       prepStep++;
       renderPrepStep(landedNum); // 着地した枠だけ、ポンと弾む演出付きで塗る
     });
@@ -2939,7 +3034,7 @@
   function finishPrep() {
     if (net.active) { onlineFinishPrep(); return; }
     showScreen('game');
-    newGame(prepMyColors, prepOpColors);
+    newGame(prepMyColors, prepOpColors, prepMyEffects, prepOpEffects);
     startBgm('battle');
   }
 
@@ -2952,10 +3047,10 @@
     stopBgm();
   }
 
-  function newGame(myColors, opColors) {
+  function newGame(myColors, opColors, myEffects, opEffects) {
     gameToken++;
     openRoleWho = null;
-    state = makeState(myColors, opColors);
+    state = makeState(myColors, opColors, myEffects, opEffects);
     updateOpLabel();
     for (let i = 0; i < 2; i++) {
       drawInto(state.myHand, 'my');
@@ -2964,12 +3059,17 @@
     startRound();
   }
 
-  function makeState(myColors, opColors) {
+  function makeState(myColors, opColors, myEffects, opEffects) {
     return {
       myDeck: shuffle([1,2,3,4,5,6,7,8]),
       opDeck: shuffle([1,2,3,4,5,6,7,8]),
       myCardColors: myColors || {},
       opCardColors: opColors || {},
+      myCardEffects: Object.assign({}, myEffects || {}), // 各数字の効果 'A' / 'B'
+      opCardEffects: Object.assign({}, opEffects || {}), // 相手の効果（オンラインは出された時に分かる）
+      prev: null,          // 直前のラウンドの結果（次のラウンドの効果に使う）
+      intel: null,         // 今のラウンドで見えている相手の情報
+      exposure: null,      // 今のラウンドで相手に見えている自分の情報
       myDiscard: [],
       opDiscard: [],
       myHand: [],
@@ -3011,6 +3111,7 @@
   // ラウンド開始フェイズ：強制供出（賭金）と、支払えない場合の即敗北は撤廃。
   // 所持チップが0でも参加でき、その場合は単にブーストできないだけになる。
   function startRound() {
+    prepareRoundIntel();
     state.myHpShown = null;
     document.getElementById('myHP').textContent = state.myChips;
     document.getElementById('opHP').textContent = state.opChips;
@@ -3044,43 +3145,82 @@
     state.opPendingIdx = idx;
     state.opPendingCard = state.opHand[idx];
     let chips = 0;
-    if (state.opChips > 0 && Math.random() < 0.5) {
-      const maxBoost = Math.min(3, state.opChips);
+    const rule = state.rule ? state.rule.op : { free: false, noBoost: false };
+    const avail = state.opChips + (rule.free ? 1 : 0);
+    if (!rule.noBoost && avail > 0 && Math.random() < 0.5) {
+      const maxBoost = Math.min(3, avail);
       chips = Math.floor(Math.random() * maxBoost) + 1;
     }
     state.opPendingChips = chips;
+    state.opPendingFree = rule.free && chips > 0;
   }
 
   // 黄・ピンクの役が発動中なら、選択フェイズ中にヒントを表示する（ピンクの「見える」側は捨て札グリッドの目のアイコンで表現）
   // 自分の役で相手の情報が見える場合と、相手の役で自分の情報が見えてしまっている場合の両方を表示する（対人戦でどちらが役を揃えても機能するように）
   function refreshColorInfoHint() {
     const el = document.getElementById('colorInfoHint');
-    if (!el) return;
+    if (!el || !state) return;
+    if (net.active) readOpIntel();
     const me = activeViewer;
     const opp = otherOf(me);
-    const lines = [];
-    if (hasColorTriple(me, 'yellow')) {
+    const pv = state.prev;
+    const opBlocked = !!(pv && pv.op.key === '1B');  // 相手の撹乱：自分の情報系の効果・役が効かない
+    const myBlocked = !!(pv && pv.my.key === '1B');  // 自分の撹乱：相手の情報系の効果・役が効かない
+    const see = [];   // 見えている相手の情報
+    const shown = []; // 相手に見えている自分の情報
+    const rules = []; // このラウンドの自分の制限・特典
+    const hl = (n) => (n === 'hi' ? '大(5〜8)' : '小(1〜4)');
+    const pr = (n) => (n === 'even' ? '偶数' : '奇数');
+    const describe = (ex, list, whoLabel) => {
+      if (!ex) return;
+      if (ex.parity) list.push(`偵察：${whoLabel}の手札は 偶数${ex.parity.even}枚・奇数${ex.parity.odd}枚`);
+      if (ex.hilo) list.push(`観測：${whoLabel}の手札は 小(1〜4)${ex.hilo.lo}枚・大(5〜8)${ex.hilo.hi}枚`);
+      if (ex.sum != null) list.push(`解析：${whoLabel}の手札の合計は ${ex.sum}`);
+      if ('deckTop' in ex) list.push(`先読み：${whoLabel}の山札の一番上は ${ex.deckTop == null ? '（山札が空）' : ex.deckTop}`);
+      if (ex.hidHilo) list.push(`露呈：${whoLabel}の手札の1枚は ${hl(ex.hidHilo)}`);
+      if (ex.hidParity) list.push(`露呈：${whoLabel}の手札の1枚は ${pr(ex.hidParity)}`);
+      (ex.reveal || []).forEach(r => list.push(`${r.src}：${whoLabel}の手札の ${r.n} が確定（!）`));
+    };
+    describe(state.intel, see, '相手');
+    describe(state.exposure, shown, 'あなた');
+
+    // 予兆（2A）・黄の役：相手のブースト
+    const intelBoost = !!(state.intel && state.intel.boostIntel);
+    const yellow = hasColorTriple(me, 'yellow') && !opBlocked;
+    if (intelBoost || yellow) {
+      const tag = intelBoost ? '予兆' : '黄の役';
       if (net.active) {
         const op = oppSeatC();
         if (op && op.commitRound === state.round) {
-          lines.push(typeof op.boostFlag === 'boolean'
-            ? (op.boostFlag ? '黄の役：相手はブーストする' : '黄の役：相手はブーストしない')
-            : '黄の役：相手は確定済み（ブースト情報なし）');
+          if (intelBoost && op.boostRange) see.push(`${tag}：相手は${op.boostRange}`);
+          else if (typeof op.boostFlag === 'boolean') see.push(`${tag}：相手は${op.boostFlag ? 'ブーストする' : 'ブーストしない'}`);
+          else see.push(`${tag}：相手は確定済み（ブースト情報なし）`);
         } else {
-          lines.push('黄の役：相手はまだ選択中（確定するとブーストの有無が見える）');
+          see.push(`${tag}：相手はまだ選択中（確定すると${intelBoost ? 'ブーストの枚数の範囲' : 'ブーストの有無'}が見える）`);
         }
       } else {
-        lines.push(state.opPendingChips > 0 ? '黄の役：相手はブーストする予定' : '黄の役：相手はブーストしない予定');
+        see.push(intelBoost ? `${tag}：相手は${boostRangeText(state.opPendingChips)}予定` : `${tag}：相手は${state.opPendingChips > 0 ? 'ブーストする' : 'ブーストしない'}予定`);
       }
     }
-    if (hasColorTriple(opp, 'yellow')) {
-      lines.push('相手の黄の役：自分がブーストするかどうかが相手に見えている');
+    if (state.exposure && state.exposure.boostIntel) shown.push('予兆：あなたのブーストの枚数の範囲');
+    else if (hasColorTriple(opp, 'yellow') && !myBlocked) shown.push('黄の役：あなたがブーストするかどうか');
+    if (hasColorTriple(opp, 'pink') && !myBlocked) shown.push('ピンクの役：あなたのデッキの底');
+    if (opBlocked && (hasColorTriple(me, 'yellow') || hasColorTriple(me, 'pink') || (pv && /^[1-5]A$|^5B$/.test(pv.my.key || '')))) {
+      see.push('撹乱：相手の撹乱で、このラウンドは相手の情報が見えない');
     }
-    if (hasColorTriple(opp, 'pink')) {
-      lines.push('相手のピンクの役：自分のデッキの底が相手に見えている');
-    }
-    el.textContent = lines.join(' ／ ');
-    el.style.display = lines.length ? '' : 'none';
+    if (myBlocked) rules.push('撹乱：このラウンドは相手の情報系の効果・役が効かない');
+    const r = state.rule ? state.rule.my : null;
+    if (r && r.free) rules.push('伏兵：このラウンドはブースト1枚目が無料');
+    if (r && r.noBoost) rules.push('重圧：このラウンドはブーストできない');
+
+    const esc = (t) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    const html = [
+      ...see.map(t => `<div class="intel-see">👁 ${esc(t)}</div>`),
+      ...rules.map(t => `<div class="intel-see">◆ ${esc(t)}</div>`),
+      ...(shown.length ? [`<div class="intel-shown">相手に見えている：${shown.map(esc).join(' ／ ')}</div>`] : [])
+    ].join('');
+    el.innerHTML = html;
+    el.style.display = html ? '' : 'none';
   }
 
   function drawInto(hand, who) {
@@ -3274,14 +3414,20 @@
 
   function resolveRound(myCard, opCard, myToken) {
     state.roundSnap = { my: state.myChips, op: state.opChips, pod: state.pod };
-    const myChipsUsed = Math.min(state.chipSelect, state.myChips);
+    // ブーストで上がる数字（Used）と、実際に払うチップ（Paid）。伏兵（2B）なら1枚目は無料
+    const myFree = state.rule && state.rule.my.free ? 1 : 0;
+    const myChipsUsed = Math.min(state.chipSelect, state.myChips + myFree);
+    const myPaid = Math.max(0, myChipsUsed - myFree);
     // 表示上は、チップが飛び立つまでブースト前の枚数のままにしておく
-    state.myHpShown = myChipsUsed > 0 ? state.myChips : null;
-    state.myChips -= myChipsUsed;
+    state.myHpShown = myPaid > 0 ? state.myChips : null;
+    state.myChips -= myPaid;
     state.chipSelect = 0;
 
-    const opChipsUsed = Math.max(0, Math.min(state.opPendingChips || 0, state.opChips));
-    state.opChips -= opChipsUsed;
+    const opFree = state.opPendingFree ? 1 : 0;
+    const opChipsUsed = Math.max(0, Math.min(state.opPendingChips || 0, state.opChips + opFree));
+    const opPaid = Math.max(0, opChipsUsed - opFree);
+    state.opChips -= opPaid;
+    state.roundPaid = { my: myPaid, op: opPaid };
 
     const myEffective = myCard + myChipsUsed;
     const opEffective = opCard + opChipsUsed;
@@ -3367,11 +3513,11 @@
 
     const sides = [
       { used: myChipsUsed, base: myCard, hp: 'myHP', flip: 'fieldMeFlip', front: 'fieldMeFront', boost: 'fieldMeBoost',
-        // 自分のチップ数も、チップが飛び立つたびに1ずつ減らす
-        hpShown: state.myChips + myChipsUsed, own: true },
+        // 自分のチップ数も、チップが飛び立つたびに1ずつ減らす（伏兵の無料分は減らさない）
+        hpShown: state.myChips + state.roundPaid.my, own: true, free: myChipsUsed - state.roundPaid.my },
       { used: opChipsUsed, base: opCard, hp: 'opHP', flip: 'fieldOpFlip', front: 'fieldOpFront', boost: 'fieldOpBoost',
         // 相手のチップ数は、チップが飛び立つたびに1ずつ減らす
-        hpShown: state.opChips + opChipsUsed }
+        hpShown: state.opChips + state.roundPaid.op, free: opChipsUsed - state.roundPaid.op }
     ].filter(sd => sd.used > 0);
 
     let pending = sides.reduce((n, sd) => n + sd.used, 0);
@@ -3383,7 +3529,7 @@
       const boostEl = document.getElementById(sd.boost);
       if (front) { front.textContent = sd.base + k; pulse(front); }
       if (boostEl) boostEl.textContent = `+${k}🪙`;
-      bumpPod();
+      if (!(sd.freeUsed && k === 1)) bumpPod();
       playTickSound(tickStep++);
       pending -= 1;
       if (pending === 0) setTimeout(() => { if (myToken === gameToken) onDone(); }, 350);
@@ -3392,9 +3538,13 @@
     const launch = (sd, k) => {
       if (myToken !== gameToken) return;
       const hpEl = document.getElementById(sd.hp);
-      sd.hpShown -= 1;
-      if (sd.own) state.myHpShown = sd.hpShown;
-      if (hpEl) hpEl.textContent = sd.hpShown;
+      if (k === 1 && sd.free > 0) {
+        sd.freeUsed = true; // 伏兵の無料の1枚目：持ちチップは減らない
+      } else {
+        sd.hpShown -= 1;
+        if (sd.own) state.myHpShown = sd.hpShown;
+        if (hpEl) hpEl.textContent = sd.hpShown;
+      }
       const cardEl = document.getElementById(sd.flip);
       if (reduceMotion || !hpEl || !cardEl) {
         setTimeout(() => land(sd, k), reduceMotion ? 0 : CHIP_FLIGHT_MS);
@@ -3454,7 +3604,8 @@
   // 捨て札を「数字＋色」の一覧にする（勝敗計算・オンライン同期用）
   function discEntries(who) {
     const colors = state[who + 'CardColors'] || {};
-    return state[who + 'Discard'].map(n => ({ n, c: colors[n] || null }));
+    const effs = state[who + 'CardEffects'] || {};
+    return state[who + 'Discard'].map(n => ({ n, c: colors[n] || null, e: effs[n] || null }));
   }
 
   // 負けた側がポッドへ支払う枚数（固定）
@@ -3480,11 +3631,24 @@
   // 勝敗と報酬の計算（画面には触らない純粋な計算）。オンラインでは両端末とホストが同じ入力で同じ結果を得る。
   // p.myChips / p.opChips はブースト消費後の枚数。p.myDisc / p.opDisc は今回出したカードを含む捨て札（{n, c}の配列）
   // p.tie は引き分け時の勝負に使うカードの数字の列 { my: [手札, 山札の一番上, 次…], op: [...] }（null＝カードなし）
+  // p.myBoost / p.opBoost はブーストで上がった数字、p.myPaid / p.opPaid は実際に払ったチップ（伏兵の無料分を除く）
+  // p.myKey / p.opKey は出したカードの効果（例 '4B'）
   function computeRoundResult(p) {
     const chips = { my: p.myChips, op: p.opChips };
     const loseCost = LOSE_PAYMENT;
     let pod = p.pod;
     const nm = who => (who === 'my' ? 'あなた' : '相手');
+    const paid = { my: p.myPaid != null ? p.myPaid : p.myBoost, op: p.opPaid != null ? p.opPaid : p.opBoost };
+    const key = { my: p.myKey || null, op: p.opKey || null };
+    // 代償（6B・8B）：出したらチップをポッドへ払う
+    const costNotes = [];
+    ['my', 'op'].forEach(w => {
+      const cost = key[w] === '6B' ? 1 : (key[w] === '8B' ? 2 : 0);
+      const pay = Math.min(cost, chips[w]);
+      if (pay > 0) { chips[w] -= pay; pod += pay; costNotes.push(`${effectDef(+key[w][0], 'B').name}：${nm(w)}がポッドへ${pay}🪙`); }
+    });
+    // 負けた時の支払い（保険4Bなら1枚減る）
+    const losePay = (who) => Math.max(0, loseCost - (key[who] === '4B' ? 1 : 0));
     const has = (who, color) => ((who === 'my' ? p.myDisc : p.opDisc) || []).filter(e => e.c === color).length >= COLOR_ROLE_MIN;
     const myEffective = p.myCard + p.myBoost;
     const opEffective = p.opCard + p.opBoost;
@@ -3493,6 +3657,7 @@
       myEffective, opEffective, notes: [], logKind: '', roundPodKind: 'through',
       jackpotWinner: null, losePayer: null, drawBothFlash: false, carried: 0, tiebreak: null
     };
+    res.notes.push(...costNotes);
     // 引き分け：残りの手札（素の数字）で勝負。手札も同じなら山札の一番上から順に比べる
     let diff = Math.abs(myEffective - opEffective);
     if (res.outcome === 'tie' && p.tie) {
@@ -3508,7 +3673,7 @@
 
     if (res.outcome === 'tie') {
       // DRAW：場に出ていたブーストチップはすべてポッドへ（青トリプルの軽減は効かない）
-      const carried = p.myBoost + p.opBoost;
+      const carried = paid.my + paid.op;
       pod += carried;
       res.carried = carried;
       if (carried > 0) { res.roundPodKind = 'grow'; res.drawBothFlash = true; }
@@ -3517,8 +3682,10 @@
     } else {
       const winner = res.outcome === 'me' ? 'my' : 'op';
       const loser = winner === 'my' ? 'op' : 'my';
-      const winnerBoost = winner === 'my' ? p.myBoost : p.opBoost;
-      const loserBoost = winner === 'my' ? p.opBoost : p.myBoost;
+      const winnerBoost = paid[winner];   // ポッドへ流れる・総取りに含まれるのは実際に払ったチップ
+      const loserBoost = paid[loser];
+      const winnerBoosted = (winner === 'my' ? p.myBoost : p.opBoost) > 0;
+      const loserBoosted = (winner === 'my' ? p.opBoost : p.myBoost) > 0;
 
       if (diff === 1) {
         // JACKPOT：ちょうど1差で勝った側が、ポッド（今回の両者のブースト分を含む）を総取り。ブースト有無は問わない
@@ -3527,17 +3694,17 @@
         chips[winner] += jackpot;
         res.roundPodKind = 'jackpot';
         res.jackpotWinner = winner;
-        res.notes.push(winnerBoost > 0
+        res.notes.push(winnerBoosted
           ? `JACKPOT！${nm(winner)}の+1差ブースト勝利：ポッド${jackpot}🪙を総取り`
           : `JACKPOT！${nm(winner)}のノーブースト+1差勝利：ポッド${jackpot}🪙を総取り`);
         // JACKPOTで負けた側も、ブースト有無を問わずLOSEと同様にポッドへ支払う。総取りの後に支払う（仮置き）
         {
-          const payment = Math.min(loseCost, chips[loser]);
+          const payment = Math.min(losePay(loser), chips[loser]);
           if (payment > 0) {
             chips[loser] -= payment;
             pod += payment;
             res.losePayer = loser;
-            res.notes.push(`${nm(loser)}がポッドへ${payment}🪙支払い（JACKPOT敗者）`);
+            res.notes.push(`${nm(loser)}がポッドへ${payment}🪙支払い（JACKPOT敗者${key[loser] === '4B' ? '・保険で-1' : ''}）`);
           }
         }
         // 赤トリプル（攻め）：総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）
@@ -3570,12 +3737,12 @@
 
         {
           // LOSE：ポッドへ支払う（固定枚数。持っている分だけ）。ブーストして負けた場合もブースト分に加えて支払う
-          const payment = Math.min(loseCost, chips[loser]);
+          const payment = Math.min(losePay(loser), chips[loser]);
           chips[loser] -= payment;
           pod += payment;
           if (payment > 0 && res.roundPodKind === 'through') res.roundPodKind = 'grow';
           res.losePayer = loser;
-          res.notes.push(`${loserBoost > 0 ? 'ブースト負け' : 'LOSE'}：${nm(loser)}がポッドへ${payment}🪙支払い`);
+          res.notes.push(`${loserBoosted ? 'ブースト負け' : 'LOSE'}：${nm(loser)}がポッドへ${payment}🪙支払い${key[loser] === '4B' ? '（保険で-1）' : ''}`);
         }
         // WIN：勝った側はポッドから受け取る（ポッドにある分だけ。LOSEの支払い・ブースト流入の後）
         const reward = Math.min(WIN_REWARD, pod);
@@ -3588,7 +3755,7 @@
           res.notes.push(`WIN：${nm(winner)}の勝利（ポッドが空のため受け取りなし）`);
         }
         // 緑トリプル（安定）：THROUGH（ブーストなしの勝利）時、さらにポッドから1🪙回収
-        if (winnerBoost === 0 && has(winner, 'green') && pod > 0) {
+        if (!winnerBoosted && has(winner, 'green') && pod > 0) {
           pod -= 1;
           chips[winner] += 1;
           res.roundPodKind = 'grow';
@@ -3597,7 +3764,7 @@
       }
       res.logKind = diff === 1
         ? 'JACKPOT'
-        : [winnerBoost === 0 ? 'THROUGH' : 'ブースト勝ち', loserBoost === 0 ? 'LOSE' : 'ブースト負け'].join(' + ');
+        : [!winnerBoosted ? 'THROUGH' : 'ブースト勝ち', !loserBoosted ? 'LOSE' : 'ブースト負け'].join(' + ');
     }
     res.myChips = chips.my;
     res.opChips = chips.op;
@@ -3743,8 +3910,10 @@
     state.fieldOpChips = opChipsUsed;
     render(true);
 
+    const rp = state.roundPaid || { my: myChipsUsed, op: opChipsUsed };
     const res = computeRoundResult({
-      myCard, opCard, myBoost: myChipsUsed, opBoost: opChipsUsed,
+      myCard, opCard, myBoost: myChipsUsed, opBoost: opChipsUsed, myPaid: rp.my, opPaid: rp.op,
+      myKey: effKey('my', myCard), opKey: effKey('op', opCard),
       myChips: state.myChips, opChips: state.opChips, pod: state.pod,
       myDisc: discEntries('my'), opDisc: discEntries('op'), round: currentRoundNo(),
       tie: tie ? { my: tie.my.map(tieNum), op: tie.op.map(tieNum) } : null
@@ -3753,6 +3922,14 @@
     state.opChips = res.opChips;
     state.pod = res.pod;
     const outcome = res.outcome;
+    // 次のラウンドの効果のために、出したカード・勝敗・残りの手札を記録しておく
+    state.prev = {
+      round: currentRoundNo(),
+      my: { n: myCard, key: effKey('my', myCard) },
+      op: { n: opCard, key: effKey('op', opCard) },
+      winner: outcome === 'me' ? 'my' : (outcome === 'op' ? 'op' : null),
+      hidden: { my: state.myHand.length ? state.myHand[0] : null, op: (!net.active && state.opHand.length) ? state.opHand[0] : null }
+    };
 
     const myLabel = myChipsUsed > 0 ? `${myCard}(+${myChipsUsed}🪙=${myEffective})` : `${myCard}`;
     const opLabel = opChipsUsed > 0 ? `${opCard}(+${opChipsUsed}🪙=${opEffective})` : `${opCard}`;
@@ -3830,6 +4007,8 @@
 
     setTimeout(() => {
       if (myToken !== gameToken) return;
+      stackChoice(myToken).then(() => {
+      if (myToken !== gameToken) return;
       if (net.active) { onlineNextRound(); return; }
       drawInto(state.myHand, 'my');
       drawInto(state.opHand, 'op');
@@ -3844,7 +4023,103 @@
       state.fieldRevealed = false;
       state.locked = false;
       startRound();
+      });
     }, 1100);
+  }
+
+  // 仕込み（3B）：出した後、自分の山札の一番上を見て、そのまま残すか一番下へ送るか選ぶ（CPUはランダム）
+  function stackChoice(myToken) {
+    const pv = state.prev;
+    if (!net.active && pv && pv.op.key === '3B' && refillDeck('op')) {
+      const d = state.opDeck;
+      if (d.length > 1 && Math.random() < 0.5) d.unshift(d.pop());
+    }
+    if (!pv || pv.my.key !== '3B' || !refillDeck('my')) return Promise.resolve();
+    const deck = state.myDeck;
+    const top = deck[deck.length - 1];
+    return new Promise(resolve => {
+      const wrap = document.createElement('div');
+      wrap.className = 'stack-dialog';
+      const color = state.myCardColors[top] || '';
+      wrap.innerHTML = `<div class="box overlay-card"><h3>仕込み</h3><p>山札の一番上のカードです。<br>そのまま残しますか？一番下へ送りますか？</p>
+        <div class="top-card"><button class="card ${color}" disabled style="width:70px;height:98px;font-size:2rem;opacity:1">${top}</button></div>
+        <div class="btns"><button class="btn secondary" data-k="keep">そのまま</button><button class="btn" data-k="bottom">一番下へ</button></div></div>`;
+      document.body.appendChild(wrap);
+      wrap.addEventListener('click', (e) => {
+        const k = e.target && e.target.dataset ? e.target.dataset.k : null;
+        if (!k) return;
+        playSelectSound();
+        if (k === 'bottom' && deck.length > 1) deck.unshift(deck.pop());
+        wrap.remove();
+        resolve();
+      });
+    });
+  }
+
+  // ===== 次のラウンドの効果（前のラウンドに出したカードの効果から決まる）=====
+  // who の情報のうち、このラウンド相手に見えるもの
+  function computeExposure(who) {
+    const pv = state.prev;
+    if (!pv) return {};
+    const other = otherOf(who);
+    const ex = {};
+    const hand = state[who + 'Hand'] || [];
+    const blocked = pv[who].key === '1B'; // 撹乱：相手の情報系の効果・役が効かない
+    ex.blocked = blocked;
+    const by = (k) => !blocked && pv[other].key === k;
+    if (by('1A')) ex.parity = { even: hand.filter(n => n % 2 === 0).length, odd: hand.filter(n => n % 2 === 1).length };
+    if (by('4A')) ex.hilo = { lo: hand.filter(n => n <= 4).length, hi: hand.filter(n => n >= 5).length };
+    if (by('5A')) ex.sum = hand.reduce((a, b) => a + b, 0);
+    if (by('3A')) { const d = state[who + 'Deck']; ex.deckTop = d.length ? d[d.length - 1] : null; }
+    if (by('2A')) ex.boostIntel = true;
+    const hid = pv.hidden ? pv.hidden[who] : null;
+    if (hid != null && hand.includes(hid)) {
+      if (by('5B') && pv.winner === other) ex.reveal = [{ n: hid, src: '記録' }];
+      if (pv[who].key === '6A') ex.hidHilo = hid <= 4 ? 'lo' : 'hi';
+      if (pv[who].key === '7A') ex.hidParity = hid % 2 === 0 ? 'even' : 'odd';
+      if (pv[who].key === '8A') ex.reveal = (ex.reveal || []).concat([{ n: hid, src: '全公開' }]);
+    }
+    return ex;
+  }
+  // このラウンドの自分（who）の制限：伏兵（2B）＝1枚目無料、重圧（7B）＝ブースト不可
+  function computeRules() {
+    const pv = state.prev;
+    const r = (who) => ({ free: !!pv && pv[who].key === '2B', noBoost: !!pv && pv[who].key === '7B' });
+    state.rule = { my: r('my'), op: r('op') };
+  }
+  function boostRangeText(n) {
+    if (!n) return 'ブーストしない';
+    return n <= 2 ? '1〜2枚ブーストする' : '3枚以上ブーストする';
+  }
+  // 公開された数字を確定情報（!）にする
+  function applyRevealKnown(who, ex) {
+    (ex && ex.reveal || []).forEach(r => { if (!state.knownHeld[who].includes(r.n)) state.knownHeld[who].push(r.n); });
+  }
+  // ラウンド開始時：見える情報を計算（オンラインは自分の分を座席に公開）
+  function prepareRoundIntel() {
+    computeRules();
+    state.exposure = computeExposure('my');
+    applyRevealKnown('my', state.exposure);
+    if (net.active) {
+      state.intel = null;
+      state.expoApplied = null;
+      writeMySeat({ expo: { round: state.round, data: state.exposure } });
+    } else {
+      state.intel = computeExposure('op');
+      applyRevealKnown('op', state.intel);
+    }
+  }
+  // オンライン：相手が公開した情報を読み込む
+  function readOpIntel() {
+    if (!net.active || !state) return;
+    const op = oppSeatC();
+    const e = op && op.expo && op.expo.round === state.round ? op.expo.data : null;
+    state.intel = e;
+    if (e && state.expoApplied !== state.round) {
+      state.expoApplied = state.round;
+      applyRevealKnown('op', e);
+      renderDiscardGrid('discardGridOp', state.opDiscard, state.opCardColors, 'op');
+    }
   }
 
   function showGameOver() {
@@ -3918,7 +4193,8 @@
       btn.addEventListener('click', (e) => playRound(c, e.currentTarget));
       const label = document.createElement('div');
       label.className = 'card-effect-label';
-      label.textContent = getCardEffectTexts(c).join(' / ');
+      const d = effectDef(c, state.myCardEffects[c]);
+      if (d) label.innerHTML = `<span class="eff-name">${d.name}</span><span class="eff-desc">${d.desc}</span>`;
       wrap.appendChild(btn);
       wrap.appendChild(label);
       myHandEl.appendChild(wrap);
@@ -3942,13 +4218,20 @@
     updateHandBadges();
   }
 
+  // このラウンドにブーストできる上限（重圧なら0、伏兵なら持ちチップ＋1）
+  function maxBoostNow() {
+    const r = state.rule ? state.rule.my : null;
+    if (r && r.noBoost) return 0;
+    return state.myChips + (r && r.free ? 1 : 0);
+  }
   function updateChipSelectorUI() {
-    if (state.chipSelect > state.myChips) state.chipSelect = state.myChips;
+    const maxB = maxBoostNow();
+    if (state.chipSelect > maxB) state.chipSelect = maxB;
     document.getElementById('myChipAvail').textContent = state.myChips;
     document.getElementById('chipSelectedVal').textContent = state.chipSelect;
     const disabled = state.locked || state.over;
     document.getElementById('chipMinus').disabled = disabled || state.chipSelect <= 0;
-    document.getElementById('chipPlus').disabled = disabled || state.chipSelect >= state.myChips;
+    document.getElementById('chipPlus').disabled = disabled || state.chipSelect >= maxB;
 
     // 持ちチップの大きい数字は、ブースト量を選んでいる間は変えない（チップが飛び立つ演出で減らす）
     const hpEl = document.getElementById('myHP');
@@ -4072,7 +4355,7 @@
 
     // ピンクトリプル発動中：相手のデッキの底（次に引かれる最後のカード）の枠に目のアイコンを表示
     // activeViewer基準：今画面を見ている側がピンクを持っていれば、相手側の捨て札グリッド(who === otherOf(activeViewer))に表示する
-    const peekTarget = (who === otherOf(activeViewer) && hasColorTriple(activeViewer, 'pink'))
+    const peekTarget = (who === otherOf(activeViewer) && hasColorTriple(activeViewer, 'pink') && !(state.prev && state.prev[who].key === '1B'))
       ? getDeckBottom(who)
       : null;
 
@@ -4089,6 +4372,15 @@
       if (isKnown) cls += ' known';
       slot.className = cls;
       slot.textContent = n;
+      if (isFilled) {
+        const d = effectDef(n, state[who + 'CardEffects'][n]);
+        if (d) {
+          const tag = document.createElement('span');
+          tag.className = 'slot-eff';
+          tag.textContent = d.name;
+          slot.appendChild(tag);
+        }
+      }
       if (isKnown) {
         const mark = document.createElement('span');
         mark.className = 'known-mark';
@@ -4131,7 +4423,7 @@
   });
   document.getElementById('chipPlus').addEventListener('click', () => {
     if (state.locked || state.over) return;
-    if (state.chipSelect < state.myChips) {
+    if (state.chipSelect < maxBoostNow()) {
       state.chipSelect += 1;
       updateChipSelectorUI();
     }
