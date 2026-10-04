@@ -1295,6 +1295,28 @@
   .rp-card.yellow { border-color: var(--color-yellow); }
   .rp-card.green { border-color: var(--color-green); }
   .rp-card.pink { border-color: var(--color-pink); }
+  /* ===== 一画面に収めるための詰め（情報量が増えた分、高さに合わせて縮める） ===== */
+  .side-col .num { font-size: clamp(3rem, min(26vw, 12.5dvh), 8rem); }
+  .select-panel { gap: clamp(4px, 1.4dvh, 12px); }
+  .select-panel .hand-card-wrap { width: min(132px, 38vw, 15.5dvh); gap: 4px; }
+  .select-panel button.card { font-size: clamp(2.2rem, 6dvh, 3.2rem); }
+  .select-panel .card-effect-label { font-size: 0.62rem; line-height: 1.25; }
+  .card-effect-label .eff-desc {
+    font-size: 0.54rem;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+  }
+  /* チップ選択は1行にまとめる */
+  .chip-selector { flex-direction: row; gap: 10px; }
+  .chip-controls { padding: 4px 12px; gap: 10px; }
+  .color-info-hint { margin-top: 0; font-size: 0.64rem; line-height: 1.35; max-width: 100%; }
+  .pod-mini { padding: 2px 10px; }
+  .zone-side { padding: 8px 12px; }
+  .zone-mid { padding: 4px 10px 18px; }
+  /* デッキ構築：画面の高さが低い時は枠を小さくして選択肢まで収める */
+  .prep-grid { max-width: min(340px, 42dvh); gap: 8px; margin-bottom: 8px; }
+  .prep-peek { margin-top: 0; min-height: 0; }
+  /* 役パネルは盤面の中に収め、はみ出す分はスクロール */
+  .role-panel { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; }
   .rp-note { font-size: 0.62rem; color: var(--text-dim); }
   .rp-detail { font-size: 0.7rem; line-height: 1.45; min-height: 2.9em; }
   .rp-detail.dim { color: var(--text-dim); }
