@@ -2606,6 +2606,9 @@
     const last = state.roundLog[state.roundLog.length - 1];
     if (last) {
       last.notes = (last.notes ? last.notes + ' / ' : '') + `⚠ ホストの集計と差異があったため補正（あなた${myC}・相手${opC}・ポッド${m.pod}）`;
+      // 表示用のチップ数・増減もホストの値にそろえる
+      last.dMy += myC - last.my; last.dOp += opC - last.op; last.dPod += m.pod - last.pod;
+      last.my = myC; last.op = opC; last.pod = m.pod;
       renderRoundLog();
     }
     document.getElementById('opHP').textContent = state.opChips;
@@ -4227,6 +4230,25 @@
     nz.start(t); nz.stop(t + 0.3);
   }
 
+  // ログに出す「発動した効果」：出したカードの効果、成立した色の役、手札勝負（side: 'me' / 'op' / 'both'）
+  function logEffects(res, outcome, myKey, opKey) {
+    const out = [];
+    const winSide = outcome === 'me' ? 'me' : (outcome === 'op' ? 'op' : null);
+    const loseSide = winSide === 'me' ? 'op' : (winSide === 'op' ? 'me' : null);
+    [[myKey, 'me'], [opKey, 'op']].forEach(([k, side]) => {
+      const d = k ? effectDef(+k[0], k.slice(1)) : null;
+      if (d) out.push({ side, t: d.name });
+    });
+    res.notes.forEach(n => {
+      const m = n.match(/^(赤|青|黄|緑|ピンク)の役（(.+?)）：(あなた|相手)/);
+      if (m) out.push({ side: m[3] === 'あなた' ? 'me' : 'op', t: `${m[1]}の役：${m[2]}` });
+      if (n.includes('緑の役で+1') && winSide) out.push({ side: winSide, t: '緑の役：コツコツ回収' });
+      if (n.includes('青の役で-1') && loseSide) out.push({ side: loseSide, t: '青の役：守り' });
+    });
+    if (res.tiebreak) out.push({ side: 'both', t: `${res.tiebreak.d === 0 ? '手札' : '山札'}勝負 ${res.tiebreak.my} vs ${res.tiebreak.op}` });
+    return out;
+  }
+
   function finalizeRound(myCard, opCard, myChipsUsed, opChipsUsed, myEffective, opEffective, myToken, tie) {
     // 捨て札に行くまでは、場の数字はチップで上がった数値のまま表示する
     state.fieldMy = myEffective;
@@ -4288,7 +4310,14 @@
         dOp: state.opChips - state.roundSnap.op,
         dPod: state.pod - state.roundSnap.pod,
         my: state.myChips, op: state.opChips, pod: state.pod,
-        notes: noteText + (state.tamperNote ? ' / ' + state.tamperNote : '')
+        notes: noteText + (state.tamperNote ? ' / ' + state.tamperNote : ''),
+        // プレイヤー向けログの表示用
+        v: {
+          outcome, jackpot: res.logKind === 'JACKPOT', sd: !!tb,
+          my: { n: myCard, c: state.myCardColors[myCard] || null, b: myChipsUsed },
+          op: { n: opCard, c: state.opCardColors[opCard] || null, b: opChipsUsed },
+          eff: logEffects(res, outcome, effKey('my', myCard), effKey('op', opCard))
+        }
       });
       state.roundSnap = null;
       renderRoundLog();
@@ -4824,49 +4853,93 @@
 </script>
 
 <style>
-  #logBtn { position: fixed; right: 10px; bottom: 10px; z-index: 900; padding: 8px 12px; font-size: 0.85rem; border-radius: 20px; border: 1px solid #19d3ff; background: rgba(11, 16, 32, 0.9); color: #19d3ff; cursor: pointer; opacity: 0.9; }
-  #logPanel { position: fixed; left: 0; right: 0; bottom: 0; max-height: 65vh; overflow-y: auto; z-index: 950; background: #0b1020; color: #eef3ff; border-top: 2px solid #19d3ff; box-shadow: 0 -4px 16px rgba(0,0,0,0.3); padding: 10px 12px 16px; display: none; font-size: 0.8rem; }
-  #logPanel.show { display: block; }
-  #logPanel .lp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: bold; }
-  #logPanel .lp-head button { border: 1px solid #19d3ff; background: transparent; color: #19d3ff; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
-  #logPanel .lp-round { border-top: 1px solid #1f2a44; padding: 6px 0; line-height: 1.5; }
-  #logPanel .lp-kind { font-weight: bold; }
-  #logPanel .pos { color: #4ee08a; font-weight: bold; }
-  #logPanel .neg { color: #ff6b7a; font-weight: bold; }
-  #logPanel .zero { color: #8fa0c4; }
-  #logPanel .lp-notes { color: #8fa0c4; }
+  #logBtn { position: fixed; right: 10px; bottom: 10px; z-index: 900; padding: 8px 14px; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.1em; border-radius: 20px; border: 1px solid #19d3ff; background: rgba(11, 16, 32, 0.9); color: #19d3ff; cursor: pointer; opacity: 0.9; }
+  #logPanel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 950; background: #0b1020; color: #eef3ff; border-top: 2px solid #19d3ff; box-shadow: 0 -4px 16px rgba(0,0,0,0.3); display: none; }
+  #logPanel.show { display: block; animation: panelIn 0.18s ease; }
+  .lp-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px 10px; border-bottom: 1px solid rgba(25, 211, 255, 0.25); }
+  .lp-head .t { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; letter-spacing: 0.14em; font-size: 0.8rem; color: var(--cy-cyan); }
+  .lp-head button { font: inherit; font-size: 1rem; line-height: 1; color: var(--text-dim); background: none; border: none; cursor: pointer; padding: 4px; }
+  /* 縦幅は2ラウンド分まで。上下にスクロールして遡る */
+  #logBody { padding: 8px 12px 12px; display: grid; gap: 8px; overflow-y: auto; overscroll-behavior: contain; scroll-snap-type: y proximity; max-height: 60vh; }
+  .lp-empty { color: var(--text-dim); font-size: 0.8rem; padding: 12px 2px; }
+  .mlp { scroll-snap-align: start; border: 1px solid #1f2a44; border-radius: 12px; padding: 10px 12px; background: rgba(255, 255, 255, 0.02); }
+  .mlp.win { border-color: rgba(255, 43, 79, 0.55); }
+  .mlp.lose { border-color: rgba(30, 139, 255, 0.55); }
+  .mlp.jp { border-color: var(--gold); box-shadow: 0 0 10px rgba(255, 218, 77, 0.3); }
+  .mlp-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .mlp-r { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.72rem; letter-spacing: 0.1em; color: var(--text-dim); }
+  .mlp-kind { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.58rem; font-weight: 900; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 999px; background: #1f2a44; color: var(--text-dim); }
+  .mlp-kind.jp { background: var(--gold); color: #2a1f00; }
+  .mlp-kind.sd { background: linear-gradient(90deg, #ff2b4f, #7a3cff, #1e8bff); color: #fff; }
+  .mlp-vs { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+  .mlp-side { display: flex; align-items: center; gap: 8px; }
+  .mlp-side.op { justify-content: flex-end; }
+  .mlp-res { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.72rem; letter-spacing: 0.06em; }
+  .mlp-res.w { color: var(--win); } .mlp-res.l { color: var(--lose); } .mlp-res.d { color: var(--text-dim); }
+  .mlp-c { --hc: var(--card-border); position: relative; width: 34px; height: 46px; border-radius: 6px; border: 2px solid var(--hc); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 1.05rem; color: #fff; background: #0e1530; }
+  .mlp-c.red { --hc: var(--color-red); } .mlp-c.blue { --hc: var(--color-blue); } .mlp-c.yellow { --hc: var(--color-yellow); } .mlp-c.green { --hc: var(--color-green); } .mlp-c.pink { --hc: var(--color-pink); }
+  .mlp-c .bst { position: absolute; top: -7px; right: -9px; font-size: 0.52rem; font-weight: 900; padding: 1px 4px; border-radius: 6px; background: var(--cy-cyan); color: #0b1020; }
+  .mlp-vsx { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.7rem; color: var(--text-dim); }
+  .mlp-chips { display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 10px; border-top: 1px solid #1f2a44; padding-top: 8px; text-align: center; }
+  .mlp-chips > div + div { border-left: 1px solid #1f2a44; }
+  .mlp-chips .lb { font-size: 0.52rem; font-weight: 800; letter-spacing: 0.08em; color: var(--text-dim); font-family: 'Orbitron', "Hiragino Sans", sans-serif; }
+  .mlp-chips .v { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.95rem; color: var(--text); }
+  .mlp-chips .me .v { color: var(--cy-red); } .mlp-chips .opp .v { color: var(--cy-blue); }
+  .mlp-chips .d { font-size: 0.68rem; font-weight: 800; margin-left: 2px; }
+  .mlp-chips .p { color: var(--win); } .mlp-chips .n { color: var(--lose); } .mlp-chips .z { color: var(--text-dim); }
+  .mlp-eff { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .mlp-eff span { font-size: 0.6rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; border: 1px solid; }
+  .mlp-eff .me { color: #ff8095; border-color: rgba(255, 43, 79, 0.5); background: rgba(255, 43, 79, 0.08); }
+  .mlp-eff .op { color: #7ab8ff; border-color: rgba(30, 139, 255, 0.5); background: rgba(30, 139, 255, 0.08); }
+  .mlp-eff .both { color: #d9c2ff; border-color: rgba(122, 60, 255, 0.5); background: rgba(122, 60, 255, 0.1); }
 </style>
-<button id="logBtn">📋 ログ</button>
-<div id="logPanel">
-  <div class="lp-head"><span>ラウンドログ</span><span><button id="logCopyBtn">コピー</button> <button id="logCloseBtn">閉じる</button></span></div>
+<button id="logBtn">LOG</button>
+<div id="logPanel" aria-label="バトルログ">
+  <div class="lp-head"><span class="t">BATTLE LOG</span><button type="button" id="logCloseBtn" aria-label="閉じる">✕</button></div>
   <div id="logBody"></div>
 </div>
 <script>
   (function () {
-    const fmt = n => n > 0 ? `<span class="pos">+${n}</span>` : (n < 0 ? `<span class="neg">${n}</span>` : `<span class="zero">±0</span>`);
-    const plain = n => n > 0 ? `+${n}` : (n < 0 ? `${n}` : '±0');
+    const esc = (t) => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const sgn = (d) => d > 0 ? `<span class="d p">(+${d})</span>` : (d < 0 ? `<span class="d n">(−${-d})</span>` : '<span class="d z">(±0)</span>');
+    const card = (c) => `<div class="mlp-c ${c.c || ''}">${c.n}${c.b > 0 ? `<span class="bst">+${c.b}</span>` : ''}</div>`;
+    const res = (o, side) => o === 'tie' ? '<span class="mlp-res d">DRAW</span>'
+      : ((o === 'me') === (side === 'me') ? '<span class="mlp-res w">WIN</span>' : '<span class="mlp-res l">LOSE</span>');
+    function entry(r) {
+      const v = r.v;
+      if (!v) return `<div class="mlp"><div class="mlp-top"><span class="mlp-r">ROUND ${r.no}</span></div><div class="lp-empty">${esc(r.cards)}</div></div>`;
+      const cls = v.jackpot ? 'jp' : (v.outcome === 'me' ? 'win' : (v.outcome === 'op' ? 'lose' : ''));
+      const badge = v.jackpot ? '<span class="mlp-kind jp">JACKPOT</span>' : (v.sd ? '<span class="mlp-kind sd">SUDDEN DEATH</span>' : (v.outcome === 'tie' ? '<span class="mlp-kind">DRAW</span>' : ''));
+      return `<div class="mlp ${cls}">
+        <div class="mlp-top"><span class="mlp-r">ROUND ${r.no}</span>${badge}</div>
+        <div class="mlp-vs"><div class="mlp-side">${res(v.outcome, 'me')}${card(v.my)}</div><span class="mlp-vsx">VS</span><div class="mlp-side op">${card(v.op)}${res(v.outcome, 'op')}</div></div>
+        <div class="mlp-chips"><div class="me"><div class="lb">YOU</div><span class="v">${r.my}</span>${sgn(r.dMy)}</div><div class="opp"><div class="lb">ENEMY</div><span class="v">${r.op}</span>${sgn(r.dOp)}</div><div><div class="lb">POT</div><span class="v">${r.pod}</span>${sgn(r.dPod)}</div></div>
+        ${v.eff && v.eff.length ? `<div class="mlp-eff">${v.eff.map(e => `<span class="${e.side}">${esc(e.t)}</span>`).join('')}</div>` : ''}
+      </div>`;
+    }
+    // 2ラウンド分の高さを上限にする
+    function fitHeight() {
+      const body = document.getElementById('logBody');
+      const items = body.querySelectorAll('.mlp');
+      if (items.length < 2) { body.style.maxHeight = ''; return; }
+      const cs = getComputedStyle(body);
+      const h = items[0].offsetHeight + items[1].offsetHeight + parseFloat(cs.rowGap || 8) + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+      body.style.maxHeight = Math.min(h, window.innerHeight * 0.7) + 'px';
+    }
     window.renderRoundLog = function () {
       const body = document.getElementById('logBody');
       if (!body) return;
       const log = window.__getRoundLog ? window.__getRoundLog() : [];
-      if (!log.length) { body.innerHTML = '<div class="zero">まだログはありません</div>'; return; }
-      body.innerHTML = log.slice().reverse().map(r =>
-        `<div class="lp-round"><div><span class="lp-kind">R${r.no}｜${r.result}｜${r.kind}</span></div>` +
-        `<div>${r.cards}</div>` +
-        `<div>あなた ${fmt(r.dMy)}（→${r.my}） / 相手 ${fmt(r.dOp)}（→${r.op}） / ポッド ${fmt(r.dPod)}（→${r.pod}）</div>` +
-        (r.notes ? `<div class="lp-notes">${r.notes}</div>` : '') + `</div>`
-      ).join('');
+      body.innerHTML = log.length ? log.slice().reverse().map(entry).join('') : '<div class="lp-empty">まだログはありません</div>';
+      if (document.getElementById('logPanel').classList.contains('show')) fitHeight();
     };
-    document.getElementById('logBtn').addEventListener('click', () => { renderRoundLog(); document.getElementById('logPanel').classList.toggle('show'); });
-    document.getElementById('logCloseBtn').addEventListener('click', () => document.getElementById('logPanel').classList.remove('show'));
-    document.getElementById('logCopyBtn').addEventListener('click', () => {
-      const log = window.__getRoundLog ? window.__getRoundLog() : [];
-      const text = log.map(r => `R${r.no} ${r.result} ${r.kind} | ${r.cards} | あなた${plain(r.dMy)}(${r.my}) 相手${plain(r.dOp)}(${r.op}) ポッド${plain(r.dPod)}(${r.pod}) | ${r.notes}`).join('\n');
-      const btn = document.getElementById('logCopyBtn');
-      const done = () => { btn.textContent = 'コピー済み'; setTimeout(() => btn.textContent = 'コピー', 1200); };
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(() => {});
-      else done();
+    document.getElementById('logBtn').addEventListener('click', () => {
+      const panel = document.getElementById('logPanel');
+      const open = !panel.classList.contains('show');
+      panel.classList.toggle('show', open);
+      if (open) { renderRoundLog(); document.getElementById('logBody').scrollTop = 0; }
     });
+    document.getElementById('logCloseBtn').addEventListener('click', () => document.getElementById('logPanel').classList.remove('show'));
   })();
 </script>
 </body>
