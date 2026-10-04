@@ -1430,8 +1430,8 @@
   .ht-tag.lose { color: #fff; background: var(--lose); }
   .ht-boost-demo { position: relative; gap: 22px; }
   .ht-chipcount {
-    width: 52px; height: 72px; display: flex; align-items: center; justify-content: center;
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 1.6rem; font-weight: 900;
+    min-width: 72px; height: 56px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 2.6rem; font-weight: 900; line-height: 1;
     color: var(--cy-red); text-shadow: 0 0 12px rgba(255, 43, 79, 0.9);
   }
   .ht-chiplabel { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.12em; color: var(--text-dim); }
@@ -1543,13 +1543,12 @@
             <h2 class="howto-title">チップでブースト</h2>
             <!-- 図解：持ちチップ → チップが飛ぶ → カードの数字が上がる（ゲーム内のブースト演出と同じ動き） -->
             <div class="howto-visual ht-boost-demo" id="htBoostDemo">
-              <div class="ht-side"><div class="ht-chipcount" id="htChipCount">15</div><div class="ht-chiplabel">CHIP</div></div>
+              <div class="ht-side"><div class="ht-chiplabel">CHIP</div><div class="ht-chipcount" id="htChipCount">15</div></div>
               <div class="ht-arrow">→</div>
-              <div class="ht-side"><div class="ht-card blue" id="htBoostCard">5</div><div class="ht-boost-tag" id="htBoostTag"></div></div>
+              <div class="ht-side"><div class="ht-card blue" id="htBoostCard">5</div></div>
             </div>
             <ul class="howto-text">
               <li>持ちチップ<b>1枚</b>につき数字を<b>+1</b>できる</li>
-              <li>ブーストは<b>そのラウンドだけ</b>有効</li>
               <li>使ったチップは<b>POT</b>に送られるので注意！</li>
               <li class="howto-em">チップを賭けて、相手を上回れ！</li>
             </ul>
@@ -3252,7 +3251,6 @@
     const demo = document.getElementById('htBoostDemo');
     const countEl = document.getElementById('htChipCount');
     const cardEl = document.getElementById('htBoostCard');
-    const tagEl = document.getElementById('htBoostTag');
     let demoToken = 0;
     const bump = (el) => { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); };
     const wait = (ms) => new Promise(r => setTimeout(r, ms));
@@ -3264,7 +3262,7 @@
       const my = ++demoToken;
       const alive = () => my === demoToken;
       while (alive()) {
-        countEl.textContent = '15'; cardEl.textContent = '5'; tagEl.textContent = ''; cardEl.classList.remove('boosted');
+        countEl.textContent = '15'; cardEl.textContent = '5'; cardEl.classList.remove('boosted');
         await wait(700);
         for (let k = 1; k <= 2 && alive(); k++) {
           const a = center(countEl), b = center(cardEl);
@@ -3282,7 +3280,6 @@
           chip.remove();
           if (!alive()) return;
           cardEl.textContent = String(5 + k); cardEl.classList.add('boosted'); bump(cardEl); // 着地でカードの数字が上がる
-          tagEl.textContent = `+${k}`;
           await wait(240);
         }
         await wait(1800);
