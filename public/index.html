@@ -1385,6 +1385,55 @@
   .role-panel .role-item.compact .role-item-desc { font-size: 0.64rem; }
   .role-legend .legend-text { font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .role-panel .role-item.compact + .rp-cards-wrap { margin-top: 8px; }
+  /* ===== 遊び方（3ページ） ===== */
+  .howto-ov { position: fixed; inset: 0; z-index: 970; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 0, 0, 0.65); }
+  .howto-ov.show { display: flex; animation: panelIn 0.18s ease; }
+  .howto-box {
+    position: relative; width: 100%; max-width: 380px; max-height: calc(100dvh - 32px); display: flex; flex-direction: column;
+    background: var(--bg2); border: 1px solid var(--cy-cyan); border-radius: 16px; box-shadow: 0 0 22px rgba(25, 211, 255, 0.4); overflow: hidden;
+  }
+  .howto-x { position: absolute; top: 8px; right: 10px; z-index: 2; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--text-dim); background: none; border: none; cursor: pointer; padding: 4px; }
+  .howto-viewport { overflow: hidden; flex: 1; min-height: 0; touch-action: pan-y; }
+  .howto-track { display: flex; height: 100%; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .howto-page { flex: 0 0 100%; min-width: 0; padding: 22px 20px 6px; overflow-y: auto; text-align: center; }
+  .howto-kicker { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.18em; color: var(--cy-cyan); }
+  .howto-title { margin: 6px 0 14px; font-size: 1.15rem; font-weight: 900; color: var(--text); text-shadow: 0 0 10px rgba(25, 211, 255, 0.5); }
+  .howto-visual { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 10px; }
+  .ht-side { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .ht-card {
+    width: 64px; height: 90px; border-radius: 10px; border: 3px solid var(--hc); background: linear-gradient(160deg, var(--card-bg), var(--bg2));
+    display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 2rem; font-weight: 900; color: #fff;
+    box-shadow: 0 0 12px var(--hc);
+  }
+  .ht-card.red { --hc: var(--color-red); } .ht-card.blue { --hc: var(--color-blue); } .ht-card.yellow { --hc: var(--color-yellow); } .ht-card.pink { --hc: var(--color-pink); }
+  .ht-vs { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; color: var(--text-dim); }
+  .ht-tag { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.66rem; font-weight: 900; letter-spacing: 0.08em; padding: 2px 10px; border-radius: 999px; }
+  .ht-tag.win { color: #0b1020; background: var(--win, #3ddc84); }
+  .ht-tag.lose { color: #fff; background: var(--lose); }
+  .ht-jackpot {
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 1.5rem; font-weight: 900; letter-spacing: 0.06em; color: var(--gold);
+    text-shadow: 0 0 12px var(--gold), 0 0 24px rgba(255, 200, 60, 0.6); margin: 2px 0 8px; animation: htPulse 1.4s ease-in-out infinite;
+  }
+  @keyframes htPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  .ht-strips { display: grid; gap: 4px; margin: 0 auto 12px; max-width: 300px; }
+  .ht-strip { height: 26px; border-radius: 6px; border: 1px solid var(--rc); background: var(--bg) center / cover no-repeat; opacity: 0.9; }
+  .ht-strip.red { --rc: var(--color-red); --bg: url("assets/role-bg-red.webp"); }
+  .ht-strip.blue { --rc: var(--color-blue); --bg: url("assets/role-bg-blue.webp"); }
+  .ht-strip.yellow { --rc: var(--color-yellow); --bg: url("assets/role-bg-yellow.webp"); }
+  .ht-strip.pink { --rc: var(--color-pink); --bg: url("assets/role-bg-pink.webp"); }
+  .ht-strip.green { --rc: var(--color-green); --bg: url("assets/role-bg-green.webp"); }
+  .howto-text { list-style: none; margin: 0; padding: 0; text-align: left; font-size: 0.82rem; line-height: 1.6; color: var(--text); }
+  .howto-text li { position: relative; padding-left: 14px; margin: 4px 0; }
+  .howto-text li::before { content: ''; position: absolute; left: 0; top: 0.62em; width: 6px; height: 6px; border-radius: 1px; background: var(--cy-cyan); transform: rotate(45deg); }
+  .howto-text b { color: var(--cy-cyan); }
+  .howto-text .howto-em { font-weight: 800; color: #ffe066; }
+  .howto-text .howto-em::before { background: #ffe066; }
+  .howto-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px 14px; }
+  .howto-nav .btn { width: auto; min-width: 84px; margin: 0; padding: 8px 14px; font-size: 0.85rem; }
+  .howto-prev:disabled { visibility: hidden; }
+  .howto-dots { display: flex; gap: 6px; }
+  .howto-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--card-border); transition: background 0.2s, box-shadow 0.2s; }
+  .howto-dots span.on { background: var(--cy-cyan); box-shadow: 0 0 6px var(--cy-cyan); }
   /* 役パネルは盤面の中に収め、はみ出す分はスクロール */
   .role-panel { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; }
   .rp-note { font-size: 0.62rem; color: var(--text-dim); }
@@ -1430,12 +1479,71 @@
         <button class="btn" id="joinRoomBtn">部屋に入る</button>
       </div>
       <div class="online-status" id="onlineStatus"></div>
+      <div class="start-btns start-group">
+        <button class="btn secondary" id="howtoBtn">遊び方</button>
+      </div>
       <div class="dev-section">
         <div class="dev-label">-開発用-</div>
         <div class="start-btns">
           <button class="btn secondary" id="startBtn">CPU対戦</button>
           <button class="btn" id="debugModeBtn" style="opacity:0.75;">デバッグモード: OFF</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 遊び方（3ページ） -->
+  <div class="howto-ov" id="howtoOv" aria-hidden="true">
+    <div class="howto-box" role="dialog" aria-label="遊び方">
+      <button type="button" class="howto-x" id="howtoClose" aria-label="閉じる">✕</button>
+      <div class="howto-viewport" id="howtoViewport">
+        <div class="howto-track" id="howtoTrack">
+          <section class="howto-page">
+            <div class="howto-kicker">HOW TO PLAY 1/3</div>
+            <h2 class="howto-title">基本ルール</h2>
+            <div class="howto-visual">
+              <div class="ht-side"><div class="ht-card red">7</div><div class="ht-tag win">WIN</div></div>
+              <div class="ht-vs">VS</div>
+              <div class="ht-side"><div class="ht-card blue">4</div><div class="ht-tag lose">LOSE</div></div>
+            </div>
+            <ul class="howto-text">
+              <li>出したカードの<b>数値が高い方</b>がそのラウンドの勝者</li>
+              <li>勝者はチップが貰え、敗者は奪われる</li>
+              <li class="howto-em">相手のチップを<b>0</b>にしたら勝利だ！</li>
+            </ul>
+          </section>
+          <section class="howto-page">
+            <div class="howto-kicker">HOW TO PLAY 2/3</div>
+            <h2 class="howto-title">大差で勝つより、1差で勝て</h2>
+            <div class="howto-visual">
+              <div class="ht-side"><div class="ht-card yellow">6</div></div>
+              <div class="ht-vs">VS</div>
+              <div class="ht-side"><div class="ht-card pink">5</div></div>
+            </div>
+            <div class="ht-jackpot">JACKPOT!</div>
+            <ul class="howto-text">
+              <li><b>ちょうど1差</b>で勝つとJACKPOT！</li>
+              <li class="howto-em">POTに溜まったチップを<b>総取り</b>だ！</li>
+            </ul>
+          </section>
+          <section class="howto-page">
+            <div class="howto-kicker">HOW TO PLAY 3/3</div>
+            <h2 class="howto-title">デッキ構築</h2>
+            <div class="ht-strips">
+              <div class="ht-strip red"></div><div class="ht-strip blue"></div><div class="ht-strip yellow"></div><div class="ht-strip pink"></div><div class="ht-strip green"></div>
+            </div>
+            <ul class="howto-text">
+              <li>カードごとに<b>色</b>と<b>効果</b>を選んでデッキを組む</li>
+              <li>同じ色が3枚そろうと<b>色の役</b>が発動</li>
+              <li class="howto-em">色による役、カードによる効果で毎回違った戦略をたのしもう！</li>
+            </ul>
+          </section>
+        </div>
+      </div>
+      <div class="howto-nav">
+        <button type="button" class="btn secondary howto-prev" id="howtoPrev">戻る</button>
+        <div class="howto-dots" id="howtoDots"><span></span><span></span><span></span></div>
+        <button type="button" class="btn howto-next" id="howtoNext">次へ</button>
       </div>
     </div>
   </div>
@@ -3027,6 +3135,45 @@
     const effs = Math.random() < 0.5 ? ['A', 'B'] : ['B', 'A'];
     return cols.map((color, i) => ({ color, eff: effs[i] })).sort((a, b) => (a.eff < b.eff ? -1 : 1));
   }
+
+  // ===== 遊び方（3ページ。ボタン・スワイプで切り替え） =====
+  (function setupHowto() {
+    const ov = document.getElementById('howtoOv');
+    const track = document.getElementById('howtoTrack');
+    const dots = [...document.querySelectorAll('#howtoDots span')];
+    const prev = document.getElementById('howtoPrev');
+    const next = document.getElementById('howtoNext');
+    const total = dots.length;
+    let page = 0;
+    const show = (i) => {
+      page = Math.max(0, Math.min(total - 1, i));
+      track.style.transform = `translateX(${-100 * page}%)`;
+      dots.forEach((d, k) => d.classList.toggle('on', k === page));
+      prev.disabled = page === 0;
+      next.textContent = page === total - 1 ? 'はじめる' : '次へ';
+    };
+    const open = (v) => {
+      ov.classList.toggle('show', v);
+      ov.setAttribute('aria-hidden', v ? 'false' : 'true');
+      if (v) show(0);
+    };
+    document.getElementById('howtoBtn').addEventListener('click', () => open(true));
+    document.getElementById('howtoClose').addEventListener('click', () => open(false));
+    ov.addEventListener('click', (e) => { if (e.target === ov) open(false); });
+    prev.addEventListener('click', () => show(page - 1));
+    next.addEventListener('click', () => (page === total - 1 ? open(false) : show(page + 1)));
+    // スワイプ
+    let sx = null, sy = 0;
+    const vp = document.getElementById('howtoViewport');
+    vp.addEventListener('pointerdown', (e) => { sx = e.clientX; sy = e.clientY; });
+    vp.addEventListener('pointerup', (e) => {
+      if (sx == null) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      sx = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) show(page + (dx < 0 ? 1 : -1));
+    });
+    vp.addEventListener('pointercancel', () => { sx = null; });
+  })();
 
   // ===== デッキ構築：役一覧（今のデッキの色の枚数つき） =====
   const ROLE_LIST = [
