@@ -1275,18 +1275,36 @@
   .prep-effect-name { color: var(--cy-cyan); font-size: 0.74rem; padding-bottom: 4px; }
   .prep-effect-row:not(.prep-effect-name) { font-weight: 500; color: var(--text); font-size: 0.64rem; }
   .prep-slot { position: relative; }
-  .prep-slot .prep-slot-eff {
-    position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%);
-    font-size: 0.5rem; font-weight: 800; color: var(--cy-cyan); white-space: nowrap; letter-spacing: 0;
+  .prep-slot.filled { cursor: pointer; }
+  .prep-slot.peeking { outline: 2px solid var(--cy-cyan); outline-offset: 2px; }
+  .prep-peek { min-height: 2.6em; margin: 8px auto 0; max-width: 360px; font-size: 0.72rem; line-height: 1.45; color: var(--text); text-align: center; }
+  .prep-peek.dim { color: var(--text-dim); }
+  .prep-peek b, .rp-detail b { font-size: 0.9rem; margin-right: 6px; }
+  /* 役パネル：カード一覧 */
+  .rp-cards-wrap { margin-top: 4px; padding-top: 6px; border-top: 1px dashed var(--card-border); }
+  .rp-cards { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin: 4px 0 6px; }
+  .rp-card {
+    aspect-ratio: 3 / 4; border-radius: 6px; border: 2px solid var(--card-border); background: var(--bg);
+    color: var(--text); font: inherit; font-weight: 800; font-size: 0.9rem; padding: 0; cursor: pointer;
   }
+  .rp-card.unknown { border-style: dashed; color: var(--text-dim); }
+  .rp-card:not(.in-disc) { opacity: 0.6; }
+  .rp-card.sel { opacity: 1; outline: 2px solid var(--cy-cyan); outline-offset: 1px; }
+  .rp-card.red { border-color: var(--color-red); }
+  .rp-card.blue { border-color: var(--color-blue); }
+  .rp-card.yellow { border-color: var(--color-yellow); }
+  .rp-card.green { border-color: var(--color-green); }
+  .rp-card.pink { border-color: var(--color-pink); }
+  .rp-note { font-size: 0.62rem; color: var(--text-dim); }
+  .rp-detail { font-size: 0.7rem; line-height: 1.45; min-height: 2.9em; }
+  .rp-detail.dim { color: var(--text-dim); }
+  .rp-col { font-size: 0.62rem; font-weight: 800; padding: 1px 6px; border-radius: 8px; margin-right: 6px; color: #fff; }
+  .rp-col.red { background: var(--color-red); } .rp-col.blue { background: var(--color-blue); }
+  .rp-col.yellow { background: var(--color-yellow); color: #222; } .rp-col.green { background: var(--color-green); }
+  .rp-col.pink { background: var(--color-pink); }
+  .rp-eff { color: var(--cy-cyan); font-weight: 800; }
   .card-effect-label .eff-name { display: block; color: var(--cy-cyan); font-weight: 800; }
   .card-effect-label .eff-desc { display: block; font-size: 0.56rem; line-height: 1.3; margin-top: 2px; }
-  /* 捨て札の枠：出されたカードの効果名 */
-  .discard-slot .slot-eff {
-    position: absolute; left: 50%; bottom: 1px; transform: translateX(-50%);
-    font-size: 0.42rem; font-weight: 800; letter-spacing: -0.02em; color: var(--cy-cyan); white-space: nowrap; line-height: 1;
-    pointer-events: none;
-  }
   /* 情報（効果・役で見えていること） */
   .color-info-hint { line-height: 1.5; }
   .color-info-hint .intel-see { color: var(--cy-cyan); font-weight: 700; }
@@ -1345,6 +1363,7 @@
     <div class="prep-panel" id="prepPanel">
       <div class="prep-progress" id="prepProgress">カード 1 / 8</div>
       <div class="prep-grid" id="prepGrid"></div>
+      <div class="prep-peek dim" id="prepPeek">選んだカードをタップすると効果を確認できます</div>
       <div class="prep-instruction">好きな方のカードを選んでください</div>
       <div class="prep-choices" id="prepChoices"></div>
       <div class="prep-wait hidden" id="prepWait">デッキ完成！相手の準備を待っています…</div>
@@ -1446,7 +1465,7 @@
     ・<b>LOSE</b>＝負けると、ポッドへチップを<b>2枚</b>支払う（持っている分だけ）。ブーストして負けた場合は、ブースト分に加えて<b>2枚</b>支払う<br>
     ・<b>引き分け</b>＝お互いの残りの手札（素の数字）を公開し、大きい方の勝ち。差がちょうど1ならJACKPOT、それ以外は通常の勝ち負けと同じ扱い。手札も同じ数字なら、山札の一番上から順に公開して決着するまで比べる（山札が空なら捨て札をシャッフルして山札にする。カードが尽きた時だけ、ブーストはすべてポッドへ流れて引き分け）。公開した手札は手札に戻り、捨て札の枠に<b style="color:var(--known)">!</b>が付く。公開した山札のカードは山札に戻り、手札に引いた時に<b style="color:var(--known)">!</b>が付く<br>
     ・それ以外の結果（JACKPOTにならなかったブースト、ブーストしての負け等）は、使ったブースト分がそのままポッドへ流れる（ブーストしての負けは、さらにLOSEの2枚も支払う）<br><br>
-    カード効果：各数字にA・B2種類の効果があり、デッキ構築で<b>色とセットで</b>どちらかを選ぶ。相手がどちらを選んだかは、そのカードが出された時に分かる（捨て札の枠に効果名が表示される）。見えている情報は手札選択画面に表示される。<br>
+    カード効果：各数字にA・B2種類の効果があり、デッキ構築で<b>色とセットで</b>どちらかを選ぶ。相手がどちらを選んだかは、そのカードが出された時に分かる（捨て札をタップして開くパネルで、カードをタップすると効果が見られる。一度出たカードの色と効果は山札に戻っても記録される）。見えている情報は手札選択画面に表示される。<br>
     ・<b>1</b>　A <b>偵察</b>：次のラウンド、相手の手札2枚の偶数・奇数の内訳が見える／B <b>撹乱</b>：次のラウンド、相手の情報系の効果・役（黄・ピンク含む）が自分に効かない<br>
     ・<b>2</b>　A <b>予兆</b>：次のラウンド、相手がブーストするか（枚数の範囲も）が見える／B <b>伏兵</b>：次のラウンド、自分のブースト1枚目が無料<br>
     ・<b>3</b>　A <b>先読み</b>：次のラウンド、相手の山札の一番上が見える／B <b>仕込み</b>：出した後、自分の山札の一番上を見て、そのまま残すか一番下へ送るか選べる<br>
@@ -2234,8 +2253,12 @@
     const op = oppSeatC() || {};
     const opColors = {}, opEffects = {};
     (op.discard || []).forEach(e => { if (e.c) opColors[e.n] = e.c; if (e.e) opEffects[e.n] = e.e; });
+    // 山札に戻った後も、一度出された相手のカードの色・効果は覚えておく（再読み込みに備えて自分の端末に保存）
+    Object.entries(pv.opSeen || {}).forEach(([n, v]) => { if (v.c && !opColors[n]) opColors[n] = v.c; if (v.e && !opEffects[n]) opEffects[n] = v.e; });
     state = makeState(Object.assign({}, pv.colors), opColors, Object.assign({}, pv.effects || {}), opEffects);
     state.prev = pv.prev || null;
+    Object.keys(pv.opSeen || {}).forEach(n => { state.opSeen[n] = true; });
+    (op.discard || []).forEach(e => { state.opSeen[e.n] = true; });
     Object.assign(state, {
       myDeck: (pv.deck || []).slice(),
       myHand: (pv.hand || []).slice(),
@@ -2304,13 +2327,15 @@
     return state.myDeck.length ? state.myDeck[0] : null;
   }
   function persistAfterRoundDraw() {
-    writePriv({ deck: state.myDeck.slice(), hand: state.myHand.slice(), pending: null, drawnRound: state.round, log: state.roundLog, prev: state.prev });
+    const opSeen = {};
+    Object.keys(state.opSeen).forEach(n => { opSeen[n] = { c: state.opCardColors[n] || null, e: state.opCardEffects[n] || null }; });
+    writePriv({ deck: state.myDeck.slice(), hand: state.myHand.slice(), pending: null, drawnRound: state.round, log: state.roundLog, prev: state.prev, opSeen });
     writeMySeat({ discard: discEntries('my'), deckBottom: myDeckBottomPublic() });
   }
 
   // 相手の捨て札を共有データに合わせる（山札へ戻った時は戻る演出）
   function syncOpDiscard(op) {
-    (op.discard || []).forEach(e => { if (e.c) state.opCardColors[e.n] = e.c; if (e.e) state.opCardEffects[e.n] = e.e; });
+    (op.discard || []).forEach(e => { if (e.c) state.opCardColors[e.n] = e.c; if (e.e) state.opCardEffects[e.n] = e.e; state.opSeen[e.n] = true; });
     const incoming = (op.discard || []).map(e => e.n);
     const cur = state.opDiscard;
     const bottom = getDeckBottom('op');
@@ -2783,7 +2808,54 @@
       row.appendChild(body);
       panel.appendChild(row);
     });
+    panel.appendChild(buildCardList(who));
     panel.appendChild(buildMarkLegend(who));
+  }
+
+  // 役パネル内のカード一覧：タップでそのカードの効果を表示。
+  // 相手のカードは一度出されたものだけ色・効果が分かる（山札に戻っても覚えておく）
+  let rolePanelCard = null;
+  function buildCardList(who) {
+    const wrap = document.createElement('div');
+    wrap.className = 'rp-cards-wrap';
+    const t = document.createElement('div');
+    t.className = 'role-legend-title';
+    t.textContent = (who === 'my' ? 'あなた' : '相手') + 'のカード（タップで効果）';
+    const note = document.createElement('div');
+    note.className = 'rp-note';
+    note.textContent = who === 'my' ? '薄い表示＝山札・手札にあるカード' : '一度出たカードは色・効果を記録（山札に戻っても残る）。薄い表示＝山札・手札にあるカード';
+    wrap.appendChild(t);
+    wrap.appendChild(note);
+    const row = document.createElement('div');
+    row.className = 'rp-cards';
+    const known = n => who === 'my' || !!state.opSeen[n];
+    for (let n = 1; n <= 8; n++) {
+      const c = document.createElement('button');
+      c.type = 'button';
+      c.className = 'rp-card' + (known(n) && state[who + 'CardColors'][n] ? ' ' + state[who + 'CardColors'][n] : ' unknown') +
+        (state[who + 'Discard'].includes(n) ? ' in-disc' : '') + (rolePanelCard === n ? ' sel' : '');
+      c.dataset.n = n;
+      c.textContent = n;
+      row.appendChild(c);
+    }
+    wrap.appendChild(row);
+    const det = document.createElement('div');
+    det.className = 'rp-detail';
+    const n = rolePanelCard;
+    if (n == null) {
+      det.textContent = 'カードをタップすると効果が見られます';
+      det.classList.add('dim');
+    } else if (!known(n)) {
+      det.innerHTML = `<b>${n}</b>：まだ出されていないため、色と効果は分からない`;
+    } else {
+      const ab = state[who + 'CardEffects'][n];
+      const d = effectDef(n, ab);
+      const col = state[who + 'CardColors'][n];
+      det.innerHTML = `<b>${n}</b>${col ? `<span class="rp-col ${col}">${COLOR_LABEL[col]}</span>` : ''}` +
+        (d ? `<span class="rp-eff">${ab}：${d.name}</span><br>${d.desc}` : '：効果なし');
+    }
+    wrap.appendChild(det);
+    return wrap;
   }
 
   // 捨て札に重ねて出るマーク（「!」＝確定情報、目＝デッキの底）の説明。今そのマークが付いている数字も添える
@@ -2889,6 +2961,7 @@
     prepMyColors = {};
     prepMyEffects = {};
     prepStep = 1;
+    prepPeekNum = null;
     showScreen('prep');
     renderPrepStep();
   }
@@ -2913,6 +2986,7 @@
     }
     document.getElementById('prepProgress').textContent = `カード ${prepStep} / 8`;
     renderPrepGrid(justLandedNum);
+    renderPrepPeek();
 
     prepCurrentOptions = prepOptionsFor();
     const choicesEl = document.getElementById('prepChoices');
@@ -2951,22 +3025,33 @@
   }
 
   // 8枚ぶんの枠を描画。選択済みはその色で塗り、現在選んでいる枠だけ強調する
+  function renderPrepPeek() {
+    const el = document.getElementById('prepPeek');
+    if (!el) return;
+    const n = prepPeekNum;
+    const d = n != null ? effectDef(n, prepMyEffects[n]) : null;
+    if (!d) {
+      el.className = 'prep-peek dim';
+      el.textContent = prepStep > 1 ? '選んだカードをタップすると効果を確認できます' : '';
+      return;
+    }
+    const col = prepMyColors[n];
+    el.className = 'prep-peek';
+    el.innerHTML = `<b>${n}</b>${col ? `<span class="rp-col ${col}">${COLOR_LABEL[col]}</span>` : ''}<span class="rp-eff">${prepMyEffects[n]}：${d.name}</span><br>${d.desc}`;
+  }
+  let prepPeekNum = null; // デッキ構築：タップして効果を確認中の数字
   function renderPrepGrid(justLandedNum) {
     const grid = document.getElementById('prepGrid');
     grid.innerHTML = '';
+    if (prepPeekNum != null && prepPeekNum >= prepStep) prepPeekNum = null;
     for (let n = 1; n <= 8; n++) {
       const slot = document.createElement('div');
       slot.id = 'prepSlot' + n;
       if (n < prepStep) {
         slot.className = 'prep-slot filled ' + prepMyColors[n] + (n === justLandedNum ? ' just-landed' : '');
         slot.textContent = n;
-        const d = effectDef(n, prepMyEffects[n]);
-        if (d) {
-          const tag = document.createElement('span');
-          tag.className = 'prep-slot-eff';
-          tag.textContent = d.name;
-          slot.appendChild(tag);
-        }
+        slot.dataset.n = n;
+        if (n === prepPeekNum) slot.classList.add('peeking');
       } else if (n === prepStep) {
         slot.className = 'prep-slot active';
         slot.textContent = n;
@@ -3104,7 +3189,8 @@
       opPendingChips: 0,
       tamperNote: '',
       reconciledRound: 0,
-      lastOpBottom: null
+      lastOpBottom: null,
+      opSeen: {}             // 一度でも出された相手の数字（色・効果が分かっている）
     };
   }
 
@@ -3443,6 +3529,7 @@
     playFlipSound(0); // カードをフリップする音
     if (!state.myDiscard.includes(myCard)) state.myDiscard.push(myCard);
     if (!state.opDiscard.includes(opCard)) state.opDiscard.push(opCard);
+    state.opSeen[opCard] = true;
     unmarkKnown('my', myCard);
     unmarkKnown('op', opCard);
 
@@ -4372,15 +4459,6 @@
       if (isKnown) cls += ' known';
       slot.className = cls;
       slot.textContent = n;
-      if (isFilled) {
-        const d = effectDef(n, state[who + 'CardEffects'][n]);
-        if (d) {
-          const tag = document.createElement('span');
-          tag.className = 'slot-eff';
-          tag.textContent = d.name;
-          slot.appendChild(tag);
-        }
-      }
       if (isKnown) {
         const mark = document.createElement('span');
         mark.className = 'known-mark';
@@ -4402,10 +4480,26 @@
 
   // 捨て札をタップ → 役パネルの開閉。それ以外をタップで閉じる
   document.addEventListener('click', (e) => {
+    const rpCard = e.target.closest && e.target.closest('.rp-card');
+    if (rpCard && openRoleWho) {
+      const n = +rpCard.dataset.n;
+      rolePanelCard = rolePanelCard === n ? null : n;
+      refreshRolePanel();
+      return;
+    }
+    const prepSlot = e.target.closest && e.target.closest('.prep-slot.filled');
+    if (prepSlot) {
+      const n = +prepSlot.dataset.n;
+      prepPeekNum = prepPeekNum === n ? null : n;
+      renderPrepGrid();
+      renderPrepPeek();
+      return;
+    }
     const grid = e.target.closest && e.target.closest('.discard-grid');
     if (grid) {
       const who = grid.id === 'discardGridMy' ? 'my' : 'op';
       openRoleWho = (openRoleWho === who) ? null : who;
+      rolePanelCard = null;
       refreshRolePanel();
       const hint = document.getElementById('roleHint');
       if (hint) hint.classList.add('gone'); // 一度使ったらヒントは消す
