@@ -3396,7 +3396,7 @@
       return `<div class="role-item ${r.color}">
         <div class="role-cnt${n >= COLOR_ROLE_MIN ? ' on' : ''}">${n}<small>枚</small></div>
         <div><div class="role-item-name">${COLOR_EN[r.color]}：${r.name}</div>
-        <div class="role-item-desc">${roleDescHtml(r, roleLevel(n))}</div></div></div>`;
+        <div class="role-item-desc">${roleDescHtml(r, 3)}</div></div></div>`; // デッキ構築ではグレーアウトしない
     }).join('');
   }
   function setRoleList(open) {
