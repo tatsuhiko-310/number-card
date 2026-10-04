@@ -675,8 +675,7 @@
     0%, 100% { box-shadow: 0 0 4px var(--gc), 0 0 8px var(--gc); }
     50% { box-shadow: 0 0 9px var(--gc), 0 0 20px var(--gc), 0 0 3px #fff inset; }
   }
-  /* バッジ（枠の右上に重ねる）：ピンクトリプルで見える相手のデッキの底／確定情報 */
-  .discard-slot .peek-eye,
+  /* バッジ（枠の右上に重ねる）：確定情報 */
   .discard-slot .known-mark {
     position: absolute;
     top: -7px;
@@ -694,14 +693,6 @@
     pointer-events: none;
     z-index: 3;
     animation: peekEyeBlink 1.8s ease-in-out infinite;
-  }
-  .discard-slot .peek-eye { background: var(--color-pink); box-shadow: 0 0 4px var(--color-pink), 0 0 8px var(--color-pink); }
-  .discard-slot .peek-eye svg { width: 12px; height: 12px; }
-  .discard-slot.peek {
-    color: var(--color-pink);
-    border-color: var(--color-pink);
-    box-shadow: 0 0 0 1px var(--color-pink) inset, 0 0 8px color-mix(in srgb, var(--color-pink) 50%, transparent);
-    z-index: 1;
   }
   /* 確定情報：捨て札が山札に戻った時点で手札に残っていた数字（相手にも中身が分かっている） */
   .discard-slot .known-mark { background: var(--known); box-shadow: 0 0 4px var(--known), 0 0 8px var(--known); }
@@ -814,13 +805,11 @@
     color: #fff; font-size: 0.72rem; font-weight: 900; line-height: 1;
   }
   .legend-badge.known { background: var(--known); box-shadow: 0 0 4px var(--known); }
-  .legend-badge.peek { background: var(--color-pink); box-shadow: 0 0 4px var(--color-pink); }
   .legend-badge svg { width: 12px; height: 12px; }
   .legend-text { font-size: 0.72rem; color: var(--text-dim); line-height: 1.45; }
   .legend-text b { color: var(--text); }
   .legend-now { font-weight: 800; }
   .legend-now.known { color: var(--known); }
-  .legend-now.peek { color: var(--color-pink); }
 
   .controls { text-align: center; margin-top: 16px; }
   .btn {
@@ -1357,7 +1346,7 @@
   .rp-eff { color: var(--cy-cyan); font-weight: 800; }
   .card-effect-label .eff-name { display: block; color: var(--cy-cyan); font-weight: 800; }
   .card-effect-label .eff-desc { display: block; font-size: 0.56rem; line-height: 1.3; margin-top: 2px; }
-  /* 情報（効果・役で見えていること） */
+  /* 情報（カード効果で見えていること） */
   .color-info-hint { line-height: 1.5; }
   .color-info-hint .intel-see { color: var(--cy-cyan); font-weight: 700; }
   .color-info-hint .intel-shown { color: var(--known); }
@@ -1520,7 +1509,7 @@
     ・<b>引き分け</b>＝お互いの残りの手札（素の数字）を公開し、大きい方の勝ち。差がちょうど1ならJACKPOT、それ以外は通常の勝ち負けと同じ扱い。手札も同じ数字なら、山札の一番上から順に公開して決着するまで比べる（山札が空なら捨て札をシャッフルして山札にする。カードが尽きた時だけ、ブーストはすべてポッドへ流れて引き分け）。公開した手札は手札に戻り、捨て札の枠に<b style="color:var(--known)">!</b>が付く。公開した山札のカードは山札に戻り、手札に引いた時に<b style="color:var(--known)">!</b>が付く<br>
     ・それ以外の結果（JACKPOTにならなかったブースト、ブーストしての負け等）は、使ったブースト分がそのままポッドへ流れる（ブーストしての負けは、さらにLOSEの2枚も支払う）<br><br>
     カード効果：各数字にA・B2種類の効果があり、デッキ構築で<b>色とセットで</b>どちらかを選ぶ。相手がどちらを選んだかは、そのカードが出された時に分かる（捨て札をタップして開くパネルで、カードをタップすると効果が見られる。一度出たカードの色と効果は山札に戻っても記録される）。発動中の効果はポッドの上下に表示される（ENEMY＝相手が発動、PLAYER＝自分が発動／水色＝相手の情報が見える、オレンジ＝自分の情報が相手に見えている、黄色＝このラウンドのルール）。<br>
-    ・<b>1</b>　A <b>偵察</b>：次のラウンド、相手の手札2枚の偶数・奇数の内訳が見える／B <b>撹乱</b>：次のラウンド、相手の情報系の効果・役（黄・ピンク含む）が自分に効かない<br>
+    ・<b>1</b>　A <b>偵察</b>：次のラウンド、相手の手札2枚の偶数・奇数の内訳が見える／B <b>撹乱</b>：次のラウンド、相手の情報系の効果が自分に効かない<br>
     ・<b>2</b>　A <b>予兆</b>：次のラウンド、相手がブーストするか（枚数の範囲も）が見える／B <b>伏兵</b>：次のラウンド、自分のブースト1枚目が無料<br>
     ・<b>3</b>　A <b>先読み</b>：次のラウンド、相手の山札の一番上が見える／B <b>仕込み</b>：出した後、自分の山札の一番上を見て、そのまま残すか一番下へ送るか選べる<br>
     ・<b>4</b>　A <b>観測</b>：次のラウンド、相手の手札2枚の大小（1〜4／5〜8）の内訳が見える／B <b>保険</b>：このカードで負けたら、LOSEの支払いが1枚減る<br>
@@ -1529,10 +1518,10 @@
     ・<b>7</b>　A <b>露呈・中</b>：出すと、次のラウンド自分の残りの手札の偶数・奇数が相手に見える／B <b>重圧</b>：出すと、次のラウンド自分はブーストできない<br>
     ・<b>8</b>　A <b>全公開</b>：出すと、自分の残りの手札が相手に公開される（確定情報 !）／B <b>代償・大</b>：出すと、チップ2枚をポッドへ払う<br>
     <br>
-    色の役(自分の捨て札の色構成で常時判定)：<b>色トリプル</b>(同色3枚以上)。成立すると捨て札が光り、タップで確認できます。<b>赤</b>(攻め)＝JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）／<b>青</b>(守り)＝ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ）／<b>緑</b>(安定)＝THROUGH(ブーストなしの勝利)時、WINの1🪙に加えて、ポッドに残っていればさらに1🪙回収できる／<b>ピンク</b>＝相手のデッキの底が見える／<b>黄</b>＝手札選択中に相手がブーストするかどうかだけ見える(枚数は伏せる)。<br><br>
+    色の役(自分の捨て札の色構成で常時判定)：<b>色トリプル</b>(同色3枚以上)。成立すると捨て札が光り、タップで確認できます。<b>赤</b>(攻め)＝JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）／<b>青</b>(守り)＝ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ）／<b>緑</b>(安定)＝THROUGH(ブーストなしの勝利)時、WINの1🪙に加えて、ポッドに残っていればさらに1🪙回収できる／<b>黄</b>(勢い)＝ブーストして勝った時(JACKPOT以外)、ポッドへ流れるブースト分のうち1🪙が手元に戻る／<b>ピンク</b>(反撃)＝ブーストせずに負けた時(JACKPOT以外)、相手がブーストしていれば、相手のブースト分のうち1🪙がポッドではなく自分の手元に入る。役はすべてチップの出入りに関わり、情報が見える効果はカード効果だけ。<br><br>
     確定情報：山札がなくなり捨て札を山札に戻した時に手札に残っていたカード、引き分けの手札勝負で公開した手札、引き分けの山札勝負で公開して後から手札に引いたカードの数字、山札を引ききった時の最後の手札など捨て札（と山札にあると分かっているカード）から手札が絞り込めた数字は、お互いに分かる。その数字は捨て札の枠に<b style="color:var(--known)">!</b>が表示され、出されるまで残る。<br><br>
     色：各カードには赤・青・黄・緑・ピンクいずれかの色がある（デッキ構築時に選択）。現時点では色トリプル以外の効果条件には未使用。<br><br>
-    オンライン対戦：「部屋を作る」で表示される4桁のコードを相手に伝え、相手が入室したら準備フェイズ（それぞれ非公開でデッキを組む）へ進み、両者の準備が終わると対戦開始。手札のカードをタップした時点でそのラウンドの手が確定し、両者が確定したら一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになると手札からランダムに1枚、ブースト0で自動的に出す。黄の役は、相手が確定した時点でブーストの有無が見える。通信はブラウザ同士の直接通信で、部屋を作った人のブラウザが対戦データを持つため、対戦中はそのページを閉じないこと。途中で抜けても、同じブラウザから同じ部屋コードで入り直せば続きから再開できる。<br><br>
+    オンライン対戦：「部屋を作る」で表示される4桁のコードを相手に伝え、相手が入室したら準備フェイズ（それぞれ非公開でデッキを組む）へ進み、両者の準備が終わると対戦開始。手札のカードをタップした時点でそのラウンドの手が確定し、両者が確定したら一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになると手札からランダムに1枚、ブースト0で自動的に出す。予兆（2A）は、相手が確定した時点でブースト枚数の範囲が見える。通信はブラウザ同士の直接通信で、部屋を作った人のブラウザが対戦データを持つため、対戦中はそのページを閉じないこと。途中で抜けても、同じブラウザから同じ部屋コードで入り直せば続きから再開できる。<br><br>
     画面：カードを選ぶ時は「手札選択」画面、カードを出すと「バトル場」画面に自動で切り替わり、決着後にまた手札選択へ戻ります。
   </div>
   </div>
@@ -1871,9 +1860,6 @@
     if (myChips <= 0) return 'op';
     return null;
   }
-  // 対人戦(2人対戦・画面を渡し合う想定)に備えて、情報系の役(ピンク・黄)は「今画面を見ている側」基準で判定する。
-  // 現状は常にmy(人間側)が画面を見ているが、将来オセットで表示を切り替える際はここを変更するだけでよい。
-  let activeViewer = 'my';
   function otherOf(who) { return who === 'my' ? 'op' : 'my'; }
   let prepMyColors = {};
   let prepOpColors = {};
@@ -2288,7 +2274,7 @@
     const deck = shuffle([1, 2, 3, 4, 5, 6, 7, 8]);
     const hand = [deck.pop(), deck.pop()];
     writePriv({ colors: Object.assign({}, prepMyColors), effects: Object.assign({}, prepMyEffects), deck, hand, pending: null, drawnRound: 1, log: [], prev: null });
-    writeMySeat({ prepDone: true, discard: [], commitRound: 0, commitHash: null, boostFlag: null, reveal: null, deckBottom: null });
+    writeMySeat({ prepDone: true, discard: [], commitRound: 0, commitHash: null, boostFlag: null, reveal: null });
     net.phase = 'prepWait';
     showPrepWait();
     onNetUpdate();
@@ -2375,16 +2361,11 @@
     }
   }
 
-  function myDeckBottomPublic() {
-    // 相手がピンクの役を持っている時だけ、自分のデッキの底を公開する
-    if (!state || !hasColorTriple('op', 'pink') || (state.prev && state.prev.my.key === '1B')) return null;
-    return state.myDeck.length ? state.myDeck[0] : null;
-  }
   function persistAfterRoundDraw() {
     const opSeen = {};
     Object.keys(state.opSeen).forEach(n => { opSeen[n] = { c: state.opCardColors[n] || null, e: state.opCardEffects[n] || null }; });
     writePriv({ deck: state.myDeck.slice(), hand: state.myHand.slice(), pending: null, drawnRound: state.round, log: state.roundLog, prev: state.prev, opSeen });
-    writeMySeat({ discard: discEntries('my'), deckBottom: myDeckBottomPublic() });
+    writeMySeat({ discard: discEntries('my') });
   }
 
   // 相手の捨て札を共有データに合わせる（山札へ戻った時は戻る演出）
@@ -2392,14 +2373,12 @@
     (op.discard || []).forEach(e => { if (e.c) state.opCardColors[e.n] = e.c; if (e.e) state.opCardEffects[e.n] = e.e; state.opSeen[e.n] = true; });
     const incoming = (op.discard || []).map(e => e.n);
     const cur = state.opDiscard;
-    const bottom = getDeckBottom('op');
-    if (incoming.length === cur.length && incoming.every((n, i) => n === cur[i]) && bottom === state.lastOpBottom) return;
+    if (incoming.length === cur.length && incoming.every((n, i) => n === cur[i])) return;
     if (cur.length && cur.some(n => !incoming.includes(n))) {
       state.returning.op = cur.slice();
       state.knownHeld.op = knownHeldFrom(cur);
     }
     state.opDiscard = incoming;
-    state.lastOpBottom = bottom;
     renderDiscardGrid('discardGridOp', state.opDiscard, state.opCardColors, 'op');
     refreshRolePanel();
   }
@@ -2426,12 +2405,6 @@
     // ホストの集計と自分の計算を照らし合わせる（ずれていたらホストの値に合わせる）
     if (net.match && net.match.round === R && state.reconciledRound !== R && (state.netPhase === 'select' || state.netPhase === 'committing' || state.netPhase === 'committed')) {
       reconcileWithMatch();
-    }
-
-    // ピンク：相手が役を持っていれば自分のデッキの底を公開（変化した時だけ書く）
-    if (me && state.netPhase !== 'resolving') {
-      const bottom = myDeckBottomPublic();
-      if ((typeof me.deckBottom === 'number' ? me.deckBottom : null) !== bottom) writeMySeat({ deckBottom: bottom });
     }
 
     // 両者が確定 → 自分の手を公開
@@ -2534,9 +2507,9 @@
     const hiddenHash = await hiddenCardHash(R, state.myHand[0], salt2);
     if (token !== gameToken || !net.active) return;
     writePriv({ pending: pc });
-    // 相手の黄の役・予兆（2A）が効いていれば、ブーストの有無（予兆は枚数の範囲も）を公開する。撹乱中は公開しない
+    // 相手の予兆（2A）が効いていれば、ブーストの有無と枚数の範囲を公開する。撹乱中は公開しない
     const ex = state.exposure || {};
-    const showFlag = !ex.blocked && (hasColorTriple('op', 'yellow') || ex.boostIntel);
+    const showFlag = !ex.blocked && ex.boostIntel;
     writeMySeat({ commitRound: R, commitHash: hash, hiddenHash,
       boostFlag: showFlag ? boost > 0 : null,
       boostRange: !ex.blocked && ex.boostIntel ? boostRangeText(boost) : null });
@@ -2693,7 +2666,7 @@
   // 小さい数字は「情報を得る／守る」、大きい数字は「強いが代償（情報を渡す／チップを払う）」
   const EFFECT_DEFS = {
     1: { A: { name: '偵察', desc: '次のラウンド、相手の手札2枚の偶数・奇数の内訳が見える' },
-         B: { name: '撹乱', desc: '次のラウンド、相手の情報系の効果・役（黄・ピンク含む）が自分に効かない' } },
+         B: { name: '撹乱', desc: '次のラウンド、相手の情報系の効果が自分に効かない' } },
     2: { A: { name: '予兆', desc: '次のラウンド、相手がブーストするか（枚数の範囲も）が見える' },
          B: { name: '伏兵', desc: '次のラウンド、自分のブースト1枚目が無料' } },
     3: { A: { name: '先読み', desc: '次のラウンド、相手の山札の一番上が見える' },
@@ -2779,8 +2752,8 @@
     red: '攻めの一撃：JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（相手の残りが2枚未満なら0枚になるまで）',
     blue: '守りの軽減：ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ。例：3🪙ブースト→2🪙がポッドへ、1🪙は手元に残る）',
     green: 'コツコツ回収：THROUGH（ブーストなしの勝利）時、WINの1🪙に加えて、ポッドに残っていればさらに1🪙回収できる',
-    pink: '情報アドバンテージ：相手のデッキの底（次に引かれる最後のカード）の捨て札枠に👁が表示される',
-    yellow: '情報アドバンテージ：手札選択中、相手がブーストするかどうかだけ見える(枚数は伏せる)'
+    yellow: '勢い：ブーストして勝った時（JACKPOT以外）、ポッドへ流れるブースト分のうち1🪙が手元に戻る',
+    pink: '反撃：ブーストせずに負けた時（JACKPOT以外）、相手がブーストしていれば、相手のブースト分のうち1🪙がポッドではなく自分の手元に入る'
   };
   function getColorCounts(who) {
     const discard = state[who + 'Discard'];
@@ -2791,13 +2764,6 @@
       if (c) counts[c] = (counts[c] || 0) + 1;
     });
     return counts;
-  }
-  function hasColorTriple(who, color) {
-    return (getColorCounts(who)[color] || 0) >= COLOR_ROLE_MIN;
-  }
-  function hasTripleColor(who) {
-    const counts = getColorCounts(who);
-    return COLORS.find(c => counts[c] >= COLOR_ROLE_MIN) || null;
   }
 
   // 現在発動している役の一覧（捨て札の光り表示・役パネルの両方で使う）。同時に複数色が成立することもある
@@ -2848,14 +2814,6 @@
       const ds = document.createElement('div');
       ds.className = 'role-desc';
       ds.textContent = r.desc;
-      if (r.color === 'blue') {
-        const status = document.createElement('div');
-        status.className = 'role-desc';
-        status.style.opacity = '0.85';
-        status.textContent = state.blueChargeUsed[who] ? '(残り0/1回・使用済み)' : '(残り1/1回・未使用)';
-        ds.appendChild(document.createElement('br'));
-        ds.appendChild(status);
-      }
       body.appendChild(nm);
       body.appendChild(ds);
       row.appendChild(dot);
@@ -2912,14 +2870,12 @@
     return wrap;
   }
 
-  // 捨て札に重ねて出るマーク（「!」＝確定情報、目＝デッキの底）の説明。今そのマークが付いている数字も添える
-  const EYE_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 5C5 5 1 12 1 12s4 7 11 7 11-7 11-7-4-7-11-7zm0 11a4 4 0 110-8 4 4 0 010 8zm0-2a2 2 0 100-4 2 2 0 000 4z"/></svg>';
+  // 捨て札に重ねて出るマーク（「!」＝確定情報）の説明。今そのマークが付いている数字も添える
   function buildMarkLegend(who) {
     const gridId = who === 'my' ? 'discardGridMy' : 'discardGridOp';
     const marked = (sel) => [...document.querySelectorAll('#' + gridId + ' > .discard-slot')]
       .filter(sl => sl.querySelector(sel)).map(sl => sl.firstChild && sl.firstChild.nodeType === 3 ? sl.firstChild.nodeValue : sl.textContent);
     const knownNow = marked('.known-mark');
-    const peekNow = marked('.peek-eye');
     const owner = who === 'my' ? 'あなた' : '相手';
 
     const wrap = document.createElement('div');
@@ -2945,12 +2901,6 @@
     addRow('known', '!',
       `<b>確定情報</b>：山札を作り直した時に手札に残っていた数字や、引き分け勝負で公開された数字、山札を引ききるなどして捨て札から絞り込めた数字。今も${owner}の手札にあることがお互いに分かっている（出されると消える）` +
       (knownNow.length ? `<br><span class="legend-now known">いま：${knownNow.join('・')}</span>` : ''));
-    addRow('peek', EYE_SVG,
-      who === 'op'
-        ? `<b>デッキの底</b>：あなたのピンクの役（ピンクトリプル）で見えている、相手が最後に引くカード` +
-          (peekNow.length ? `<br><span class="legend-now peek">いま：${peekNow.join('・')}</span>` : '')
-        : `<b>デッキの底</b>：ピンクの役（ピンクトリプル）が成立すると、相手の捨て札に相手が最後に引くカードが表示される` +
-          (hasColorTriple(otherOf(activeViewer), 'pink') ? '<br><span class="legend-now peek">いま相手のピンクの役で、あなたのデッキの底が相手に見えている</span>' : ''));
     return wrap;
   }
   // ヒントの横位置を、相手の捨て札置き場の中央に合わせる
@@ -3233,7 +3183,6 @@
       revealedDeck: { my: [], op: [] },       // 引き分け勝負で公開した山札のカード（上から順）。手札に引いた時に確定情報になる
       tieWait: null,                          // オンライン：引き分け勝負の進行中（決着を待つ）
       roleSeen: { my: new Set(), op: new Set() }, // 直前に成立していた役（新規成立の検出用）
-      blueChargeUsed: { my: false, op: false }, // 青トリプル：今の成立中に1回分の蒸発無効を使い切ったか
       returningNow: { my: false, op: false }, // 演出中は捨て札置き場の再描画を止める
       roundLog: [],   // ラウンドごとの収支ログ（検証用）
       roundSnap: null, // ラウンド開始時（ブースト消費前）のチップ・ポッド
@@ -3243,7 +3192,6 @@
       opPendingChips: 0,
       tamperNote: '',
       reconciledRound: 0,
-      lastOpBottom: null,
       opSeen: {}             // 一度でも出された相手の数字（色・効果が分かっている）
     };
   }
@@ -3271,7 +3219,7 @@
       return;
     }
 
-    decideOpponentMove(); // 黄の役で相手のブースト予定を見せるため、選択フェイズが始まる前に相手の手を決めておく
+    decideOpponentMove(); // 予兆で相手のブースト予定を見せるため、選択フェイズが始まる前に相手の手を決めておく
     render();
     setMode('select');
     refreshColorInfoHint();
@@ -3294,20 +3242,16 @@
     state.opPendingFree = rule.free && chips > 0;
   }
 
-  // 黄・ピンクの役が発動中なら、選択フェイズ中にヒントを表示する（ピンクの「見える」側は捨て札グリッドの目のアイコンで表現）
-  // 自分の役で相手の情報が見える場合と、相手の役で自分の情報が見えてしまっている場合の両方を表示する（対人戦でどちらが役を揃えても機能するように）
-  // 発動中のカード効果・役を、ポッドの上(ENEMY＝相手が発動)と下(PLAYER＝自分が発動)にまとめて表示
+  // 発動中のカード効果を、ポッドの上(ENEMY＝相手が発動)と下(PLAYER＝自分が発動)にまとめて表示
   //   水色 ＝ 自分に見えている相手の情報 ／ オレンジ ＝ 相手に見えている自分の情報 ／ 黄色 ＝ このラウンドのルール
   function refreshColorInfoHint() {
     const rowOp = document.getElementById('effRowOp');
     const rowMe = document.getElementById('effRowMe');
     if (!rowOp || !rowMe || !state) return;
     if (net.active) readOpIntel();
-    const me = activeViewer;
-    const opp = otherOf(me);
     const pv = state.prev;
-    const opBlocked = !!(pv && pv.op.key === '1B');  // 相手の撹乱：自分の情報系の効果・役が効かない
-    const myBlocked = !!(pv && pv.my.key === '1B');  // 自分の撹乱：相手の情報系の効果・役が効かない
+    const opBlocked = !!(pv && pv.op.key === '1B');  // 相手の撹乱：自分の情報系の効果が効かない
+    const myBlocked = !!(pv && pv.my.key === '1B');  // 自分の撹乱：相手の情報系の効果が効かない
     const items = { me: [], op: [] };
     const add = (side, kind, text) => items[side].push({ kind, text });
     const hl = (n) => (n === 'hi' ? '大(5〜8)' : '小(1〜4)');
@@ -3326,31 +3270,26 @@
     describe(state.intel, '相手', 'me', 'op', 'see');
     describe(state.exposure, 'あなた', 'op', 'me', 'shown');
 
-    // 予兆（2A）・黄の役：相手のブースト
-    const intelBoost = !!(state.intel && state.intel.boostIntel);
-    const yellow = hasColorTriple(me, 'yellow') && !opBlocked;
-    if (intelBoost || yellow) {
-      const tag = intelBoost ? '予兆' : '黄の役';
+    // 予兆（2A）：相手のブースト
+    if (state.intel && state.intel.boostIntel) {
       let t;
       if (net.active) {
         const op = oppSeatC();
         if (op && op.commitRound === state.round) {
-          if (intelBoost && op.boostRange) t = `相手は${op.boostRange}`;
+          if (op.boostRange) t = `相手は${op.boostRange}`;
           else if (typeof op.boostFlag === 'boolean') t = `相手は${op.boostFlag ? 'ブーストする' : 'ブーストしない'}`;
           else t = '相手は確定済み（ブースト情報なし）';
         } else {
-          t = `相手の選択待ち（確定すると${intelBoost ? 'ブースト枚数の範囲' : 'ブーストの有無'}が見える）`;
+          t = '相手の選択待ち（確定するとブースト枚数の範囲が見える）';
         }
       } else {
-        t = intelBoost ? `相手は${boostRangeText(state.opPendingChips)}予定` : `相手は${state.opPendingChips > 0 ? 'ブーストする' : 'ブーストしない'}予定`;
+        t = `相手は${boostRangeText(state.opPendingChips)}予定`;
       }
-      add('me', 'see', `${tag}：${t}`);
+      add('me', 'see', `予兆：${t}`);
     }
     if (state.exposure && state.exposure.boostIntel) add('op', 'shown', '予兆：あなたのブースト枚数の範囲');
-    else if (hasColorTriple(opp, 'yellow') && !myBlocked) add('op', 'shown', '黄の役：あなたがブーストするか');
-    if (hasColorTriple(opp, 'pink') && !myBlocked) add('op', 'shown', 'ピンクの役：あなたのデッキの底');
-    if (opBlocked) add('op', 'rule', '撹乱：あなたの情報系の効果・役が効かない');
-    if (myBlocked) add('me', 'rule', '撹乱：相手の情報系の効果・役が効かない');
+    if (opBlocked) add('op', 'rule', '撹乱：あなたの情報系の効果が効かない');
+    if (myBlocked) add('me', 'rule', '撹乱：相手の情報系の効果が効かない');
     const r = state.rule || {};
     if (r.my && r.my.free) add('me', 'rule', '伏兵：ブースト1枚目が無料');
     if (r.my && r.my.noBoost) add('me', 'rule', '重圧：このラウンドはブーストできない');
@@ -3888,18 +3827,31 @@
         let loserProtected = 0;
         if (loserBoost > 0 && has(loser, 'blue')) loserProtected = Math.floor(loserBoost / 2);
         const loserToPod = loserBoost - loserProtected;
-        const toPod = winnerBoost + loserToPod;
+        // 黄トリプル（勢い）：ブーストして勝った側は、ポッドへ流れるブースト分のうち1🪙が手元に戻る
+        const winnerKept = (winnerBoost > 0 && has(winner, 'yellow')) ? 1 : 0;
+        // ピンクトリプル（反撃）：ブーストせずに負けた側は、勝った側のブースト分のうち1🪙をポッドではなく自分の手元に受け取る
+        const loserCounter = (!loserBoosted && winnerBoost - winnerKept > 0 && has(loser, 'pink')) ? 1 : 0;
+        const winnerToPod = winnerBoost - winnerKept - loserCounter;
+        const toPod = winnerToPod + loserToPod;
         if (toPod > 0) {
           pod += toPod;
           res.roundPodKind = 'grow';
           const parts = [];
-          if (winnerBoost > 0) parts.push(`${nm(winner)}のブースト${winnerBoost}🪙`);
+          if (winnerToPod > 0) parts.push(`${nm(winner)}のブースト${winnerToPod}🪙`);
           if (loserToPod > 0) parts.push(`${nm(loser)}のブースト${loserToPod}🪙`);
           res.notes.push(`${parts.join('＋')}がポッドへ`);
         }
         if (loserProtected > 0) {
           chips[loser] += loserProtected; // 手元に残る分（ブースト消費時に一度引かれているので戻す）
           res.notes.push(`青トリプル：${nm(loser)}はブースト失敗分のうち${loserProtected}🪙を手元に残した`);
+        }
+        if (winnerKept > 0) {
+          chips[winner] += winnerKept;
+          res.notes.push(`黄トリプル：${nm(winner)}はブースト分のうち${winnerKept}🪙を手元に戻した`);
+        }
+        if (loserCounter > 0) {
+          chips[loser] += loserCounter;
+          res.notes.push(`ピンクトリプル：${nm(loser)}が${nm(winner)}のブーストから${loserCounter}🪙を奪い返した`);
         }
 
         {
@@ -4230,7 +4182,7 @@
     const other = otherOf(who);
     const ex = {};
     const hand = state[who + 'Hand'] || [];
-    const blocked = pv[who].key === '1B'; // 撹乱：相手の情報系の効果・役が効かない
+    const blocked = pv[who].key === '1B'; // 撹乱：相手の情報系の効果が効かない
     ex.blocked = blocked;
     const by = (k) => !blocked && pv[other].key === k;
     if (by('1A')) ex.parity = { even: hand.filter(n => n % 2 === 0).length, odd: hand.filter(n => n % 2 === 1).length };
@@ -4440,16 +4392,6 @@
     sweep.start(t0); sweep.stop(t0 + 0.34);
   }
 
-  // デッキの底（ピンクの役で見えるカード）。オンラインの相手分は、相手が公開した値を使う
-  function getDeckBottom(who) {
-    if (net.active && who === 'op') {
-      const op = oppSeatC();
-      return (op && typeof op.deckBottom === 'number') ? op.deckBottom : null;
-    }
-    const d = state[who + 'Deck'];
-    return (d && d.length) ? d[0] : null;
-  }
-
   // 山札へ戻る捨て札に含まれない数字＝その時点で手札に残っていたカード（両者に分かる確定情報）
   function knownHeldFrom(returningCards) {
     const out = [];
@@ -4464,11 +4406,6 @@
     // 公開済みの場のカードは捨て札に入っているので、手札は1枚。裏向きの場のカードは手札に含めて数える
     const handCount = state.fieldRevealed ? 1 : 2;
     const inDeck = new Set((state.revealedDeck && state.revealedDeck[who]) || []);
-    // ピンクの役で相手に見えているデッキの底
-    if (hasColorTriple(otherOf(who), 'pink') && !(state.prev && state.prev[who].key === '1B')) {
-      const b = getDeckBottom(who);
-      if (b != null) inDeck.add(b);
-    }
     const rest = [];
     for (let n = 1; n <= 8; n++) if (!disc.includes(n) && !inDeck.has(n)) rest.push(n);
     return rest.length === handCount ? rest : [];
@@ -4521,21 +4458,9 @@
     const roleKeys = new Set(activeRoles.map(r => r.name));
     const seen = state.roleSeen[who];
     let newlyActivated = false;
-    const blueRoleKey = `色トリプル(${COLOR_LABEL.blue})`;
-    roleKeys.forEach(k => {
-      if (!seen.has(k)) {
-        newlyActivated = true;
-        if (k === blueRoleKey) state.blueChargeUsed[who] = false; // 再成立で1回分を回復（ストックはしない）
-      }
-    });
+    roleKeys.forEach(k => { if (!seen.has(k)) newlyActivated = true; });
     state.roleSeen[who] = roleKeys;
     if (newlyActivated) playRoleUpSound();
-
-    // ピンクトリプル発動中：相手のデッキの底（次に引かれる最後のカード）の枠に目のアイコンを表示
-    // activeViewer基準：今画面を見ている側がピンクを持っていれば、相手側の捨て札グリッド(who === otherOf(activeViewer))に表示する
-    const peekTarget = (who === otherOf(activeViewer) && hasColorTriple(activeViewer, 'pink') && !(state.prev && state.prev[who].key === '1B'))
-      ? getDeckBottom(who)
-      : null;
 
     const deduced = deducedHeld(who);
     for (let n = 1; n <= 8; n++) {
@@ -4557,14 +4482,6 @@
         mark.textContent = '!';
         slot.title = who === 'op' ? '確定情報：この数字は相手の手札にある' : '確定情報：この数字が手札にあることは相手にも分かっている';
         slot.appendChild(mark);
-      }
-      if (peekTarget === n) {
-        slot.classList.add('peek');
-        slot.title = '相手のデッキの底（最後に引かれるカード）';
-        const eye = document.createElement('span');
-        eye.className = 'peek-eye';
-        eye.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 5C5 5 1 12 1 12s4 7 11 7 11-7 11-7-4-7-11-7zm0 11a4 4 0 110-8 4 4 0 010 8zm0-2a2 2 0 100-4 2 2 0 000 4z"/></svg>';
-        slot.appendChild(eye);
       }
       grid.appendChild(slot);
     }
