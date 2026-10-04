@@ -903,12 +903,6 @@
     line-height: 1.6;
     margin: 10px 0 18px;
   }
-  .prep-progress {
-    font-size: 0.75rem;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-    letter-spacing: 0.03em;
-  }
   .prep-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1335,10 +1329,8 @@
   .eff-board .pod-label { justify-self: end; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.7rem; letter-spacing: 0.12em; color: var(--text-dim); }
   .eff-item.none { color: var(--text-dim); opacity: 0.7; }
   /* ===== デッキ構築：役一覧 ===== */
-  .prep-head { position: relative; display: flex; justify-content: center; align-items: center; margin-bottom: 6px; }
-  .prep-head .prep-progress { margin-bottom: 0; }
+  .prep-head { display: flex; justify-content: flex-end; align-items: center; max-width: min(340px, 42dvh); margin: 0 auto 12px; }
   .role-list-btn {
-    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
     font: inherit; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; cursor: pointer;
     border: 1px solid var(--cy-cyan); background: rgba(25, 211, 255, 0.06); color: var(--cy-cyan); box-shadow: 0 0 8px rgba(25, 211, 255, 0.35);
   }
@@ -1564,7 +1556,6 @@
     <div class="goal">準備フェイズ：カードの色を選んでデッキを組んでください</div>
     <div class="prep-panel" id="prepPanel">
       <div class="prep-head">
-        <div class="prep-progress" id="prepProgress">カード 1 / 8</div>
         <button type="button" class="role-list-btn" id="roleListBtn">役一覧</button>
       </div>
       <div class="prep-grid" id="prepGrid"></div>
@@ -2428,7 +2419,6 @@
     showScreen('prep');
     if (net.priv && net.priv.colors) prepMyColors = Object.assign({}, net.priv.colors);
     prepStep = 9;
-    document.getElementById('prepProgress').textContent = 'デッキ完成';
     renderPrepGrid();
     document.getElementById('prepChoices').innerHTML = '';
     document.getElementById('prepPanel').classList.add('waiting');
@@ -3196,7 +3186,6 @@
       finishPrep();
       return;
     }
-    document.getElementById('prepProgress').textContent = `カード ${prepStep} / 8`;
     renderPrepGrid(justLandedNum);
     renderPrepPeek();
 
@@ -3221,7 +3210,7 @@
       effectsEl.className = 'prep-option-effects';
       const nameRow = document.createElement('div');
       nameRow.className = 'prep-effect-row prep-effect-name';
-      nameRow.textContent = d ? `${eff}：${d.name}` : '━';
+      nameRow.textContent = d ? d.name : '━';
       effectsEl.appendChild(nameRow);
       const divider = document.createElement('div');
       divider.className = 'prep-effect-divider';
@@ -3249,7 +3238,7 @@
     }
     const col = prepMyColors[n];
     el.className = 'prep-peek';
-    el.innerHTML = `<b>${n}</b>${col ? `<span class="rp-col ${col}">${COLOR_LABEL[col]}</span>` : ''}<span class="rp-eff">${prepMyEffects[n]}：${d.name}</span><br>${d.desc}`;
+    el.innerHTML = `<b>${n}</b>${col ? `<span class="rp-col ${col}">${COLOR_LABEL[col]}</span>` : ''}<span class="rp-eff">${d.name}</span><br>${d.desc}`;
   }
   let prepPeekNum = null; // デッキ構築：タップして効果を確認中の数字
   function renderPrepGrid(justLandedNum) {
