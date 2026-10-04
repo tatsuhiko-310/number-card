@@ -1434,6 +1434,9 @@
     font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 2.6rem; font-weight: 900; line-height: 1;
     color: var(--cy-red); text-shadow: 0 0 12px rgba(255, 43, 79, 0.9);
   }
+  /* CHIP の文字は数字の上に重ねて置き、数字の中心をカードの中心にそろえる */
+  .ht-chipside { position: relative; }
+  .ht-chipside .ht-chiplabel { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); margin-bottom: 2px; }
   .ht-chiplabel { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.12em; color: var(--text-dim); }
   .ht-arrow { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; color: var(--text-dim); }
   .ht-boost-tag { min-height: 1.1em; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.66rem; font-weight: 900; color: var(--gold); }
@@ -1543,7 +1546,7 @@
             <h2 class="howto-title">チップでブースト</h2>
             <!-- 図解：持ちチップ → チップが飛ぶ → カードの数字が上がる（ゲーム内のブースト演出と同じ動き） -->
             <div class="howto-visual ht-boost-demo" id="htBoostDemo">
-              <div class="ht-side"><div class="ht-chiplabel">CHIP</div><div class="ht-chipcount" id="htChipCount">15</div></div>
+              <div class="ht-side ht-chipside"><div class="ht-chiplabel">CHIP</div><div class="ht-chipcount" id="htChipCount">15</div></div>
               <div class="ht-arrow">→</div>
               <div class="ht-side"><div class="ht-card blue" id="htBoostCard">5</div></div>
             </div>
