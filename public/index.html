@@ -1473,6 +1473,19 @@
   }
   .debug-bug.on { color: #ffb020; border-color: #ffb020; box-shadow: 0 0 10px rgba(255, 176, 32, 0.6); opacity: 1; }
   .debug-state { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.1em; color: #ffb020; }
+  /* ===== ハッキングチップ ===== */
+  .hack-btn {
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.7rem; font-weight: 900; letter-spacing: 0.08em;
+    padding: 7px 12px; border-radius: 999px; cursor: pointer;
+    border: 1px solid #39ff9e; background: rgba(57, 255, 158, 0.06); color: #39ff9e; box-shadow: 0 0 8px rgba(57, 255, 158, 0.3);
+  }
+  .hack-btn.on { background: #39ff9e; color: #04130b; box-shadow: 0 0 14px rgba(57, 255, 158, 0.9); }
+  .hack-btn:disabled { opacity: 0.3; cursor: default; box-shadow: none; }
+  .hack-count { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.56rem; font-weight: 900; letter-spacing: 0.06em; color: #39ff9e; }
+  .hack-count:empty { display: none; }
+  .sd-banner.hack { background: linear-gradient(90deg, rgba(4, 30, 18, 0.95), rgba(57, 255, 158, 0.95), rgba(4, 30, 18, 0.95)); color: #04130b; text-shadow: 0 0 8px #fff; box-shadow: 0 0 26px rgba(57, 255, 158, 0.8); }
+  .battle-panel.hacked .flip-card { animation: hackGlitch 0.5s steps(2) 2; }
+  @keyframes hackGlitch { 0% { transform: translate(0); filter: none; } 25% { transform: translate(-3px, 1px); filter: hue-rotate(90deg); } 50% { transform: translate(3px, -1px); } 75% { transform: translate(-1px, 2px); filter: hue-rotate(-60deg); } 100% { transform: translate(0); filter: none; } }
   /* 役パネルは盤面の中に収め、はみ出す分はスクロール */
   .role-panel { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; }
   .rp-note { font-size: 0.62rem; color: var(--text-dim); }
@@ -1647,7 +1660,7 @@
     <!-- 上：相手（チップ／捨て札） -->
     <div class="zone-side op">
       <div class="side-col">
-        <div class="side-head"><span id="opLabel">相手(CPU)</span></div>
+        <div class="side-head"><span id="opLabel">相手(CPU)</span><span class="hack-count" id="opHackCount"></span></div>
         <div class="num" id="opHP">15</div>
       </div>
       <div class="discard-col">
@@ -1694,6 +1707,7 @@
             <span class="chip-value" id="chipSelectedVal">0</span>
             <button class="chip-btn" id="chipPlus">+</button>
           </div>
+          <button type="button" class="hack-btn" id="hackBtn" aria-pressed="false">HACK</button>
         </div>
       </div>
       <div class="role-hint" id="roleHint">▲ タップで役を確認</div>
@@ -1709,6 +1723,7 @@
       </div>
       <div class="side-col">
         <div class="num" id="myHP">15</div>
+        <span class="hack-count" id="myHackCount"></span>
       </div>
     </div>
   </div>
@@ -1732,6 +1747,7 @@
 
   <div class="rules">
     基本ルール：お互いチップ15枚からスタート（ラウンド開始時の参加費の支払いはなし）。1〜8のカードが1枚ずつ入った8枚のデッキを、<b>プレイヤーごとに1組ずつ</b>用意してシャッフル。それぞれ手札2枚になるよう自分のデッキから引く。出すカードを選ぶ際、所持チップを消費してその<b>ターンのみ</b>数字を+1できる（カード自体の数字は変わらず、ターン終了時は元の数字のまま捨て札へ）。お互い同時に1枚出し、数字を比較して勝敗を決める。<br><br>
+    <b>ハッキングチップ</b>：通常のチップとは別枠で、お互い<b>2枚</b>持ってスタート。使ったラウンドは<b>勝敗がアベコベ</b>（低い数字が勝ち。例：1が8に勝つ）。ブーストとは併用できず、使ったことはカード公開時に相手にも分かる。お互いが使っても反転は1回分。1差ならJACKPOT、同じ数字なら手札勝負も低い方が勝ち。勝った側は、負けた側がブーストしたチップをポッドではなく自分の手元に吸収する。<br><br>
     決着：ラウンド終了時に<b>相手のチップを0枚</b>にした方の勝ち（お互い0枚なら引き分け）。<br><br>
     勝敗の報酬（チップブーストが鍵）：<br>
     ・<b>JACKPOT</b>＝ブースト有無を問わず、<b>ちょうど1差</b>で勝った時だけ、ポッドに溜まっている分を総取りできる（負けた側は、LOSE同様にポッドへ<b>2枚</b>支払う。支払いは総取りの後）<br>
@@ -2362,7 +2378,7 @@
       net.matchRev = 1;
       const m = {
         gameId: net.gameId, code, hostId: net.uid, guestId: '', status: 'waiting', debug: !!debugMode,
-        round: 0, chips: { host: 15, guest: 15 }, pod: 0, rev: 1, createdAt: Date.now(), updatedAt: Date.now()
+        round: 0, chips: { host: 15, guest: 15 }, hacks: { host: HACK_START, guest: HACK_START }, pod: 0, rev: 1, createdAt: Date.now(), updatedAt: Date.now()
       };
       net.match = m;
       await net.db.doc(matchPath()).set(m);
@@ -2469,7 +2485,7 @@
       else if (myDone && net.phase !== 'prepWait') { net.phase = 'prepWait'; showPrepWait(); }
       const op = oppSeatC();
       if (net.role === 'host' && myDone && op && op.prepDone) {
-        writeMatch({ status: 'playing', round: 1, chips: { host: 15, guest: 15 }, pod: 0 });
+        writeMatch({ status: 'playing', round: 1, chips: { host: 15, guest: 15 }, hacks: { host: HACK_START, guest: HACK_START }, pod: 0 });
         return onNetUpdate();
       }
       return;
@@ -2538,6 +2554,7 @@
       myChips: m.chips[net.role], opChips: m.chips[oppRole()], pod: m.pod,
       round: R, roundLog: (pv.log || []).slice()
     });
+    if (m.hacks) state.hacks = { my: m.hacks[net.role], op: m.hacks[oppRole()] };
     net.hostResolvedRound = 0;
     net.revealWrittenRound = 0;
     net.resolvingRound = 0;
@@ -2665,7 +2682,7 @@
       const pc = state.pendingCommit;
       const discard = discEntries('my').filter(e => e.n !== pc.card);
       discard.push({ n: pc.card, c: pc.color, e: pc.eff || null });
-      writeMySeat({ reveal: { round: R, card: pc.card, color: pc.color, eff: pc.eff || null, boost: pc.boost, free: pc.free || 0, rev: revengeNow('my'), salt: pc.salt }, discard });
+      writeMySeat({ reveal: { round: R, card: pc.card, color: pc.color, eff: pc.eff || null, boost: pc.boost, hack: pc.hack || 0, free: pc.free || 0, rev: revengeNow('my'), salt: pc.salt }, discard });
     }
     if (state.netPhase === 'committed' && oc) {
       const rm = document.getElementById('resultMsg');
@@ -2686,6 +2703,7 @@
   function reconcileWithMatch() {
     const m = net.match;
     state.reconciledRound = state.round;
+    if (m.hacks) { state.hacks = { my: m.hacks[net.role], op: m.hacks[oppRole()] }; updateHackUI(); }
     const myC = m.chips[net.role], opC = m.chips[oppRole()];
     if (myC === state.myChips && opC === state.opChips && m.pod === state.pod) return;
     console.warn('[online] 集計のずれを補正', { local: [state.myChips, state.opChips, state.pod], host: [myC, opC, m.pod] });
@@ -2711,9 +2729,11 @@
     const hs = net.seats.host, gs = net.seats.guest;
     if (!hs || !gs || !hs.reveal || !gs.reveal || hs.reveal.round !== R || gs.reveal.round !== R) return;
     if (net.hostResolvedRound >= R) return;
+    const hk = m.hacks || { host: HACK_START, guest: HACK_START };
+    const hHack = !!hs.reveal.hack && hk.host > 0, gHack = !!gs.reveal.hack && hk.guest > 0;
     const hFree = hs.reveal.free ? 1 : 0, gFree = gs.reveal.free ? 1 : 0;
-    const hB = Math.max(0, Math.min(hs.reveal.boost | 0, m.chips.host + hFree));
-    const gB = Math.max(0, Math.min(gs.reveal.boost | 0, m.chips.guest + gFree));
+    const hB = hHack ? 0 : Math.max(0, Math.min(hs.reveal.boost | 0, m.chips.host + hFree));
+    const gB = gHack ? 0 : Math.max(0, Math.min(gs.reveal.boost | 0, m.chips.guest + gFree));
     const hP = Math.max(0, hB - hFree), gP = Math.max(0, gB - gFree);
     let tie = null;
     if (hs.reveal.card + hB === gs.reveal.card + gB) {
@@ -2729,10 +2749,11 @@
       myKey: hs.reveal.eff ? hs.reveal.card + hs.reveal.eff : null, opKey: gs.reveal.eff ? gs.reveal.card + gs.reveal.eff : null,
       myChips: m.chips.host - hP, opChips: m.chips.guest - gP, pod: m.pod,
       myDisc: hs.discard || [], opDisc: gs.discard || [], round: R, tie,
-      myRevenge: !!hs.reveal.rev, opRevenge: !!gs.reveal.rev
+      myRevenge: !!hs.reveal.rev, opRevenge: !!gs.reveal.rev,
+      myHack: hHack, opHack: gHack
     });
     const over = !m.debug && gameWinner(res.myChips, res.opChips) !== null;
-    writeMatch({ round: R + 1, chips: { host: res.myChips, guest: res.opChips }, pod: res.pod, status: over ? 'over' : 'playing', lastRound: R });
+    writeMatch({ round: R + 1, chips: { host: res.myChips, guest: res.opChips }, pod: res.pod, hacks: { host: hk.host - (hHack ? 1 : 0), guest: hk.guest - (gHack ? 1 : 0) }, status: over ? 'over' : 'playing', lastRound: R });
   }
 
   async function hiddenCardHash(r, card, salt2) {
@@ -2751,13 +2772,14 @@
     const R = state.round;
     const token = gameToken;
     const free = state.rule && state.rule.my.free ? 1 : 0;
-    const boost = Math.max(0, Math.min(state.chipSelect, maxBoostNow()));
+    const hack = !!(state.hackSelect && state.hacks.my > 0);
+    const boost = hack ? 0 : Math.max(0, Math.min(state.chipSelect, maxBoostNow()));
     const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
     const salt2 = Math.random().toString(36).slice(2) + Date.now().toString(36);
-    const pc = { round: R, card, boost, free: free && boost > 0 ? 1 : 0, salt, salt2, color: state.myCardColors[card] || null, eff: state.myCardEffects[card] || null };
+    const pc = { round: R, card, boost, hack: hack ? 1 : 0, free: free && boost > 0 ? 1 : 0, salt, salt2, color: state.myCardColors[card] || null, eff: state.myCardEffects[card] || null };
     state.pendingCommit = pc;
     stopTurnTimer();
-    const hash = await commitHash(R, card, boost, salt);
+    const hash = await commitHash(R, card, boost + (hack ? 'H' : ''), salt);
     // 残りの手札は中身を見せずにハッシュだけ記録する（引き分けの手札勝負で公開した時に照合）
     const hiddenHash = await hiddenCardHash(R, state.myHand[0], salt2);
     if (token !== gameToken || !net.active) return;
@@ -2777,13 +2799,14 @@
     const R = state.round;
     state.netPhase = 'resolving';
     const op = oppSeatC();
-    const h = await commitHash(R, oppReveal.card, oppReveal.boost, oppReveal.salt);
+    const h = await commitHash(R, oppReveal.card, oppReveal.boost + (oppReveal.hack ? 'H' : ''), oppReveal.salt);
     if (token !== gameToken) return;
     state.tamperNote = (h && op && op.commitHash && h !== op.commitHash) ? '⚠ 相手の公開内容が確定時の記録と一致しません' : '';
     if (oppReveal.color) state.opCardColors[oppReveal.card] = oppReveal.color;
     if (oppReveal.eff) state.opCardEffects[oppReveal.card] = oppReveal.eff;
     state.opPendingChips = oppReveal.boost | 0;
     state.opPendingFree = !!oppReveal.free;
+    state.opPendingHack = !!oppReveal.hack;
     state.chipSelect = state.pendingCommit.boost;
     state.fieldOpPlaced = true;
     state.fieldMyPlaced = true;
@@ -3556,6 +3579,10 @@
       opPendingChips: 0,
       tamperNote: '',
       reconciledRound: 0,
+      hacks: { my: HACK_START, op: HACK_START }, // ハッキングチップの残り枚数（通常のチップとは別枠）
+      hackSelect: false,     // このラウンドにハッキングを使うか（自分）
+      opPendingHack: false,  // 相手がこのラウンドにハッキングを使うか
+      roundHack: false,      // このラウンドの勝敗が反転しているか
       opSeen: {}             // 一度でも出された相手の数字（色・効果が分かっている）
     };
   }
@@ -3601,6 +3628,12 @@
     if (!rule.noBoost && avail > 0 && Math.random() < 0.5) {
       const maxBoost = Math.min(3, avail);
       chips = Math.floor(Math.random() * maxBoost) + 1;
+    }
+    // ハッキング：手札が小さい時にたまに使う（ブーストとは併用しない）
+    state.opPendingHack = false;
+    if (state.hacks.op > 0 && state.opPendingCard <= 3 && Math.random() < 0.35) {
+      state.opPendingHack = true;
+      chips = 0;
     }
     state.opPendingChips = chips;
     state.opPendingFree = rule.free && chips > 0;
@@ -3884,6 +3917,15 @@
   function resolveRound(myCard, opCard, myToken) {
     state.roundSnap = { my: state.myChips, op: state.opChips, pod: state.pod };
     // ブーストで上がる数字（Used）と、実際に払うチップ（Paid）。伏兵（2B）なら1枚目は無料
+    // ハッキングチップ（使ったらブーストなし）
+    const myHack = net.active ? !!(state.pendingCommit && state.pendingCommit.hack) : (state.hackSelect && state.hacks.my > 0);
+    const opHack = !!state.opPendingHack && state.hacks.op > 0;
+    if (myHack) { state.hacks.my -= 1; state.chipSelect = 0; }
+    if (opHack) { state.hacks.op -= 1; state.opPendingChips = 0; }
+    state.hackSelect = false;
+    state.opPendingHack = false;
+    state.roundHack = myHack || opHack;
+    state.roundHackBy = { my: myHack, op: opHack };
     const myFree = state.rule && state.rule.my.free ? 1 : 0;
     const myChipsUsed = Math.min(state.chipSelect, state.myChips + myFree);
     const myPaid = Math.max(0, myChipsUsed - myFree);
@@ -3923,6 +3965,19 @@
     const rm0 = document.getElementById('resultMsg');
     rm0.textContent = (myChipsUsed > 0 || opChipsUsed > 0) ? 'チップを集計中…' : '';
     rm0.className = 'result-msg';
+    updateHackUI();
+    // ハッキングの演出：カード公開と同時にバナーとグリッチ
+    const hackDelay = state.roundHack ? 1300 : 0;
+    if (state.roundHack) {
+      const panel = document.querySelector('.battle-panel');
+      const b = document.createElement('div');
+      b.className = 'sd-banner hack';
+      b.textContent = myHack && opHack ? 'DOUBLE HACK!!' : (myHack ? 'HACK!! 勝敗反転' : 'HACKED!! 勝敗反転');
+      panel.appendChild(b);
+      panel.classList.add('hacked');
+      setTimeout(() => { b.remove(); panel.classList.remove('hacked'); }, 1300);
+      playSuddenDeathSound();
+    }
 
     const finalize = () => {
       if (myToken !== gameToken) return;
@@ -3946,9 +4001,9 @@
       setTimeout(() => {
         if (myToken !== gameToken) return;
         animateChipCount(myCard, opCard, myChipsUsed, opChipsUsed, myToken, finalize);
-      }, 1500);
+      }, 1500 + hackDelay);
     } else {
-      setTimeout(finalize, 250);
+      setTimeout(finalize, 250 + hackDelay);
     }
   }
 
@@ -4078,6 +4133,8 @@
     return state[who + 'Discard'].map(n => ({ n, c: colors[n] || null, e: effs[n] || null }));
   }
 
+  // ハッキングチップ：使ったラウンドは勝敗がアベコベ（低い方が勝ち）。ブーストとは併用不可
+  const HACK_START = 2;
   // 負けた側がポッドへ支払う枚数（固定）
   const LOSE_PAYMENT = 2;
   // 勝った時（JACKPOT以外）にポッドから受け取る枚数
@@ -4104,7 +4161,10 @@
   // p.myBoost / p.opBoost はブーストで上がった数字、p.myPaid / p.opPaid は実際に払ったチップ（伏兵の無料分を除く）
   // p.myKey / p.opKey は出したカードの効果（例 '4B'）
   // p.myRevenge / p.opRevenge はピンクの役「逆襲」がこのラウンド有効か（前のラウンドにJACKPOTで負けた時に成立）
+  // p.myHack / p.opHack はハッキングチップを使ったか。どちらか（両方でも）が使えば勝敗は反転し、
+  // 勝った側は負けた側のブーストをポッドではなく自分の手元に吸収する
   function computeRoundResult(p) {
+    const hack = !!(p.myHack || p.opHack);
     const chips = { my: p.myChips, op: p.opChips };
     const loseCost = LOSE_PAYMENT;
     let pod = p.pod;
@@ -4124,11 +4184,16 @@
     const myEffective = p.myCard + p.myBoost;
     const opEffective = p.opCard + p.opBoost;
     const res = {
-      outcome: myEffective === opEffective ? 'tie' : (myEffective > opEffective ? 'me' : 'op'),
+      outcome: myEffective === opEffective ? 'tie' : ((myEffective > opEffective) !== hack ? 'me' : 'op'),
       myEffective, opEffective, notes: [], logKind: '', roundPodKind: 'through',
       jackpotWinner: null, losePayer: null, drawBothFlash: false, carried: 0, tiebreak: null,
-      revengeNext: null // ピンクの役：次のラウンドに逆襲できる側
+      revengeNext: null, // ピンクの役：次のラウンドに逆襲できる側
+      hack
     };
+    if (hack) {
+      const who = p.myHack && p.opHack ? 'お互い' : nm(p.myHack ? 'my' : 'op');
+      res.notes.push(`HACK：${who}がハッキングチップを使用。勝敗が反転`);
+    }
     res.notes.push(...costNotes);
     // 引き分け：残りの手札（素の数字）で勝負。手札も同じなら山札の一番上から順に比べる
     let diff = Math.abs(myEffective - opEffective);
@@ -4136,7 +4201,7 @@
       const dec = decideTie(p.tie.my, p.tie.op);
       if (dec.status === 'decided') {
         const a = p.tie.my[dec.d], b = p.tie.op[dec.d];
-        res.outcome = a > b ? 'me' : 'op';
+        res.outcome = (a > b) !== hack ? 'me' : 'op';
         diff = Math.abs(a - b);
         res.tiebreak = { d: dec.d, my: a, op: b };
         res.notes.push(`引き分け→${dec.d === 0 ? '手札' : '山札'}勝負 あなた${a} / 相手${b}`);
@@ -4199,14 +4264,19 @@
           res.notes.push(`ピンクの役（逆襲）：${nm(loser)}は次のラウンドに勝てば${nm(winner)}から2🪙奪える`);
         }
       } else {
-        // ブーストはすべてポッドへ
-        const toPod = winnerBoost + loserBoost;
+        // ブーストはすべてポッドへ。ただしハッキング中は、負けた側のブーストを勝った側が吸収する
+        const absorbed = hack ? loserBoost : 0;
+        if (absorbed > 0) {
+          chips[winner] += absorbed;
+          res.notes.push(`HACK：${nm(winner)}が${nm(loser)}のブースト${absorbed}🪙を吸収`);
+        }
+        const toPod = winnerBoost + loserBoost - absorbed;
         if (toPod > 0) {
           pod += toPod;
           res.roundPodKind = 'grow';
           const parts = [];
           if (winnerBoost > 0) parts.push(`${nm(winner)}のブースト${winnerBoost}🪙`);
-          if (loserBoost > 0) parts.push(`${nm(loser)}のブースト${loserBoost}🪙`);
+          if (loserBoost - absorbed > 0) parts.push(`${nm(loser)}のブースト${loserBoost - absorbed}🪙`);
           res.notes.push(`${parts.join('＋')}がポッドへ`);
         }
 
@@ -4331,7 +4401,7 @@
           await wait(700);
           continue;
         }
-        const meWin = an > bn;
+        const meWin = (an > bn) !== !!state.roundHack; // ハッキング中は低い方が勝ち
         (meWin ? cMe : cOp).classList.add('tb-win');
         (meWin ? cOp : cMe).classList.add('tb-lose');
         rm.textContent = `${a.src === 'deck' ? '山札' : '手札'}勝負 ${an} vs ${bn} → ${meWin ? 'あなたの勝ち' : '相手の勝ち'}`;
@@ -4400,6 +4470,9 @@
       if (n.includes('青の役で-1') && loseSide) out.push({ side: loseSide, t: '青の役：守り' });
     });
     if (res.tiebreak) out.push({ side: 'both', t: `${res.tiebreak.d === 0 ? '手札' : '山札'}勝負 ${res.tiebreak.my} vs ${res.tiebreak.op}` });
+    const hb = state.roundHackBy || {};
+    if (hb.my) out.unshift({ side: 'me', t: 'HACK：勝敗反転' });
+    if (hb.op) out.unshift({ side: 'op', t: 'HACK：勝敗反転' });
     return out;
   }
 
@@ -4418,7 +4491,8 @@
       myChips: state.myChips, opChips: state.opChips, pod: state.pod,
       myDisc: discEntries('my'), opDisc: discEntries('op'), round: currentRoundNo(),
       tie: tie ? { my: tie.my.map(tieNum), op: tie.op.map(tieNum) } : null,
-      myRevenge: revengeNow('my'), opRevenge: revengeNow('op')
+      myRevenge: revengeNow('my'), opRevenge: revengeNow('op'),
+      myHack: !!(state.roundHackBy && state.roundHackBy.my), opHack: !!(state.roundHackBy && state.roundHackBy.op)
     });
     state.myChips = res.myChips;
     state.opChips = res.opChips;
@@ -4817,8 +4891,25 @@
     if (r && r.noBoost) return 0;
     return state.myChips + (r && r.free ? 1 : 0);
   }
+  // ハッキングの表示（ボタン・残り枚数）
+  function updateHackUI() {
+    if (!state || !state.hacks) return;
+    const btn = document.getElementById('hackBtn');
+    if (btn) {
+      if (state.hacks.my <= 0) state.hackSelect = false;
+      btn.textContent = `HACK ×${state.hacks.my}`;
+      btn.classList.toggle('on', !!state.hackSelect);
+      btn.setAttribute('aria-pressed', state.hackSelect ? 'true' : 'false');
+      btn.disabled = state.locked || state.over || state.hacks.my <= 0;
+    }
+    const mc = document.getElementById('myHackCount');
+    const oc = document.getElementById('opHackCount');
+    if (mc) mc.textContent = `HACK ×${state.hacks.my}`;
+    if (oc) oc.textContent = `HACK ×${state.hacks.op}`;
+  }
   function updateChipSelectorUI() {
-    const maxB = maxBoostNow();
+    updateHackUI();
+    const maxB = state.hackSelect ? 0 : maxBoostNow();
     if (state.chipSelect > maxB) state.chipSelect = maxB;
     document.getElementById('chipSelectedVal').textContent = state.chipSelect;
     const disabled = state.locked || state.over;
@@ -5003,8 +5094,14 @@
       updateChipSelectorUI();
     }
   });
+  document.getElementById('hackBtn').addEventListener('click', () => {
+    if (!state || state.locked || state.over || state.hacks.my <= 0) return;
+    state.hackSelect = !state.hackSelect;
+    if (state.hackSelect) state.chipSelect = 0; // ブーストとは併用できない
+    updateChipSelectorUI();
+  });
   document.getElementById('chipPlus').addEventListener('click', () => {
-    if (state.locked || state.over) return;
+    if (state.locked || state.over || state.hackSelect) return;
     if (state.chipSelect < maxBoostNow()) {
       state.chipSelect += 1;
       updateChipSelectorUI();
