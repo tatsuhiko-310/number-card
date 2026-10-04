@@ -1379,6 +1379,12 @@
   .role-trig { display: inline-block; font-size: 0.58rem; font-weight: 800; padding: 1px 7px; border-radius: 8px; margin-left: 6px; color: #fff; background: var(--rc); vertical-align: 1px; text-shadow: none; }
   .role-item.yellow .role-trig { color: #222; }
   .role-item-desc { font-size: 0.68rem; color: #e6ecf8; line-height: 1.4; margin-top: 2px; text-shadow: 0 0 4px #000, 0 0 2px #000; }
+  /* 捨て札パネル内の役は少し低めに（顔が見える程度） */
+  .role-panel .role-item.compact { min-height: 70px; margin-top: 6px; }
+  .role-panel .role-item.compact::after { background: linear-gradient(180deg, rgba(11, 16, 32, 0.72) 0%, rgba(11, 16, 32, 0.45) 55%, rgba(11, 16, 32, 0.1) 100%); }
+  .role-panel .role-item.compact .role-item-desc { font-size: 0.64rem; }
+  .role-legend .legend-text { font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .role-panel .role-item.compact + .rp-cards-wrap { margin-top: 8px; }
   /* 役パネルは盤面の中に収め、はみ出す分はスクロール */
   .role-panel { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; }
   .rp-note { font-size: 0.62rem; color: var(--text-dim); }
@@ -2858,23 +2864,14 @@
       e.textContent = '発動中の役はありません';
       panel.appendChild(e);
     }
+    // デッキ構築の役一覧と同じカード型（左の数字は捨て札にあるその色の枚数）
     roles.forEach(r => {
-      const row = document.createElement('div');
-      row.className = 'role-row';
-      const dot = document.createElement('div');
-      dot.className = 'role-dot ' + r.color;
-      const body = document.createElement('div');
-      const nm = document.createElement('div');
-      nm.className = 'role-name';
-      nm.textContent = `${r.name}　捨て札の${COLOR_LABEL[r.color]} ${r.count}枚`;
-      const ds = document.createElement('div');
-      ds.className = 'role-desc';
-      ds.textContent = r.desc;
-      body.appendChild(nm);
-      body.appendChild(ds);
-      row.appendChild(dot);
-      row.appendChild(body);
-      panel.appendChild(row);
+      const info = ROLE_LIST.find(x => x.color === r.color);
+      if (!info) return;
+      panel.insertAdjacentHTML('beforeend', `<div class="role-item compact ${r.color}">
+        <div class="role-cnt on">${r.count}<small>枚</small></div>
+        <div><div class="role-item-name">${COLOR_LABEL[r.color]}：${info.name}<span class="role-trig">${info.trig}</span></div>
+        <div class="role-item-desc">${info.desc}</div></div></div>`);
     });
     panel.appendChild(buildCardList(who));
     panel.appendChild(buildMarkLegend(who));
@@ -2928,12 +2925,6 @@
 
   // 捨て札に重ねて出るマーク（「!」＝確定情報）の説明。今そのマークが付いている数字も添える
   function buildMarkLegend(who) {
-    const gridId = who === 'my' ? 'discardGridMy' : 'discardGridOp';
-    const marked = (sel) => [...document.querySelectorAll('#' + gridId + ' > .discard-slot')]
-      .filter(sl => sl.querySelector(sel)).map(sl => sl.firstChild && sl.firstChild.nodeType === 3 ? sl.firstChild.nodeValue : sl.textContent);
-    const knownNow = marked('.known-mark');
-    const owner = who === 'my' ? 'あなた' : '相手';
-
     const wrap = document.createElement('div');
     wrap.className = 'role-legend';
     const t = document.createElement('div');
@@ -2954,9 +2945,7 @@
       row.appendChild(tx);
       wrap.appendChild(row);
     };
-    addRow('known', '!',
-      `<b>確定情報</b>：山札を作り直した時に手札に残っていた数字や、引き分け勝負で公開された数字、山札を引ききるなどして捨て札から絞り込めた数字。今も${owner}の手札にあることがお互いに分かっている（出されると消える）` +
-      (knownNow.length ? `<br><span class="legend-now known">いま：${knownNow.join('・')}</span>` : ''));
+    addRow('known', '!', '<b>確定情報</b>：手札にあることが確定しているカード');
     return wrap;
   }
   // ヒントの横位置を、相手の捨て札置き場の中央に合わせる
