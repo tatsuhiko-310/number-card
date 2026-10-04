@@ -1385,24 +1385,18 @@
   .role-panel .role-item.compact .role-item-desc { font-size: 0.64rem; }
   .role-legend .legend-text { font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .role-panel .role-item.compact + .rp-cards-wrap { margin-top: 8px; }
-  /* ===== 遊び方（3ページ） ===== */
-  .howto-ov { position: fixed; inset: 0; z-index: 970; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 0, 0, 0.65); }
-  .howto-ov.show { display: flex; animation: panelIn 0.18s ease; }
-  .howto-box {
-    position: relative; width: 100%; max-width: 380px; max-height: calc(100dvh - 32px); display: flex; flex-direction: column;
-    background: var(--bg2); border: 1px solid var(--cy-cyan); border-radius: 16px; box-shadow: 0 0 22px rgba(25, 211, 255, 0.4); overflow: hidden;
-  }
-  .howto-x { position: absolute; top: 8px; right: 10px; z-index: 2; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--text-dim); background: none; border: none; cursor: pointer; padding: 4px; }
-  .howto-viewport { overflow: hidden; flex: 1; min-height: 0; touch-action: pan-y; }
-  .howto-track { display: flex; height: 100%; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
-  .howto-page { flex: 0 0 100%; min-width: 0; padding: 22px 20px 6px; overflow-y: auto; text-align: center; }
+  /* ===== 遊び方（スタート画面のパネル上部。幅はボタンにそろえる） ===== */
+  .howto-inline { width: min(100%, 16rem); margin: 0 auto; }
+  .howto-viewport { overflow: hidden; touch-action: pan-y; }
+  .howto-track { display: flex; transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .howto-page { flex: 0 0 100%; min-width: 0; padding: 0 4px; box-sizing: border-box; text-align: center; }
   .howto-kicker { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.18em; color: var(--cy-cyan); }
-  .howto-title { margin: 6px 0 14px; font-size: 1.15rem; font-weight: 900; color: var(--text); text-shadow: 0 0 10px rgba(25, 211, 255, 0.5); }
+  .howto-title { margin: 8px 0 10px; font-size: 1rem; font-weight: 900; color: var(--text); text-shadow: 0 0 10px rgba(25, 211, 255, 0.5); }
   .howto-visual { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 10px; }
   .ht-side { display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .ht-card {
-    width: 64px; height: 90px; border-radius: 10px; border: 3px solid var(--hc); background: linear-gradient(160deg, var(--card-bg), var(--bg2));
-    display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 2rem; font-weight: 900; color: #fff;
+    width: 52px; height: 72px; border-radius: 9px; border: 3px solid var(--hc); background: linear-gradient(160deg, var(--card-bg), var(--bg2));
+    display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 1.6rem; font-weight: 900; color: #fff;
     box-shadow: 0 0 12px var(--hc);
   }
   .ht-card.red { --hc: var(--color-red); } .ht-card.blue { --hc: var(--color-blue); } .ht-card.yellow { --hc: var(--color-yellow); } .ht-card.pink { --hc: var(--color-pink); }
@@ -1411,29 +1405,27 @@
   .ht-tag.win { color: #0b1020; background: var(--win, #3ddc84); }
   .ht-tag.lose { color: #fff; background: var(--lose); }
   .ht-jackpot {
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 1.5rem; font-weight: 900; letter-spacing: 0.06em; color: var(--gold);
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 1.2rem; font-weight: 900; letter-spacing: 0.06em; color: var(--gold);
     text-shadow: 0 0 12px var(--gold), 0 0 24px rgba(255, 200, 60, 0.6); margin: 2px 0 8px; animation: htPulse 1.4s ease-in-out infinite;
   }
   @keyframes htPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-  .ht-strips { display: grid; gap: 4px; margin: 0 auto 12px; max-width: 300px; }
-  .ht-strip { height: 26px; border-radius: 6px; border: 1px solid var(--rc); background: var(--bg) center / cover no-repeat; opacity: 0.9; }
+  .ht-strips { display: grid; gap: 3px; margin: 0 auto 10px; }
+  .ht-strip { height: 18px; border-radius: 6px; border: 1px solid var(--rc); background: var(--bg) center / cover no-repeat; opacity: 0.9; }
   .ht-strip.red { --rc: var(--color-red); --bg: url("assets/role-bg-red.webp"); }
   .ht-strip.blue { --rc: var(--color-blue); --bg: url("assets/role-bg-blue.webp"); }
   .ht-strip.yellow { --rc: var(--color-yellow); --bg: url("assets/role-bg-yellow.webp"); }
   .ht-strip.pink { --rc: var(--color-pink); --bg: url("assets/role-bg-pink.webp"); }
   .ht-strip.green { --rc: var(--color-green); --bg: url("assets/role-bg-green.webp"); }
-  .howto-text { list-style: none; margin: 0; padding: 0; text-align: left; font-size: 0.82rem; line-height: 1.6; color: var(--text); }
+  .howto-text { list-style: none; margin: 0; padding: 0; text-align: left; font-size: 0.74rem; line-height: 1.55; color: var(--text); }
   .howto-text li { position: relative; padding-left: 14px; margin: 4px 0; }
   .howto-text li::before { content: ''; position: absolute; left: 0; top: 0.62em; width: 6px; height: 6px; border-radius: 1px; background: var(--cy-cyan); transform: rotate(45deg); }
   .howto-text b { color: var(--cy-cyan); }
   .howto-text .howto-em { font-weight: 800; color: #ffe066; }
   .howto-text .howto-em::before { background: #ffe066; }
-  .howto-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px 14px; }
-  .howto-nav .btn { width: auto; min-width: 84px; margin: 0; padding: 8px 14px; font-size: 0.85rem; }
-  .howto-prev:disabled { visibility: hidden; }
-  .howto-dots { display: flex; gap: 6px; }
-  .howto-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--card-border); transition: background 0.2s, box-shadow 0.2s; }
-  .howto-dots span.on { background: var(--cy-cyan); box-shadow: 0 0 6px var(--cy-cyan); }
+  .howto-dots { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+  .howto-dots button { width: 8px; height: 8px; padding: 0; border: none; border-radius: 50%; background: var(--card-border); cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
+  .howto-dots button.on { background: var(--cy-cyan); box-shadow: 0 0 6px var(--cy-cyan); }
+  .howto-div { height: 1px; margin: 14px 0 22px; background: linear-gradient(90deg, transparent, rgba(25, 211, 255, 0.5), transparent); }
   /* スタート画面：デバッグモード（パネル左下の虫アイコン） */
   .dev-row { display: flex; align-items: center; gap: 8px; margin: 8px 2px 0; }
   .debug-bug {
@@ -1480,39 +1472,12 @@
 
   <div id="startScreen">
     <div class="start-panel online-panel">
-      <div class="start-btns">
-        <button class="btn" id="createRoomBtn">部屋を作る</button>
-      </div>
-      <div class="start-btns start-group">
-        <input id="roomCodeInput" class="room-input" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="部屋番号（4桁）" aria-label="部屋番号（4桁）">
-        <button class="btn" id="joinRoomBtn">部屋に入る</button>
-      </div>
-      <div class="online-status" id="onlineStatus"></div>
-      <div class="start-btns start-group">
-        <button class="btn secondary" id="startBtn">シミュレーション</button>
-        <button class="btn secondary" id="howtoBtn">遊び方</button>
-      </div>
-    </div>
-    <!-- 開発用：デバッグモードの切り替え（パネルの左下に小さく） -->
-    <div class="dev-row">
-      <button type="button" class="debug-bug" id="debugModeBtn" aria-pressed="false" aria-label="デバッグモード: OFF" title="デバッグモード: OFF">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M9 6.5a3 3 0 0 1 6 0"/><rect x="7" y="7.5" width="10" height="12" rx="5"/><path d="M12 11v8.5"/>
-          <path d="M7 11.5H4M17 11.5h3M7 15.5H3.5M17 15.5h3.5M8 19l-2.5 2M16 19l2.5 2M8.5 8 6 5.5M15.5 8 18 5.5"/>
-        </svg>
-      </button>
-      <span class="debug-state" id="debugState"></span>
-    </div>
-  </div>
-
-  <!-- 遊び方（3ページ） -->
-  <div class="howto-ov" id="howtoOv" aria-hidden="true">
-    <div class="howto-box" role="dialog" aria-label="遊び方">
-      <button type="button" class="howto-x" id="howtoClose" aria-label="閉じる">✕</button>
-      <div class="howto-viewport" id="howtoViewport">
-        <div class="howto-track" id="howtoTrack">
+      <!-- 遊び方（3ページ。自動送り・スワイプ・ドットで切り替え） -->
+      <div class="howto-inline" id="howtoInline" aria-label="遊び方">
+        <div class="howto-kicker">HOW TO PLAY</div>
+        <div class="howto-viewport" id="howtoViewport">
+          <div class="howto-track" id="howtoTrack">
           <section class="howto-page">
-            <div class="howto-kicker">HOW TO PLAY 1/3</div>
             <h2 class="howto-title">基本ルール</h2>
             <div class="howto-visual">
               <div class="ht-side"><div class="ht-card red">7</div><div class="ht-tag win">WIN</div></div>
@@ -1526,7 +1491,6 @@
             </ul>
           </section>
           <section class="howto-page">
-            <div class="howto-kicker">HOW TO PLAY 2/3</div>
             <h2 class="howto-title">大差で勝つより、1差で勝て</h2>
             <div class="howto-visual">
               <div class="ht-side"><div class="ht-card yellow">6</div></div>
@@ -1540,7 +1504,6 @@
             </ul>
           </section>
           <section class="howto-page">
-            <div class="howto-kicker">HOW TO PLAY 3/3</div>
             <h2 class="howto-title">デッキ構築</h2>
             <div class="ht-strips">
               <div class="ht-strip red"></div><div class="ht-strip blue"></div><div class="ht-strip yellow"></div><div class="ht-strip pink"></div><div class="ht-strip green"></div>
@@ -1551,13 +1514,32 @@
               <li class="howto-em">色による役、カードによる効果で毎回違った戦略をたのしもう！</li>
             </ul>
           </section>
+          </div>
         </div>
+        <div class="howto-dots" id="howtoDots"><button type="button" aria-label="1ページ目"></button><button type="button" aria-label="2ページ目"></button><button type="button" aria-label="3ページ目"></button></div>
       </div>
-      <div class="howto-nav">
-        <button type="button" class="btn secondary howto-prev" id="howtoPrev">戻る</button>
-        <div class="howto-dots" id="howtoDots"><span></span><span></span><span></span></div>
-        <button type="button" class="btn howto-next" id="howtoNext">次へ</button>
+      <div class="howto-div"></div>
+      <div class="start-btns">
+        <button class="btn" id="createRoomBtn">部屋を作る</button>
       </div>
+      <div class="start-btns start-group">
+        <input id="roomCodeInput" class="room-input" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="部屋番号（4桁）" aria-label="部屋番号（4桁）">
+        <button class="btn" id="joinRoomBtn">部屋に入る</button>
+      </div>
+      <div class="online-status" id="onlineStatus"></div>
+      <div class="start-btns start-group">
+        <button class="btn secondary" id="startBtn">シミュレーション</button>
+      </div>
+    </div>
+    <!-- 開発用：デバッグモードの切り替え（パネルの左下に小さく） -->
+    <div class="dev-row">
+      <button type="button" class="debug-bug" id="debugModeBtn" aria-pressed="false" aria-label="デバッグモード: OFF" title="デバッグモード: OFF">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 6.5a3 3 0 0 1 6 0"/><rect x="7" y="7.5" width="10" height="12" rx="5"/><path d="M12 11v8.5"/>
+          <path d="M7 11.5H4M17 11.5h3M7 15.5H3.5M17 15.5h3.5M8 19l-2.5 2M16 19l2.5 2M8.5 8 6 5.5M15.5 8 18 5.5"/>
+        </svg>
+      </button>
+      <span class="debug-state" id="debugState"></span>
     </div>
   </div>
 
@@ -3149,33 +3131,20 @@
     return cols.map((color, i) => ({ color, eff: effs[i] })).sort((a, b) => (a.eff < b.eff ? -1 : 1));
   }
 
-  // ===== 遊び方（3ページ。ボタン・スワイプで切り替え） =====
+  // ===== 遊び方（スタート画面に常に表示。自動送り・スワイプ・ドットで切り替え） =====
   (function setupHowto() {
-    const ov = document.getElementById('howtoOv');
     const track = document.getElementById('howtoTrack');
-    const dots = [...document.querySelectorAll('#howtoDots span')];
-    const prev = document.getElementById('howtoPrev');
-    const next = document.getElementById('howtoNext');
+    const dots = [...document.querySelectorAll('#howtoDots button')];
     const total = dots.length;
-    let page = 0;
+    const AUTO_MS = 6000;
+    let page = 0, timer = null;
     const show = (i) => {
-      page = Math.max(0, Math.min(total - 1, i));
+      page = (i + total) % total;
       track.style.transform = `translateX(${-100 * page}%)`;
       dots.forEach((d, k) => d.classList.toggle('on', k === page));
-      prev.disabled = page === 0;
-      next.textContent = page === total - 1 ? 'はじめる' : '次へ';
     };
-    const open = (v) => {
-      ov.classList.toggle('show', v);
-      ov.setAttribute('aria-hidden', v ? 'false' : 'true');
-      if (v) show(0);
-    };
-    document.getElementById('howtoBtn').addEventListener('click', () => open(true));
-    document.getElementById('howtoClose').addEventListener('click', () => open(false));
-    ov.addEventListener('click', (e) => { if (e.target === ov) open(false); });
-    prev.addEventListener('click', () => show(page - 1));
-    next.addEventListener('click', () => (page === total - 1 ? open(false) : show(page + 1)));
-    // スワイプ
+    const restart = () => { clearInterval(timer); timer = setInterval(() => show(page + 1), AUTO_MS); };
+    dots.forEach((d, k) => d.addEventListener('click', () => { show(k); restart(); }));
     let sx = null, sy = 0;
     const vp = document.getElementById('howtoViewport');
     vp.addEventListener('pointerdown', (e) => { sx = e.clientX; sy = e.clientY; });
@@ -3183,9 +3152,11 @@
       if (sx == null) return;
       const dx = e.clientX - sx, dy = e.clientY - sy;
       sx = null;
-      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) show(page + (dx < 0 ? 1 : -1));
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { show(page + (dx < 0 ? 1 : -1)); restart(); }
     });
     vp.addEventListener('pointercancel', () => { sx = null; });
+    show(0);
+    restart();
   })();
 
   // ===== デッキ構築：役一覧（今のデッキの色の枚数つき） =====
