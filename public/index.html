@@ -266,7 +266,6 @@
     font-weight: 700;
     color: var(--text-dim);
   }
-  .pod-mini .lose-cost { margin-left: 8px; padding-left: 8px; border-left: 1px solid var(--card-border); color: var(--lose); }
   .pod-mini #podValueMini {
     font-size: 0.95rem;
     font-weight: 900;
@@ -1297,8 +1296,8 @@
   .rp-card.pink { border-color: var(--color-pink); }
   /* ===== 一画面に収めるための詰め（情報量が増えた分、高さに合わせて縮める） ===== */
   .side-col .num { font-size: clamp(3rem, min(26vw, 12.5dvh), 8rem); }
-  .select-panel { gap: clamp(4px, 1.4dvh, 12px); }
-  .select-panel .hand-card-wrap { width: min(132px, 38vw, 15.5dvh); gap: 4px; }
+  .select-panel { gap: clamp(6px, 1.8dvh, 14px); }
+  .select-panel .hand-card-wrap { width: min(136px, 39vw, 15.5dvh); gap: 4px; }
   .select-panel button.card { font-size: clamp(2.2rem, 6dvh, 3.2rem); }
   .select-panel .card-effect-label { font-size: 0.62rem; line-height: 1.25; }
   .card-effect-label .eff-desc {
@@ -1431,7 +1430,7 @@
       </div>
 
       <div class="select-panel">
-        <div class="pod-mini" id="podMini">ポッド <span id="podValueMini">00</span>🪙<span class="lose-cost" id="loseCostMini"></span></div>
+        <div class="pod-mini" id="podMini">ポッド <span id="podValueMini">00</span>🪙</div>
         <div class="select-prompt" id="selectPrompt">出すカードを選んでください</div>
         <div class="card-row" id="myHand"></div>
         <div class="chip-selector">
@@ -1440,7 +1439,6 @@
             <span class="chip-value" id="chipSelectedVal">0</span>
             <button class="chip-btn" id="chipPlus">+</button>
           </div>
-          <div>使用チップ（所持 <b id="myChipAvail">0</b>枚）</div>
         </div>
         <div class="color-info-hint" id="colorInfoHint" style="display:none;"></div>
       </div>
@@ -3224,7 +3222,6 @@
     document.getElementById('myHP').textContent = state.myChips;
     document.getElementById('opHP').textContent = state.opChips;
     updatePodDisplay();
-    document.getElementById('myChipAvail').textContent = state.myChips;
     render();
 
     if (net.active) {
@@ -4089,7 +4086,6 @@
     if (res.roundPodKind === 'jackpot') playSe('jackpot');
     else if (res.outcome === 'me') playSe('win');    // 自分が勝った時（JACKPOTはJACKPOTの音だけ）
     else playSe('lose'); // 自分の負け（LOSE・ブーストしての負け）と引き分け。JACKPOTで負けた時はJACKPOTの音だけ
-    document.getElementById('myChipAvail').textContent = state.myChips;
     updateHandBadges();
     const hpId = who => (who === 'my' ? 'myHP' : 'opHP');
     if (res.jackpotWinner) flashNum(hpId(res.jackpotWinner), 'gain-flash');
@@ -4251,10 +4247,6 @@
   }
 
   function render(fieldOnly) {
-    const loseEl = document.getElementById('loseCostMini');
-    if (loseEl && state) {
-      loseEl.textContent = `LOSE ${LOSE_PAYMENT}🪙`;
-    }
     if (!fieldOnly) {
       renderHandsAndDiscard();
     }
@@ -4336,7 +4328,6 @@
   function updateChipSelectorUI() {
     const maxB = maxBoostNow();
     if (state.chipSelect > maxB) state.chipSelect = maxB;
-    document.getElementById('myChipAvail').textContent = state.myChips;
     document.getElementById('chipSelectedVal').textContent = state.chipSelect;
     const disabled = state.locked || state.over;
     document.getElementById('chipMinus').disabled = disabled || state.chipSelect <= 0;
