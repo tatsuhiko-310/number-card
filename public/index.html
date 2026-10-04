@@ -1334,6 +1334,51 @@
   .eff-item.rule { color: #ffe066; font-weight: 700; }
   .eff-board .pod-label { justify-self: end; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.7rem; letter-spacing: 0.12em; color: var(--text-dim); }
   .eff-item.none { color: var(--text-dim); opacity: 0.7; }
+  /* ===== デッキ構築：役一覧 ===== */
+  .prep-head { position: relative; display: flex; justify-content: center; align-items: center; margin-bottom: 6px; }
+  .prep-head .prep-progress { margin-bottom: 0; }
+  .role-list-btn {
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    font: inherit; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--cy-cyan); background: rgba(25, 211, 255, 0.06); color: var(--cy-cyan); box-shadow: 0 0 8px rgba(25, 211, 255, 0.35);
+  }
+  .role-list-ov {
+    position: fixed; inset: 0; z-index: 960; display: none; align-items: center; justify-content: center;
+    padding: 16px; background: rgba(0, 0, 0, 0.6);
+  }
+  .role-list-ov.show { display: flex; animation: panelIn 0.18s ease; }
+  .role-list-box {
+    width: 100%; max-width: 360px; max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain;
+    background: var(--bg2); border: 1px solid var(--cy-cyan); border-radius: 14px; box-shadow: 0 0 18px rgba(25, 211, 255, 0.4);
+    padding: 14px 14px 12px; text-align: left;
+  }
+  .role-list-title { display: flex; justify-content: space-between; align-items: center; font-weight: 900; color: var(--cy-cyan); font-size: 0.95rem; }
+  .role-list-x { font: inherit; font-size: 1.1rem; line-height: 1; color: var(--text-dim); background: none; border: none; cursor: pointer; padding: 2px 4px; }
+  .role-list-sub { font-size: 0.66rem; color: var(--text-dim); margin: 4px 0 4px; }
+  .role-item {
+    position: relative; overflow: hidden; display: grid; grid-template-columns: 30px 1fr; gap: 8px; align-items: start;
+    min-height: 104px; padding: 9px 10px; margin-top: 6px; border-radius: 10px; border: 1px solid var(--rc); background: #0b1020;
+  }
+  /* 背景はキャラクター画像（下側に配置、上端はぼかし済み）を薄く */
+  .role-item::before { content: ''; position: absolute; inset: 0; background: var(--bg) center bottom / 100% auto no-repeat; opacity: 0.7; }
+  .role-item::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11, 16, 32, 0.55) 0%, rgba(11, 16, 32, 0.1) 45%, rgba(11, 16, 32, 0) 60%); }
+  .role-item > * { position: relative; z-index: 1; }
+  .role-item.red { --rc: var(--color-red); --bg: url("assets/role-bg-red.webp"); }
+  .role-item.blue { --rc: var(--color-blue); --bg: url("assets/role-bg-blue.webp"); }
+  .role-item.yellow { --rc: var(--color-yellow); --bg: url("assets/role-bg-yellow.webp"); }
+  .role-item.green { --rc: var(--color-green); --bg: url("assets/role-bg-green.webp"); }
+  .role-item.pink { --rc: var(--color-pink); --bg: url("assets/role-bg-pink.webp"); }
+  .role-cnt {
+    width: 30px; height: 40px; border-radius: 6px; border: 2px solid var(--rc); background: rgba(11, 16, 32, 0.7);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.05;
+    font-weight: 900; font-size: 0.8rem; color: var(--text);
+  }
+  .role-cnt small { font-size: 0.48rem; color: var(--text-dim); font-weight: 700; }
+  .role-cnt.on { box-shadow: 0 0 10px var(--rc); }
+  .role-item-name { font-weight: 800; font-size: 0.8rem; color: var(--text); text-shadow: 0 0 4px #000; }
+  .role-trig { display: inline-block; font-size: 0.58rem; font-weight: 800; padding: 1px 7px; border-radius: 8px; margin-left: 6px; color: #fff; background: var(--rc); vertical-align: 1px; text-shadow: none; }
+  .role-item.yellow .role-trig { color: #222; }
+  .role-item-desc { font-size: 0.68rem; color: #e6ecf8; line-height: 1.4; margin-top: 2px; text-shadow: 0 0 4px #000, 0 0 2px #000; }
   /* 役パネルは盤面の中に収め、はみ出す分はスクロール */
   .role-panel { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; }
   .rp-note { font-size: 0.62rem; color: var(--text-dim); }
@@ -1400,9 +1445,19 @@
   </div>
 
   <div id="prepScreen" class="hidden">
+    <div class="role-list-ov" id="roleListOv" aria-hidden="true">
+      <div class="role-list-box" role="dialog" aria-label="色の役 一覧">
+        <div class="role-list-title"><span>色の役 一覧</span><button type="button" class="role-list-x" id="roleListClose" aria-label="閉じる">✕</button></div>
+        <div class="role-list-sub">捨て札に同じ色が3枚以上たまると発動。左の数字は今のデッキに入っている枚数</div>
+        <div id="roleListRows"></div>
+      </div>
+    </div>
     <div class="goal">準備フェイズ：カードの色を選んでデッキを組んでください</div>
     <div class="prep-panel" id="prepPanel">
-      <div class="prep-progress" id="prepProgress">カード 1 / 8</div>
+      <div class="prep-head">
+        <div class="prep-progress" id="prepProgress">カード 1 / 8</div>
+        <button type="button" class="role-list-btn" id="roleListBtn">役一覧</button>
+      </div>
       <div class="prep-grid" id="prepGrid"></div>
       <div class="prep-peek dim" id="prepPeek">選んだカードをタップすると効果を確認できます</div>
       <div class="prep-instruction">好きな方のカードを選んでください</div>
@@ -2983,6 +3038,35 @@
     const effs = Math.random() < 0.5 ? ['A', 'B'] : ['B', 'A'];
     return cols.map((color, i) => ({ color, eff: effs[i] })).sort((a, b) => (a.eff < b.eff ? -1 : 1));
   }
+
+  // ===== デッキ構築：役一覧（今のデッキの色の枚数つき） =====
+  const ROLE_LIST = [
+    { color: 'green', name: 'コツコツ回収', trig: '通常勝利時', desc: 'ポッドから受け取る枚数が1枚→2枚' },
+    { color: 'red', name: '攻めの一撃', trig: 'JACKPOT勝利時', desc: '総取りに加えて、相手のチップを直接2枚奪う' },
+    { color: 'blue', name: '守り', trig: '通常敗北時', desc: 'ポッドに払う枚数が2枚→1枚（保険と重なれば0枚）' },
+    { color: 'pink', name: '逆襲', trig: 'JACKPOT敗北時', desc: '次のラウンドに勝てば、相手のチップを直接2枚奪う' },
+    { color: 'yellow', name: '雷光', trig: 'サドンデス時', desc: '手札勝負で勝てば、差が1でなくても必ずJACKPOT' }
+  ];
+  function renderRoleList() {
+    const counts = {};
+    Object.values(prepMyColors).forEach(c => { counts[c] = (counts[c] || 0) + 1; });
+    document.getElementById('roleListRows').innerHTML = ROLE_LIST.map(r => {
+      const n = counts[r.color] || 0;
+      return `<div class="role-item ${r.color}">
+        <div class="role-cnt${n >= COLOR_ROLE_MIN ? ' on' : ''}">${n}<small>枚</small></div>
+        <div><div class="role-item-name">${COLOR_LABEL[r.color]}：${r.name}<span class="role-trig">${r.trig}</span></div>
+        <div class="role-item-desc">${r.desc}</div></div></div>`;
+    }).join('');
+  }
+  function setRoleList(open) {
+    const ov = document.getElementById('roleListOv');
+    if (open) renderRoleList();
+    ov.classList.toggle('show', open);
+    ov.setAttribute('aria-hidden', open ? 'false' : 'true');
+  }
+  document.getElementById('roleListBtn').addEventListener('click', () => setRoleList(true));
+  document.getElementById('roleListClose').addEventListener('click', () => setRoleList(false));
+  document.getElementById('roleListOv').addEventListener('click', (e) => { if (e.target.id === 'roleListOv') setRoleList(false); });
 
   function renderPrepStep(justLandedNum) {
     if (prepStep > 8) {
