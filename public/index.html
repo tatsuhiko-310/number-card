@@ -1428,6 +1428,10 @@
   .ht-tag { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.66rem; font-weight: 900; letter-spacing: 0.08em; padding: 2px 10px; border-radius: 999px; }
   .ht-tag.win { color: #0b1020; background: var(--win, #3ddc84); }
   .ht-tag.lose { color: #fff; background: var(--lose); }
+  .ht-boost {
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.8rem; font-weight: 900; color: var(--gold);
+    padding: 3px 10px; border-radius: 999px; border: 2px solid var(--gold); box-shadow: 0 0 10px rgba(255, 200, 60, 0.5);
+  }
   .ht-jackpot {
     font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 1.2rem; font-weight: 900; letter-spacing: 0.06em; color: var(--gold);
     text-shadow: 0 0 12px var(--gold), 0 0 24px rgba(255, 200, 60, 0.6); margin: 2px 0 8px; animation: htPulse 1.4s ease-in-out infinite;
@@ -1499,7 +1503,7 @@
 
   <div id="startScreen">
     <div class="start-panel online-panel">
-      <!-- 遊び方（3ページ。自動送り・スワイプ・ドットで切り替え） -->
+      <!-- 遊び方（4ページ。自動送り・スワイプ・ドットで切り替え） -->
       <div class="howto-inline" id="howtoInline" aria-label="遊び方">
         <div class="howto-kicker">HOW TO PLAY</div>
         <div class="howto-viewport" id="howtoViewport">
@@ -1512,9 +1516,23 @@
               <div class="ht-side"><div class="ht-card blue">4</div><div class="ht-tag lose">LOSE</div></div>
             </div>
             <ul class="howto-text">
+              <li>お互い<b>チップ15枚</b>を持ってスタート</li>
               <li>数値が<b>高いカード</b>を出した方がラウンドの勝者</li>
               <li>勝てばチップを獲得、負ければ失う</li>
               <li class="howto-em">相手のチップを<b>0</b>にしたら勝利！</li>
+            </ul>
+          </section>
+          <section class="howto-page">
+            <h2 class="howto-title">チップでブースト</h2>
+            <div class="howto-visual">
+              <div class="ht-side"><div class="ht-card blue">5</div></div>
+              <div class="ht-boost">+2</div>
+              <div class="ht-side"><div class="ht-card blue">7</div></div>
+            </div>
+            <ul class="howto-text">
+              <li>持ちチップ<b>1枚</b>につき数字を<b>+1</b>できる</li>
+              <li>ブーストは<b>そのラウンドだけ</b>有効</li>
+              <li class="howto-em">チップを賭けて、相手を上回れ！</li>
             </ul>
           </section>
           <section class="howto-page">
@@ -1528,6 +1546,8 @@
             <ul class="howto-text">
               <li><b>ちょうど1差</b>で勝つとJACKPOT！</li>
               <li class="howto-em">POTに溜まったチップを<b>総取り</b>だ！</li>
+              <li>勝つためだけの<b>過度なブースト</b>は損</li>
+              <li>使ったチップはPOTに送られてしまう</li>
             </ul>
           </section>
           <section class="howto-page">
@@ -1543,7 +1563,7 @@
           </section>
           </div>
         </div>
-        <div class="howto-dots" id="howtoDots"><button type="button" aria-label="1ページ目"></button><button type="button" aria-label="2ページ目"></button><button type="button" aria-label="3ページ目"></button></div>
+        <div class="howto-dots" id="howtoDots"><button type="button" aria-label="1ページ目"></button><button type="button" aria-label="2ページ目"></button><button type="button" aria-label="3ページ目"></button><button type="button" aria-label="4ページ目"></button></div>
       </div>
       <div class="howto-div"></div>
       <div class="start-btns">
