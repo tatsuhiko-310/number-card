@@ -2145,7 +2145,7 @@
 
   const COLORS = ['red', 'blue', 'yellow', 'green', 'pink'];
   const COLOR_LABEL = { red: '赤', blue: '青', yellow: '黄', green: '緑', pink: 'ピンク' };
-  const COLOR_EN = { red: 'RED', blue: 'BLUE', yellow: 'YELLOW', green: 'GREEN', pink: 'PINK' }; // 役一覧の見出し用
+  const COLOR_EN = { red: 'R code', blue: 'B code', yellow: 'Y code', green: 'G code', pink: 'P code' }; // 役一覧の見出し用（色の頭文字＋code）
   let debugMode = false; // デバッグモード：準備フェイズで全色から選べるようにする
   // 決着判定：ラウンド終了時に相手のチップを0枚にした方の勝ち。'my' / 'op' / 'draw'（両者0枚）/ null（続行）
   function gameWinner(myChips, opChips) {
