@@ -3157,7 +3157,8 @@
         <div><div class="role-item-name">${COLOR_EN[r.color]}：${info.name}</div>
         <div class="role-item-desc">${roleDescHtml(info, roleLevel(r.count))}</div></div></div>`);
     });
-    panel.appendChild(buildCardList(who));
+    // 相手のカード一覧は表示しない（自分のカードのみ）
+    if (who === 'my') panel.appendChild(buildCardList(who));
     panel.appendChild(buildMarkLegend(who));
   }
 
