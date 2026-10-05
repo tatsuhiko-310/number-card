@@ -1525,25 +1525,9 @@
   .role-lv { opacity: 0.4; filter: grayscale(1); }
   .role-lv.on { opacity: 1; filter: none; color: #fff; }
   .role-lv b { font-size: 0.62rem; margin-right: 6px; }
-  /* ===== カードの形：左上の角を斜めに切り落とす（手札・場のカード・裏面・飛ぶカード・デッキ構築の色選択） ===== */
-  .card, .flip-face, .flying-card, .prep-choice-btn, .select-panel button.card {
-    --cut: 22%;            /* 切り欠きの大きさ（横幅に対する割合） */
-    border-radius: 0;
-    clip-path: polygon(var(--cut) 0, 100% 0, 100% 100%, 0 100%, 0 calc(var(--cut) * 5 / 7));
-  }
-  /* 切り欠いた斜めの辺にも枠線を引く（枠と同じ色・太さ） */
-  .card.red, .card.blue, .card.yellow, .card.green, .card.pink,
-  .flip-front.red, .flip-front.blue, .flip-front.yellow, .flip-front.green, .flip-front.pink,
-  .prep-choice-btn.red, .prep-choice-btn.blue, .prep-choice-btn.yellow, .prep-choice-btn.green, .prep-choice-btn.pink {
-    background-image: linear-gradient(135deg, transparent calc(50% - 1px), var(--chip-c) calc(50% - 1px), var(--chip-c) calc(50% + 3px), transparent calc(50% + 3px));
-    background-size: var(--cut) calc(var(--cut) * 5 / 7);
-    background-repeat: no-repeat;
-    background-origin: border-box;
-    background-position: 0 0;
-  }
-  /* カードの裏面：デザインなしの黒地（グレーの枠＋切り欠きの斜め線） */
+  /* カードの裏面：デザインなしの黒地（グレーの枠のみ） */
   .card.back, .flip-back, .flying-card {
-    background: #000 linear-gradient(135deg, transparent calc(50% - 1px), #3a4562 calc(50% - 1px), #3a4562 calc(50% + 2px), transparent calc(50% + 2px)) 0 0 / var(--cut) calc(var(--cut) * 5 / 7) no-repeat border-box;
+    background: #000;
     border: 2px solid #3a4562;
     box-sizing: border-box;
   }
