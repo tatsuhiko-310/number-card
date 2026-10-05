@@ -42,12 +42,12 @@
     --cy-cyan: #19d3ff;
     --cy-panel: #0b1020;
     color-scheme: dark;
-    --icon-red: url("assets/icon-red.png");
-    --icon-blue: url("assets/icon-blue.png");
-    --icon-yellow: url("assets/icon-yellow.png");
-    --icon-green: url("assets/icon-green.png");
+    --icon-red: url("assets/card-chip-red.webp");
+    --icon-blue: url("assets/card-chip-blue.webp");
+    --icon-yellow: url("assets/card-chip-yellow.webp");
+    --icon-green: url("assets/card-chip-green.webp");
     --card-back-img: url("assets/card-back.png");
-    --icon-pink: url("assets/icon-pink.png");
+    --icon-pink: url("assets/card-chip-pink.webp");
   }
   * { box-sizing: border-box; }
   :root {
@@ -1091,8 +1091,8 @@
     border-radius: inherit;
     background-repeat: no-repeat;
     background-position: center;
-    background-size: contain;
-    opacity: 0.26;
+    background-size: 112% auto;
+    opacity: 0.42;
     pointer-events: none;
   }
   .card.red::before, .flip-front.red::before, .prep-choice-btn.red::before { background-image: var(--icon-red); }
