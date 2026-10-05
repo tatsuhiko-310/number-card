@@ -1534,6 +1534,12 @@
     border: 2px solid #3a4562;
     box-sizing: border-box;
   }
+  /* 体力の数字：高さを捨て札の枠（2段分）にそろえる。相手名・HACK残数は数字の上に小さく重ねる */
+  .zone-side { align-items: center; }
+  .zone-side.me { align-items: center; }
+  .zone-side .side-col { position: relative; justify-content: center; align-self: stretch; }
+  .zone-side.op .side-head { position: absolute; left: 0; right: 0; top: -2px; z-index: 1; }
+  .side-col .num { font-size: var(--num-size, clamp(3rem, min(26vw, 12.5dvh), 8rem)); line-height: 1; }
   /* 役パネルは盤面の中に収め、はみ出す分はスクロール */
   .role-panel { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; }
   .rp-note { font-size: 0.62rem; color: var(--text-dim); }
@@ -2990,7 +2996,7 @@
   function updateOpLabel() {
     const el = document.getElementById('opLabel');
     if (!el) return;
-    if (!net.active) { el.textContent = '相手(CPU)'; return; }
+    if (!net.active) { el.textContent = ''; return; } // CPU戦では表示しない
     const name = net.oppName || '相手';
     let st = '';
     if (net.oppOnline === false) st = '離席中';
@@ -3805,7 +3811,26 @@
     fill(rowOp, 'op');
     fill(rowMe, 'me');
     fitSelectPanel();
+    fitHpNumbers();
   }
+
+  // 体力の数字の高さを、捨て札の枠（2段）の高さに合わせる
+  function fitHpNumbers() {
+    const grid = document.getElementById('discardGridMy');
+    const num = document.getElementById('myHP');
+    if (!grid || !num || !grid.offsetHeight) return;
+    const h = grid.getBoundingClientRect().height;
+    // 実際に使われている書体で、数字の字面の高さ（font-size に対する比率）を測る
+    const cs = getComputedStyle(num);
+    const ctx = (fitHpNumbers.c || (fitHpNumbers.c = document.createElement('canvas'))).getContext('2d');
+    ctx.font = `${cs.fontWeight} 100px ${cs.fontFamily}`;
+    const m = ctx.measureText('0123456789');
+    const ratio = (m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) / 100 || 0.72;
+    const size = Math.round(h / ratio);
+    document.querySelectorAll('.zone-side').forEach(z => z.style.setProperty('--num-size', size + 'px'));
+  }
+  window.addEventListener('resize', fitHpNumbers);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (state) fitHpNumbers(); });
 
   // 効果の行が増えて手札選択がはみ出す時は、手札カードを小さくして盤面に収める
   function fitSelectPanel() {
