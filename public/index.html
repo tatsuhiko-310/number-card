@@ -1304,7 +1304,10 @@
     display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
   }
   /* チップ選択は1行にまとめる */
-  .chip-selector { flex-direction: row; gap: 10px; }
+  /* チップブースト（上）とHACK（下）を縦に並べ、幅をそろえる */
+  .chip-selector { flex-direction: column; align-items: center; gap: 8px; }
+  .chip-selector .chip-controls { width: 168px; justify-content: space-between; box-sizing: border-box; }
+  .chip-selector .hack-btn { width: 168px; box-sizing: border-box; text-align: center; }
   .chip-controls { padding: 4px 12px; gap: 10px; }
   .color-info-hint { margin-top: 0; font-size: 0.64rem; line-height: 1.35; max-width: 100%; }
   .pod-mini { padding: 2px 10px; }
