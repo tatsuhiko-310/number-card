@@ -1,18 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round">
-  <!-- 本体とコア -->
-  <rect x="62" y="62" width="76" height="76" rx="6"/>
-  <rect x="78" y="78" width="44" height="44" rx="3"/>
-  <circle cx="128" cy="72" r="2.5" fill="#fff" stroke="none"/>
-  <!-- 上の配線 -->
-  <path d="M74 56 V38"/><path d="M88 56 V24"/><circle cx="88" cy="18" r="6"/>
-  <path d="M100 56 V32"/><path d="M112 56 V26"/><path d="M126 56 V40"/><circle cx="126" cy="34" r="6"/>
-  <!-- 下の配線 -->
-  <path d="M74 144 V164"/><path d="M88 144 V158"/><circle cx="88" cy="164" r="6"/>
-  <path d="M100 144 V176"/><path d="M112 144 V162"/><circle cx="112" cy="168" r="6"/><path d="M126 144 V156"/>
-  <!-- 左の配線 -->
-  <path d="M56 74 H38"/><circle cx="32" cy="74" r="6"/><path d="M56 86 H22"/>
-  <path d="M56 98 H44"/><circle cx="38" cy="98" r="6"/><path d="M56 110 H26"/><path d="M56 124 H40"/>
-  <!-- 右の配線 -->
-  <path d="M144 74 H162"/><circle cx="168" cy="74" r="6"/><path d="M144 86 H160"/>
-  <path d="M144 98 H180"/><path d="M144 110 H156"/><circle cx="162" cy="110" r="6"/><path d="M144 124 H164"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+  <path d="M58 76 V58 H76 M124 58 H142 V76 M142 124 V142 H124 M76 142 H58 V124" stroke-width="3"/>
+  <rect x="68" y="68" width="64" height="64" rx="3"/>
+  <rect x="84" y="84" width="32" height="32" stroke-width="1.2" stroke-dasharray="3 3"/>
+  <path d="M80 68 V44 H66 V30 M100 68 V20 M120 68 V44 H134 V30"/>
+  <path d="M80 132 V156 H66 V170 M100 132 V180 M120 132 V156 H134 V170"/>
+  <path d="M68 80 H44 V66 H30 M68 100 H20 M68 120 H44 V134 H30"/>
+  <path d="M132 80 H156 V66 H170 M132 100 H180 M132 120 H156 V134 H170"/>
+  <g fill="#fff" stroke="none"><circle cx="66" cy="28" r="3"/><circle cx="134" cy="28" r="3"/><circle cx="66" cy="172" r="3"/><circle cx="134" cy="172" r="3"/><circle cx="28" cy="66" r="3"/><circle cx="28" cy="134" r="3"/><circle cx="172" cy="66" r="3"/><circle cx="172" cy="134" r="3"/></g>
 </svg>
