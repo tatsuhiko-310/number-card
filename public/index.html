@@ -1780,7 +1780,6 @@
       </div>
       <div class="side-col">
         <div class="num" id="myHP">15</div>
-        <span class="hack-count" id="myHackCount"></span>
       </div>
     </div>
   </div>
@@ -5066,9 +5065,7 @@
       btn.setAttribute('aria-pressed', state.hackSelect ? 'true' : 'false');
       btn.disabled = state.locked || state.over || state.hacks.my <= 0;
     }
-    const mc = document.getElementById('myHackCount');
     const oc = document.getElementById('opHackCount');
-    if (mc) mc.textContent = `HACK ×${state.hacks.my}`;
     if (oc) oc.textContent = `HACK ×${state.hacks.op}`;
   }
   function updateChipSelectorUI() {
