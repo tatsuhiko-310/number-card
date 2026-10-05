@@ -1080,7 +1080,7 @@
     border-width: 3px;
     box-shadow: 0 0 8px rgba(227, 92, 160, 0.5);
   }
-  /* カード表面：黒地に、その色で塗ったCPUの線画（SVG）を透かして置く（手札・場のカード・デッキ構築の色選択カード。捨て札には付けない） */
+  /* カード表面：黒地に、その色で塗った基板パターン（SVG）を透かして置く（手札・場のカード・デッキ構築の色選択カード。捨て札には付けない） */
   .card.red, .card.blue, .card.yellow, .card.green, .card.pink,
   .flip-front.red, .flip-front.blue, .flip-front.yellow, .flip-front.green, .flip-front.pink,
   .prep-choice-btn.red, .prep-choice-btn.blue, .prep-choice-btn.yellow, .prep-choice-btn.green, .prep-choice-btn.pink {
@@ -1093,12 +1093,12 @@
   .prep-choice-btn.red::before, .prep-choice-btn.blue::before, .prep-choice-btn.yellow::before, .prep-choice-btn.green::before, .prep-choice-btn.pink::before {
     content: '';
     position: absolute;
-    left: -14%; right: -14%; top: 0; bottom: 0;
+    left: 0; right: 0; top: 0; bottom: 0;
     z-index: -1;
     background-color: var(--chip-c);
-    -webkit-mask: url("assets/card-cpu.svg") center / contain no-repeat;
-    mask: url("assets/card-cpu.svg") center / contain no-repeat;
-    opacity: 0.45;
+    -webkit-mask: url("assets/card-cpu.svg") center / cover no-repeat;
+    mask: url("assets/card-cpu.svg") center / cover no-repeat;
+    opacity: 0.4;
     pointer-events: none;
   }
   .card.red, .flip-front.red, .prep-choice-btn.red { --chip-c: var(--color-red); }
