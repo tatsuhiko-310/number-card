@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round">
+  <!-- 本体とコア -->
+  <rect x="62" y="62" width="76" height="76" rx="6"/>
+  <rect x="78" y="78" width="44" height="44" rx="3"/>
+  <circle cx="128" cy="72" r="2.5" fill="#fff" stroke="none"/>
+  <!-- 上の配線 -->
+  <path d="M74 56 V38"/><path d="M88 56 V24"/><circle cx="88" cy="18" r="6"/>
+  <path d="M100 56 V32"/><path d="M112 56 V26"/><path d="M126 56 V40"/><circle cx="126" cy="34" r="6"/>
+  <!-- 下の配線 -->
+  <path d="M74 144 V164"/><path d="M88 144 V158"/><circle cx="88" cy="164" r="6"/>
+  <path d="M100 144 V176"/><path d="M112 144 V162"/><circle cx="112" cy="168" r="6"/><path d="M126 144 V156"/>
+  <!-- 左の配線 -->
+  <path d="M56 74 H38"/><circle cx="32" cy="74" r="6"/><path d="M56 86 H22"/>
+  <path d="M56 98 H44"/><circle cx="38" cy="98" r="6"/><path d="M56 110 H26"/><path d="M56 124 H40"/>
+  <!-- 右の配線 -->
+  <path d="M144 74 H162"/><circle cx="168" cy="74" r="6"/><path d="M144 86 H160"/>
+  <path d="M144 98 H180"/><path d="M144 110 H156"/><circle cx="162" cy="110" r="6"/><path d="M144 124 H164"/>
+</svg>
