@@ -1541,6 +1541,12 @@
     background-origin: border-box;
     background-position: 0 0;
   }
+  /* カードの裏面：デザインなしの黒地（グレーの枠＋切り欠きの斜め線） */
+  .card.back, .flip-back, .flying-card {
+    background: #000 linear-gradient(135deg, transparent calc(50% - 1px), #3a4562 calc(50% - 1px), #3a4562 calc(50% + 2px), transparent calc(50% + 2px)) 0 0 / var(--cut) calc(var(--cut) * 5 / 7) no-repeat border-box;
+    border: 2px solid #3a4562;
+    box-sizing: border-box;
+  }
   /* 役パネルは盤面の中に収め、はみ出す分はスクロール */
   .role-panel { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; }
   .rp-note { font-size: 0.62rem; color: var(--text-dim); }
