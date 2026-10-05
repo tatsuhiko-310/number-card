@@ -1402,7 +1402,9 @@
   .howto-inline { width: min(100%, 16rem); margin: 0 auto; }
   .howto-viewport { overflow: hidden; touch-action: pan-y; }
   .howto-track { display: flex; transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
-  .howto-page { flex: 0 0 100%; min-width: 0; padding: 0 4px; box-sizing: border-box; text-align: center; }
+  /* 3行の説明はページの下端にそろえる（図解の高さがページごとに違うため） */
+  .howto-page { flex: 0 0 100%; min-width: 0; padding: 0 4px; box-sizing: border-box; text-align: center; display: flex; flex-direction: column; }
+  .howto-page .howto-text { margin-top: auto; }
   .howto-kicker { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.18em; color: var(--cy-cyan); }
   .howto-title { margin: 8px 0 10px; font-size: 1rem; font-weight: 900; color: var(--text); text-shadow: 0 0 10px rgba(25, 211, 255, 0.5); }
   .howto-visual { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 10px; }
