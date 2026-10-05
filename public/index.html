@@ -1810,7 +1810,7 @@
     ・<b>7</b>　<b>露呈・中</b>：出すと、次のラウンド自分の残りの手札の偶数・奇数が相手に見える／<b>重圧</b>：出すと、次のラウンド自分はブーストできない<br>
     ・<b>8</b>　<b>全公開</b>：出すと、自分の残りの手札が相手に公開される（確定情報 !）／<b>代償・大</b>：出すと、チップ2枚をポッドへ払う<br>
     <br>
-    色の役(自分の捨て札の色構成で常時判定)：同色<b>2枚以上</b>で成立。成立すると捨て札が光り、タップで確認できます。成立している間は毎ラウンド、相手の情報が見える（ポッドの下に水色で表示）。同色2枚でLv2、<b>3枚</b>でLv3になり、さらに情報が増える。<b>青</b>(観測)＝相手の手札の大小（小1〜4・大5〜8の枚数）、Lv3で一番大きい数字も／<b>ピンク</b>(透視)＝相手の手札の偶奇（偶数・奇数の枚数）、Lv3で一番小さい数字も／<b>緑</b>(解析)＝相手の手札の合計、Lv3で自分の手札に相手の手札とちょうど1差のカードがあるかも／<b>黄</b>(先読み)＝相手の山札の一番底、Lv3で一番上も／<b>赤</b>(予兆)＝相手が手を確定した後、ブースト枚数の目安（しない／1〜2枚／3枚以上）、Lv3で正確な枚数。複数の色が成立していれば全部見える。Lv3まではチップの出入りには関わらない。<br>どの色も同色<b>4枚</b>でLv4になり、JACKPOTで勝った時、総取りに加えて相手のチップを直接<b>2🪙</b>奪う（相手の持っている分だけ）<br><br>
+    色の役(自分の捨て札の色構成で常時判定)：同色<b>2枚以上</b>で成立。成立すると捨て札が光り、タップで確認できます。成立している間は毎ラウンド、相手の情報が見える（ポッドの下に水色で表示）。同色2枚でLv2、<b>3枚</b>でLv3になり、さらに情報が増える。<b>青</b>(観測)＝相手の手札の大小（小1〜4・大5〜8の枚数）、Lv3で一番大きい数字も／<b>ピンク</b>(透視)＝相手の手札の偶奇（偶数・奇数の枚数）、Lv3で一番小さい数字も／<b>緑</b>(解析)＝相手の手札の合計、Lv3で自分の手札に相手の手札とちょうど1差のカードがあるかも／<b>黄</b>(先読み)＝相手の山札の一番底、Lv3で一番上も／<b>赤</b>(勝算)＝自分の手札それぞれが、相手の手札に（素の数字で）何枚勝てるか、Lv3で引き分けになる枚数も。複数の色が成立していれば全部見える。Lv3まではチップの出入りには関わらない。<br>どの色も同色<b>4枚</b>でLv4になり、JACKPOTで勝った時、総取りに加えて相手のチップを直接<b>2🪙</b>奪う（相手の持っている分だけ）<br><br>
     確定情報：山札がなくなり捨て札を山札に戻した時に手札に残っていたカード、引き分けの手札勝負で公開した手札、引き分けの山札勝負で公開して後から手札に引いたカードの数字、山札を引ききった時の最後の手札など捨て札（と山札にあると分かっているカード）から手札が絞り込めた数字は、お互いに分かる。その数字は捨て札の枠に<b style="color:var(--known)">!</b>が表示され、出されるまで残る。<br><br>
     色：各カードには赤・青・黄・緑・ピンクいずれかの色がある（デッキ構築時に選択）。現時点では色の役以外の効果条件には未使用。<br><br>
     オンライン対戦：「部屋を作る」で表示される4桁のコードを相手に伝え、相手が入室したら準備フェイズ（それぞれ非公開でデッキを組む）へ進み、両者の準備が終わると対戦開始。手札のカードをタップした時点でそのラウンドの手が確定し、両者が確定したら一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになると手札からランダムに1枚、ブースト0で自動的に出す。予兆は、相手が確定した時点でブースト枚数の範囲が見える。通信はブラウザ同士の直接通信で、部屋を作った人のブラウザが対戦データを持つため、対戦中はそのページを閉じないこと。途中で抜けても、同じブラウザから同じ部屋コードで入り直せば続きから再開できる。<br><br>
@@ -2829,13 +2829,12 @@
     const hiddenHash = await hiddenCardHash(R, state.myHand[0], salt2);
     if (token !== gameToken || !net.active) return;
     writePriv({ pending: pc });
-    // 相手の予兆（2A）か赤の役が効いていれば、ブーストの有無と枚数の範囲を公開する。撹乱中は公開しない
+    // 相手の予兆（2A）が効いていれば、ブーストの有無と枚数の範囲を公開する。撹乱中は公開しない
     const ex = state.exposure || {};
-    const showFlag = !ex.blocked && (ex.boostIntel || ex.roleBoost);
+    const showFlag = !ex.blocked && ex.boostIntel;
     writeMySeat({ commitRound: R, commitHash: hash, hiddenHash,
       boostFlag: showFlag ? boost > 0 : null,
-      boostRange: showFlag ? boostRangeText(boost) : null,
-      boostExact: !ex.blocked && ex.roleBoostExact ? boost : null });
+      boostRange: showFlag ? boostRangeText(boost) : null });
     state.netPhase = 'committed';
     gameNetTick();
   }
@@ -3377,7 +3376,7 @@
     { color: 'pink', name: '透視', trig: '毎ラウンド', lv1: '相手の手札の偶奇（偶数・奇数の枚数）', lv2: '＋相手の手札で一番小さい数字' },
     { color: 'green', name: '解析', trig: '毎ラウンド', lv1: '相手の手札の合計', lv2: '＋自分の手札に、相手の手札とちょうど1差のカードがあるか' },
     { color: 'yellow', name: '先読み', trig: '毎ラウンド', lv1: '相手の山札の一番底', lv2: '＋相手の山札の一番上' },
-    { color: 'red', name: '予兆', trig: '相手の確定後', lv1: '相手のブースト枚数の目安（しない／1〜2枚／3枚以上）', lv2: '＋ブーストの正確な枚数' }
+    { color: 'red', name: '勝算', trig: '毎ラウンド', lv1: '自分の手札それぞれが、相手の手札に勝てる枚数', lv2: '＋引き分けになる枚数' }
   ];
   const ROLE_LV2_MIN = COLOR_ROLE_MIN + 1;
   const roleLevel = (count) => (count >= ENHANCE_MIN ? 3 : (count >= ROLE_LV2_MIN ? 2 : (count >= COLOR_ROLE_MIN ? 1 : 0)));
@@ -3745,27 +3744,35 @@
     describe(state.intel, '相手', 'me', 'op', 'see');
     describe(state.exposure, 'あなた', 'op', 'me', 'shown');
 
-    // 予兆（2A）・赤の役：相手のブースト
-    if (state.intel && (state.intel.boostIntel || state.intel.roleBoost)) {
+    // 赤の役（勝算）：自分の手札それぞれが、相手の手札に何枚勝てるか（Lv3は引き分けも）
+    if (state.intel && state.intel.roleOdds) {
+      const opp = state.intel.roleOdds;
+      const parts = state.myHand.slice().sort((a, b) => a - b).map(n => {
+        const win = opp.filter(o => n > o).length;
+        const tie = opp.filter(o => o === n).length;
+        return `${n}は勝ち${win}枚${state.intel.roleOddsTie ? `・引き分け${tie}枚` : ''}`;
+      });
+      add('me', 'see', `赤の役（${roleName('red')}）：${parts.join(' ／ ') || '手札なし'}`);
+    }
+    if (state.exposure && state.exposure.roleOdds) add('op', 'shown', `赤の役（${roleName('red')}）：あなたの手札に対する相手の勝算`);
+    // 予兆（2A）：相手のブースト
+    if (state.intel && state.intel.boostIntel) {
       let t;
       if (net.active) {
         const op = oppSeatC();
         if (op && op.commitRound === state.round) {
-          if (state.intel.roleBoostExact && typeof op.boostExact === 'number') t = `相手は${op.boostExact > 0 ? `${op.boostExact}枚ブーストする` : 'ブーストしない'}`;
-          else if (op.boostRange) t = `相手は${op.boostRange}`;
+          if (op.boostRange) t = `相手は${op.boostRange}`;
           else if (typeof op.boostFlag === 'boolean') t = `相手は${op.boostFlag ? 'ブーストする' : 'ブーストしない'}`;
           else t = '相手は確定済み（ブースト情報なし）';
         } else {
           t = '相手の選択待ち（確定するとブースト枚数の範囲が見える）';
         }
       } else {
-        t = state.intel.roleBoostExact
-          ? `相手は${state.opPendingChips > 0 ? `${state.opPendingChips}枚ブーストする` : 'ブーストしない'}予定`
-          : `相手は${boostRangeText(state.opPendingChips)}予定`;
+        t = `相手は${boostRangeText(state.opPendingChips)}予定`;
       }
-      add('me', 'see', `${state.intel.boostIntel ? '予兆' : `赤の役（${roleName('red')}）`}：${t}`);
+      add('me', 'see', `予兆：${t}`);
     }
-    if (state.exposure && (state.exposure.boostIntel || state.exposure.roleBoost)) add('op', 'shown', `${state.exposure.boostIntel ? '予兆' : `赤の役（${roleName('red')}）`}：あなたのブースト枚数${state.exposure.roleBoostExact ? '（正確な枚数）' : 'の範囲'}`);
+    if (state.exposure && state.exposure.boostIntel) add('op', 'shown', '予兆：あなたのブースト枚数の範囲');
     if (opBlocked) add('op', 'rule', '撹乱：あなたの情報系の効果が効かない');
     if (myBlocked) add('me', 'rule', '撹乱：相手の情報系の効果が効かない');
     const r = state.rule || {};
@@ -4887,8 +4894,9 @@
     if (lv('green') >= 2) ex.roleAdj = [...new Set(hand.flatMap(n => [n - 1, n + 1]).filter(n => n >= 1 && n <= 8))].sort((a, b) => a - b);
     if (lv('yellow') >= 1) { const d = state[who + 'Deck']; ex.roleDeckBottom = d.length ? d[0] : null; }
     if (lv('yellow') >= 2) { const d = state[who + 'Deck']; ex.roleDeckTop = d.length ? d[d.length - 1] : null; }
-    if (lv('red') >= 1) ex.roleBoost = true;
-    if (lv('red') >= 2) ex.roleBoostExact = true;
+    // 赤（勝算）：見る側が自分の手札と比べるため、手札の数字を渡す（Lv3は引き分けも数える）
+    if (lv('red') >= 1) ex.roleOdds = hand.slice();
+    if (lv('red') >= 2) ex.roleOddsTie = true;
     const hid = pv.hidden ? pv.hidden[who] : null;
     if (hid != null && hand.includes(hid)) {
       if (by('5B') && pv.winner === other) ex.reveal = [{ n: hid, src: '記録' }];
