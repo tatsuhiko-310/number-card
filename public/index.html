@@ -1080,7 +1080,7 @@
     border-width: 3px;
     box-shadow: 0 0 8px rgba(227, 92, 160, 0.5);
   }
-  /* カード表面：黒地に、その色で塗ったチップの図柄を透かして置く（手札・場のカード・デッキ構築の色選択カード。捨て札には付けない） */
+  /* カード表面：黒地に、その色のチップ画像を透かして置く（手札・場のカード・デッキ構築の色選択カード。捨て札には付けない） */
   .card.red, .card.blue, .card.yellow, .card.green, .card.pink,
   .flip-front.red, .flip-front.blue, .flip-front.yellow, .flip-front.green, .flip-front.pink,
   .prep-choice-btn.red, .prep-choice-btn.blue, .prep-choice-btn.yellow, .prep-choice-btn.green, .prep-choice-btn.pink {
@@ -1093,33 +1093,17 @@
   .prep-choice-btn.red::before, .prep-choice-btn.blue::before, .prep-choice-btn.yellow::before, .prep-choice-btn.green::before, .prep-choice-btn.pink::before {
     content: '';
     position: absolute;
-    left: -35%; right: -35%; top: 0; bottom: 0;
+    left: -30%; right: -30%; top: 0; bottom: 0;
     z-index: -1;
-    background-color: var(--chip-c);
-    -webkit-mask: url("assets/card-chip.svg") center / contain no-repeat;
-    mask: url("assets/card-chip.svg") center / contain no-repeat;
-    opacity: 0.42;
+    background: var(--chip-img) center / contain no-repeat;
+    opacity: 0.5;
     pointer-events: none;
   }
-  /* チップ上面の縁取りと中央の四角（グレーの明るい線） */
-  .card.red::after, .card.blue::after, .card.yellow::after, .card.green::after, .card.pink::after,
-  .flip-front.red::after, .flip-front.blue::after, .flip-front.yellow::after, .flip-front.green::after, .flip-front.pink::after,
-  .prep-choice-btn.red::after, .prep-choice-btn.blue::after, .prep-choice-btn.yellow::after, .prep-choice-btn.green::after, .prep-choice-btn.pink::after {
-    content: '';
-    position: absolute;
-    left: -35%; right: -35%; top: 0; bottom: 0;
-    z-index: -1;
-    background-color: #9a9a9a;
-    -webkit-mask: url("assets/card-chip-hi.svg") center / contain no-repeat;
-    mask: url("assets/card-chip-hi.svg") center / contain no-repeat;
-    opacity: 0.6;
-    pointer-events: none;
-  }
-  .card.red, .flip-front.red, .prep-choice-btn.red { --chip-c: var(--color-red); }
-  .card.blue, .flip-front.blue, .prep-choice-btn.blue { --chip-c: var(--color-blue); }
-  .card.yellow, .flip-front.yellow, .prep-choice-btn.yellow { --chip-c: var(--color-yellow); }
-  .card.green, .flip-front.green, .prep-choice-btn.green { --chip-c: var(--color-green); }
-  .card.pink, .flip-front.pink, .prep-choice-btn.pink { --chip-c: var(--color-pink); }
+  .card.red, .flip-front.red, .prep-choice-btn.red { --chip-img: url("assets/card-chip-red.webp"); }
+  .card.blue, .flip-front.blue, .prep-choice-btn.blue { --chip-img: url("assets/card-chip-blue.webp"); }
+  .card.yellow, .flip-front.yellow, .prep-choice-btn.yellow { --chip-img: url("assets/card-chip-yellow.webp"); }
+  .card.green, .flip-front.green, .prep-choice-btn.green { --chip-img: url("assets/card-chip-green.webp"); }
+  .card.pink, .flip-front.pink, .prep-choice-btn.pink { --chip-img: url("assets/card-chip-pink.webp"); }
 
   /* 手札の色枠だけ、他(場のカードや捨て札)より太くする */
   .select-panel button.card.red,
