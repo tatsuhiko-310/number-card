@@ -1511,6 +1511,29 @@
   .board.hack-glitching .flip-card { filter: drop-shadow(-4px 0 rgba(255, 0, 60, 0.7)) drop-shadow(4px 0 rgba(0, 220, 255, 0.7)); }
   .board.hack-glitching .flip-front { text-shadow: -3px 0 rgba(255, 0, 60, 0.95), 3px 0 rgba(0, 220, 255, 0.95); }
   @keyframes hackShake { 0% { transform: translateX(var(--gx, 0)); } 50% { transform: translateX(calc(var(--gx, 0) * -1)) skewX(-1deg); } 100% { transform: translateX(0); } }
+  /* SPIKE演出（30ラウンド超えで負けた時の支払いが増える） */
+  .spike-alert {
+    position: fixed; z-index: 86; pointer-events: none; overflow: hidden; border-radius: 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    background: rgba(40, 0, 8, 0.72); animation: spikeFlash 0.5s steps(1) 4, spikeOut 0.35s ease 1.85s forwards;
+  }
+  .spike-alert::before, .spike-alert::after {
+    content: ''; position: absolute; left: -40px; right: -40px; height: 22px;
+    background: repeating-linear-gradient(-45deg, #ffcc00 0 16px, #120006 16px 32px);
+    box-shadow: 0 0 18px rgba(255, 43, 79, 0.8); animation: spikeTape 0.6s linear infinite;
+  }
+  .spike-alert::before { top: 22%; }
+  .spike-alert::after { bottom: 22%; animation-direction: reverse; }
+  .spike-title {
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: clamp(2.6rem, 15vw, 4rem); letter-spacing: 0.14em; color: #fff;
+    text-shadow: 0 0 10px #ff2b4f, 0 0 24px #ff2b4f, 0 0 44px rgba(255, 43, 79, 0.8);
+    animation: spikeIn 0.35s cubic-bezier(.2, 1.6, .4, 1) both;
+  }
+  .spike-sub { font-size: 0.85rem; font-weight: 800; color: #ffcc00; text-shadow: 0 0 8px rgba(0, 0, 0, 0.9); }
+  @keyframes spikeFlash { 0% { box-shadow: inset 0 0 0 4px #ff2b4f, inset 0 0 60px rgba(255, 43, 79, 0.9); } 50% { box-shadow: inset 0 0 0 4px transparent, inset 0 0 20px rgba(255, 43, 79, 0.3); } }
+  @keyframes spikeIn { 0% { transform: scale(2.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes spikeTape { from { background-position: 0 0; } to { background-position: 45px 0; } }
+  @keyframes spikeOut { to { opacity: 0; } }
   /* 遊び方：ハッキングのページ（HACKの文字がグリッチする） */
   .ht-hack {
     font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.9rem; letter-spacing: 0.08em; color: #fff;
@@ -1832,6 +1855,7 @@
       <button class="btn secondary small" id="dbgThroughBtn">THROUGH再生</button>
       <button class="btn secondary small" id="dbgLoseBtn">LOSE再生</button>
       <button class="btn secondary small" id="dbgJackpotBtn">JACKPOT再生</button>
+      <button class="btn secondary small" id="dbgSpikeBtn">SPIKE再生</button>
     </div>
     <div class="debug-row">
       <button class="btn secondary small" id="dbgHideHandBtn">🙈 手札を隠す</button>
@@ -3703,6 +3727,10 @@
   // ラウンド開始フェイズ：強制供出（賭金）と、支払えない場合の即敗北は撤廃。
   // 所持チップが0でも参加でき、その場合は単にブーストできないだけになる。
   function startRound() {
+    if (currentRoundNo() === LATE_ROUND + 1 && state.spikeShownRound !== LATE_ROUND + 1) {
+      state.spikeShownRound = LATE_ROUND + 1;
+      playSpikeAlert();
+    }
     prepareRoundIntel();
     commitRoleGlow(['my', 'op'], true); // 次ラウンドの手札選択に入った時に、役の光り・成立音を反映
     state.myHpShown = null;
@@ -4539,6 +4567,47 @@
     gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
     nz.connect(bp); bp.connect(gn); gn.connect(masterGain);
     nz.start(t); nz.stop(t + 0.62);
+  }
+
+  // ===== SPIKE演出：30ラウンドを超えた最初のラウンド開始時に、警告音とともに表示（操作は止めない）=====
+  function playSpikeAlert() {
+    const board = document.getElementById('board');
+    if (!board) return;
+    const br = board.getBoundingClientRect();
+    const layer = document.createElement('div');
+    layer.className = 'spike-alert';
+    Object.assign(layer.style, { left: br.left + 'px', top: br.top + 'px', width: br.width + 'px', height: br.height + 'px' });
+    const title = document.createElement('div');
+    title.className = 'spike-title';
+    title.textContent = 'SPIKE';
+    const sub = document.createElement('div');
+    sub.className = 'spike-sub';
+    sub.textContent = `負けた時の支払い ${LOSE_PAYMENT}→${LATE_LOSE_PAYMENT}🪙`;
+    layer.appendChild(title);
+    layer.appendChild(sub);
+    document.body.appendChild(layer);
+    playSpikeSound();
+    setTimeout(() => layer.remove(), 2200);
+  }
+  // 警告音：高低2音を交互に3回（サイレン風のビープ）
+  function playSpikeSound() {
+    if (!soundOn) return;
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    for (let i = 0; i < 6; i++) {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'square';
+      const st = t + i * 0.25;
+      o.frequency.setValueAtTime(i % 2 ? 660 : 880, st);
+      g.gain.setValueAtTime(0.0001, st);
+      g.gain.exponentialRampToValueAtTime(0.09, st + 0.015);
+      g.gain.setValueAtTime(0.09, st + 0.18);
+      g.gain.exponentialRampToValueAtTime(0.0001, st + 0.22);
+      o.connect(g); g.connect(masterGain);
+      o.start(st); o.stop(st + 0.23);
+    }
   }
 
   // ===== 引き分け→手札勝負の演出（A：サドンデス・カットイン）=====
@@ -5444,6 +5513,7 @@
     updatePodDisplay('through');
     playSe('win');
   });
+  document.getElementById('dbgSpikeBtn').addEventListener('click', playSpikeAlert);
   document.getElementById('dbgLoseBtn').addEventListener('click', () => {
     updatePodDisplay('grow');
     playSe('lose');
