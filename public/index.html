@@ -1514,25 +1514,34 @@
   /* SPIKE演出（30ラウンド超えで負けた時の支払いが増える） */
   .spike-alert {
     position: fixed; z-index: 86; pointer-events: none; overflow: hidden; border-radius: 16px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-    background: rgba(40, 0, 8, 0.72); animation: spikeFlash 0.5s steps(1) 4, spikeOut 0.35s ease 1.85s forwards;
+    background: radial-gradient(ellipse at 50% 45%, rgba(45, 0, 10, 0.8), rgba(2, 4, 12, 0.9) 70%);
+    animation: spikeFade 0.2s ease both, spikeOut 0.35s ease 1.9s forwards;
   }
-  .spike-alert::before, .spike-alert::after {
-    content: ''; position: absolute; left: -40px; right: -40px; height: 22px;
-    background: repeating-linear-gradient(-45deg, #ffcc00 0 16px, #120006 16px 32px);
-    box-shadow: 0 0 18px rgba(255, 43, 79, 0.8); animation: spikeTape 0.6s linear infinite;
-  }
-  .spike-alert::before { top: 22%; }
-  .spike-alert::after { bottom: 22%; animation-direction: reverse; }
+  .spike-alert svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  .spike-wave { fill: none; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+  .spike-wave.calm { stroke: var(--cy-cyan, #19d3ff); filter: drop-shadow(0 0 4px #19d3ff); animation: spikeDraw 0.5s 0.1s cubic-bezier(.5, 0, .7, 1) both; }
+  .spike-wave.peak { stroke: #ff2b4f; filter: drop-shadow(0 0 5px #ff2b4f); animation: spikeDraw 0.12s 0.6s linear both; }
+  /* スパイク後の波形：揺れ幅は大きいまま戻らない（支払いが増えた状態が続くことを表す） */
+  .spike-wave.storm { stroke: #ff2b4f; filter: drop-shadow(0 0 5px #ff2b4f); animation: spikeDraw 0.45s 0.72s linear both; }
+  .spike-storm-g { animation: spikeSurge 0.18s 1.17s ease-in-out infinite alternate; transform-box: view-box; }
+  .spike-dot { fill: #fff; filter: drop-shadow(0 0 6px #ff2b4f); animation: spikePop 0.3s 0.66s cubic-bezier(.2, 1.8, .4, 1) both; transform-box: fill-box; transform-origin: center; }
+  .spike-frame { position: absolute; inset: 0; border-radius: 16px; box-shadow: inset 0 0 0 3px #ff2b4f, inset 0 0 50px rgba(255, 43, 79, 0.6); animation: spikeFrame 0.5s 0.66s both; }
   .spike-title {
+    position: absolute; left: 0; right: 0; text-align: center;
     font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: clamp(2.6rem, 15vw, 4rem); letter-spacing: 0.14em; color: #fff;
-    text-shadow: 0 0 10px #ff2b4f, 0 0 24px #ff2b4f, 0 0 44px rgba(255, 43, 79, 0.8);
-    animation: spikeIn 0.35s cubic-bezier(.2, 1.6, .4, 1) both;
+    text-shadow: 0 0 10px #ff2b4f, 0 0 26px #ff2b4f, 0 0 50px rgba(255, 43, 79, 0.7);
+    animation: spikeUp 0.4s 0.7s cubic-bezier(.2, 1.4, .4, 1) both;
   }
-  .spike-sub { font-size: 0.85rem; font-weight: 800; color: #ffcc00; text-shadow: 0 0 8px rgba(0, 0, 0, 0.9); }
-  @keyframes spikeFlash { 0% { box-shadow: inset 0 0 0 4px #ff2b4f, inset 0 0 60px rgba(255, 43, 79, 0.9); } 50% { box-shadow: inset 0 0 0 4px transparent, inset 0 0 20px rgba(255, 43, 79, 0.3); } }
-  @keyframes spikeIn { 0% { transform: scale(2.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-  @keyframes spikeTape { from { background-position: 0 0; } to { background-position: 45px 0; } }
+  .spike-sub { position: absolute; left: 0; right: 0; text-align: center; font-size: 0.85rem; font-weight: 800; color: #ffcc00; text-shadow: 0 0 8px rgba(0, 0, 0, 0.9); animation: spikeFade 0.25s 1.05s both; }
+  .spike-lbl { position: absolute; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.15em; }
+  .spike-lbl.before { left: 12px; color: #19d3ff; opacity: 0.85; animation: spikeFade 0.2s 0.15s both; }
+  .spike-lbl.after { right: 12px; color: #ff6b7a; animation: spikeFade 0.2s 0.85s both; }
+  @keyframes spikeDraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes spikePop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes spikeFrame { 0% { opacity: 0; } 15% { opacity: 1; } 30% { opacity: 0.3; } 45%, 100% { opacity: 1; } }
+  @keyframes spikeUp { from { transform: translateY(40%) scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes spikeSurge { from { transform: scaleY(1); } to { transform: scaleY(1.12); } }
+  @keyframes spikeFade { from { opacity: 0; } to { opacity: 1; } }
   @keyframes spikeOut { to { opacity: 0; } }
   /* 遊び方：ハッキングのページ（HACKの文字がグリッチする） */
   .ht-hack {
@@ -4575,20 +4584,80 @@
     const board = document.getElementById('board');
     if (!board) return;
     const br = board.getBoundingClientRect();
+    if (!br.width || !br.height) return;
+    const w = br.width, h = br.height;
+    const y0 = Math.round(h * 0.56);       // 波形の基準線（手札のカードの下あたり）
+    const cx = Math.round(w / 2);
+    const top = Math.round(h * 0.42);      // スパイクの頂点
+    const amp = Math.round(h * 0.06);      // スパイク後の揺れ幅（大きいまま）
+    const pt = (x, y) => `${x.toFixed(1)} ${y.toFixed(1)}`;
+    // スパイク前：小さな揺れの水色の波形
+    const calm = [pt(0, y0)];
+    const blips = [0.12, 0.3, 0.42];
+    blips.forEach(f => {
+      const x = w * f;
+      calm.push(pt(x - 10, y0), pt(x - 4, y0 - 8), pt(x + 3, y0 + 7), pt(x + 9, y0));
+    });
+    calm.push(pt(cx - 16, y0));
+    // スパイク：真上に跳ね、下へ振り切る
+    const peak = [pt(cx - 16, y0), pt(cx - 8, y0 + 10), pt(cx, top), pt(cx + 11, y0 + amp * 0.8), pt(cx + 20, y0)];
+    // スパイク後：大きな揺れ幅を保ったまま右端まで続く赤い波形
+    const storm = [pt(cx + 20, y0)];
+    let up = true;
+    for (let x = cx + 30; x < w; x += 14) {
+      const a = amp * (0.75 + Math.random() * 0.35);
+      storm.push(pt(x, up ? y0 - a : y0 + a));
+      up = !up;
+    }
+    storm.push(pt(w, y0));
+    const NS = 'http://www.w3.org/2000/svg';
     const layer = document.createElement('div');
     layer.className = 'spike-alert';
-    Object.assign(layer.style, { left: br.left + 'px', top: br.top + 'px', width: br.width + 'px', height: br.height + 'px' });
-    const title = document.createElement('div');
-    title.className = 'spike-title';
-    title.textContent = 'SPIKE';
-    const sub = document.createElement('div');
-    sub.className = 'spike-sub';
-    sub.textContent = `負けた時の支払い ${LOSE_PAYMENT}→${LATE_LOSE_PAYMENT}🪙`;
-    layer.appendChild(title);
-    layer.appendChild(sub);
+    Object.assign(layer.style, { left: br.left + 'px', top: br.top + 'px', width: w + 'px', height: h + 'px' });
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('width', w);
+    svg.setAttribute('height', h);
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    const path = (cls, pts, parent) => {
+      const el = document.createElementNS(NS, 'path');
+      el.setAttribute('class', 'spike-wave ' + cls);
+      el.setAttribute('d', 'M' + pts.join(' L'));
+      el.setAttribute('pathLength', '1');
+      el.setAttribute('stroke-dasharray', '1');
+      (parent || svg).appendChild(el);
+    };
+    const base = document.createElementNS(NS, 'line');
+    Object.entries({ x1: 0, y1: y0, x2: w, y2: y0, stroke: '#19d3ff', 'stroke-opacity': 0.15 }).forEach(([k, v]) => base.setAttribute(k, v));
+    svg.appendChild(base);
+    path('calm', calm);
+    path('peak', peak);
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'spike-storm-g');
+    g.style.transformOrigin = `0 ${y0}px`;
+    svg.appendChild(g);
+    path('storm', storm, g);
+    const dot = document.createElementNS(NS, 'circle');
+    dot.setAttribute('class', 'spike-dot');
+    dot.setAttribute('cx', cx);
+    dot.setAttribute('cy', top);
+    dot.setAttribute('r', 5);
+    svg.appendChild(dot);
+    layer.appendChild(svg);
+    const add = (cls, text, style) => {
+      const el = document.createElement('div');
+      el.className = cls;
+      el.textContent = text;
+      Object.assign(el.style, style);
+      layer.appendChild(el);
+    };
+    add('spike-title', 'SPIKE', { top: Math.round(h * 0.2) + 'px' });
+    add('spike-sub', `負けた時の支払い ${LOSE_PAYMENT} → ${LATE_LOSE_PAYMENT}🪙`, { top: Math.round(h * 0.2 + 80) + 'px' });
+    add('spike-lbl before', `ROUND ${LATE_ROUND}`, { top: (y0 + amp + 14) + 'px' });
+    add('spike-lbl after', `ROUND ${LATE_ROUND + 1} ▲`, { top: (y0 + amp + 14) + 'px' });
+    add('spike-frame', '', {});
     document.body.appendChild(layer);
     playSe('spike');
-    setTimeout(() => layer.remove(), 2200);
+    setTimeout(() => layer.remove(), 2300);
   }
 
   // ===== 引き分け→手札勝負の演出（A：サドンデス・カットイン）=====
