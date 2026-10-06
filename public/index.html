@@ -3435,7 +3435,6 @@
     // 表記は枚数に合わせて Lv2（2枚）／Lv3（3枚）。発動していない段階はグレーアウト
     return `<span class="role-lv${lv >= 1 ? ' on' : ''}"><b>Lv${COLOR_ROLE_MIN}</b> ${r.lv1}</span><br><span class="role-lv${lv >= 2 ? ' on' : ''}"><b>Lv${ROLE_LV2_MIN}</b> ${r.lv2.replace(/^＋/, '')}</span><br><span class="role-lv${lv >= 3 ? ' on' : ''}"><b>Lv${ENHANCE_MIN}</b> ${ROLE_LV4_DESC}</span>`;
   }
-  const roleName = (color) => (ROLE_LIST.find(r => r.color === color) || {}).name || '';
   function renderRoleList() {
     const counts = {};
     Object.values(prepMyColors).forEach(c => { counts[c] = (counts[c] || 0) + 1; });
@@ -3768,6 +3767,11 @@
     const hl = (n) => (n === 'hi' ? '大(5〜8)' : '小(1〜4)');
     const pr = (n) => (n === 'even' ? '偶数' : '奇数');
     // ex：whoLabel の手札について見えている情報。読む側の効果は reader、自分をさらす効果は owner が発動したもの
+    // 色の役の見出し：「G code : Lv2」（読む側の役のレベル）
+    const roleTag = (color, reader) => {
+      const r = getActiveRoles(reader === 'me' ? 'my' : 'op').find(x => x.color === color);
+      return `${COLOR_EN[color]} : Lv${r ? roleLevel(r.count) + 1 : 2}　`;
+    };
     const describe = (ex, whoLabel, reader, owner, kind) => {
       if (!ex) return;
       if (ex.hilo) add(reader, kind, `観測：${whoLabel}の手札は 小${ex.hilo.lo}枚・大${ex.hilo.hi}枚`);
@@ -3777,19 +3781,19 @@
       if (ex.hidParity) add(owner, kind, `露呈：${whoLabel}の手札の1枚は ${pr(ex.hidParity)}`);
       (ex.reveal || []).forEach(r => add(r.src === '記録' ? reader : owner, kind, `${r.src}：${whoLabel}の手札の ${r.n} が確定（!）`));
       // 色の役で見えている情報
-      if (ex.roleHilo) add(reader, kind, `青の役（${roleName('blue')}）：${whoLabel}の手札は 小${ex.roleHilo.lo}枚・大${ex.roleHilo.hi}枚${ex.roleMax != null ? `・一番大きいのは ${ex.roleMax}` : ''}`);
-      if (ex.roleParity) add(reader, kind, `ピンクの役（${roleName('pink')}）：${whoLabel}の手札は 偶数${ex.roleParity.even}枚・奇数${ex.roleParity.odd}枚${ex.roleMin != null ? `・一番小さいのは ${ex.roleMin}` : ''}`);
-      if (ex.roleSum != null) add(reader, kind, `緑の役（${roleName('green')}）：${whoLabel}の手札の合計は ${ex.roleSum}`);
+      if (ex.roleHilo) add(reader, kind, `${roleTag('blue', reader)}${whoLabel}の手札は 小${ex.roleHilo.lo}枚・大${ex.roleHilo.hi}枚${ex.roleMax != null ? `・一番大きいのは ${ex.roleMax}` : ''}`);
+      if (ex.roleParity) add(reader, kind, `${roleTag('pink', reader)}${whoLabel}の手札は 偶数${ex.roleParity.even}枚・奇数${ex.roleParity.odd}枚${ex.roleMin != null ? `・一番小さいのは ${ex.roleMin}` : ''}`);
+      if (ex.roleSum != null) add(reader, kind, `${roleTag('green', reader)}${whoLabel}の手札の合計は ${ex.roleSum}`);
       if (ex.roleAdj) {
         if (reader === 'me') {
           const hit = state.myHand.filter(n => ex.roleAdj.includes(n));
-          add(reader, kind, `緑の役Lv3：${hit.length ? `あなたの ${hit.join('・')} は相手の手札と1差（JACKPOTの狙い目）` : 'あなたの手札に、相手の手札と1差のカードはない'}`);
+          add(reader, kind, `${roleTag('green', reader)}${hit.length ? `あなたの ${hit.join('・')} は相手の手札と1差（JACKPOTの狙い目）` : 'あなたの手札に、相手の手札と1差のカードはない'}`);
         } else {
-          add(reader, kind, `緑の役Lv3：${whoLabel}の手札と1差のカードがあるか`);
+          add(reader, kind, `${roleTag('green', reader)}${whoLabel}の手札と1差のカードがあるか`);
         }
       }
       const dk = (n) => (n == null ? '（空）' : n);
-      if ('roleDeckBottom' in ex) add(reader, kind, `黄の役（${roleName('yellow')}）：${whoLabel}の山札の一番底は ${dk(ex.roleDeckBottom)}${'roleDeckTop' in ex ? `・一番上は ${dk(ex.roleDeckTop)}` : ''}`);
+      if ('roleDeckBottom' in ex) add(reader, kind, `${roleTag('yellow', reader)}${whoLabel}の山札の一番底は ${dk(ex.roleDeckBottom)}${'roleDeckTop' in ex ? `・一番上は ${dk(ex.roleDeckTop)}` : ''}`);
     };
     describe(state.intel, '相手', 'me', 'op', 'see');
     describe(state.exposure, 'あなた', 'op', 'me', 'shown');
@@ -3802,9 +3806,9 @@
         const tie = opp.filter(o => o === n).length;
         return `${n}は勝ち${win}枚${state.intel.roleOddsTie ? `・引き分け${tie}枚` : ''}`;
       });
-      add('me', 'see', `赤の役（${roleName('red')}）：${parts.join(' ／ ') || '手札なし'}`);
+      add('me', 'see', `${roleTag('red', 'me')}${parts.join(' ／ ') || '手札なし'}`);
     }
-    if (state.exposure && state.exposure.roleOdds) add('op', 'shown', `赤の役（${roleName('red')}）：あなたの手札に対する相手の勝算`);
+    if (state.exposure && state.exposure.roleOdds) add('op', 'shown', `${roleTag('red', 'op')}あなたの手札に対する相手の勝算`);
     // 予兆（2A）：相手のブースト
     if (state.intel && state.intel.boostIntel) {
       let t;
