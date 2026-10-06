@@ -1551,7 +1551,7 @@
   /* 役の発動カットイン */
   .role-cutin { position: fixed; z-index: 86; pointer-events: none; overflow: hidden; border-radius: 16px; }
   .role-cutin .rc-band {
-    position: absolute; width: 88%; height: 64px;
+    position: absolute; width: 88%; height: 44px;
     border-top: 2px solid var(--rc); border-bottom: 2px solid var(--rc);
     box-shadow: 0 0 18px var(--rc); background: #000; overflow: hidden;
   }
@@ -5232,7 +5232,7 @@
         const hand = document.getElementById('myHand');
         const hr = hand && hand.getBoundingClientRect();
         const handTop = hr && hr.height ? hr.top - br.top : br.height * 0.55;
-        const bandTop = c.who === 'my' ? handTop - 64 - 6 : handTop - 64 * 2 - 6 - 22;
+        const bandTop = c.who === 'my' ? handTop - 44 - 8 : handTop - 44 * 2 - 8 - 18;
         wrap.firstChild.style.top = Math.max(0, bandTop) + 'px';
         document.body.appendChild(wrap);
         setTimeout(() => wrap.remove(), 1400);
