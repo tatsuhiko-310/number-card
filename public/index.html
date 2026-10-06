@@ -1548,6 +1548,34 @@
   .board.compact-2 .discard-col .discard-grid { max-width: 136px; gap: 3px; }
   .board.compact-2 .discard-slot { font-size: 0.75rem; }
   .board.compact-2 .select-label { display: none; }
+  /* 役の発動カットイン */
+  .role-cutin { position: fixed; z-index: 86; pointer-events: none; overflow: hidden; border-radius: 16px; animation: rcDim 1.4s ease forwards; }
+  @keyframes rcDim { 0% { background: rgba(0, 0, 0, 0); } 15%, 80% { background: rgba(0, 0, 0, 0.55); } 100% { background: rgba(0, 0, 0, 0); } }
+  .role-cutin .rc-band {
+    position: absolute; left: 0; width: 135%; height: 15%; min-height: 64px;
+    border-top: 2px solid var(--rc); border-bottom: 2px solid var(--rc);
+    box-shadow: 0 0 18px var(--rc);
+    background: #000 var(--bg) center / cover no-repeat;
+  }
+  .role-cutin .rc-band.top { top: 30%; animation: rcSlideR 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  .role-cutin .rc-band.bottom { top: 46%; transform: scaleX(-1); animation: rcSlideL 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  @keyframes rcSlideR { 0% { transform: translateX(-100%); opacity: 0; } 20% { transform: translateX(-12%); opacity: 1; } 75% { transform: translateX(-4%); opacity: 1; } 100% { transform: translateX(30%); opacity: 0; } }
+  @keyframes rcSlideL { 0% { transform: scaleX(-1) translateX(-100%); opacity: 0; } 20% { transform: scaleX(-1) translateX(-12%); opacity: 1; } 75% { transform: scaleX(-1) translateX(-4%); opacity: 1; } 100% { transform: scaleX(-1) translateX(30%); opacity: 0; } }
+  .role-cutin .rc-text {
+    position: absolute; left: 0; right: 0; top: 63%; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0;
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.75) 20%, rgba(0, 0, 0, 0.75) 80%, transparent);
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif; color: #fff; text-shadow: 0 0 10px var(--rc), 0 0 4px #000;
+    animation: rcText 1.4s ease forwards;
+  }
+  .role-cutin .rc-who { font-size: 0.62rem; font-weight: 900; letter-spacing: 0.2em; color: var(--rc); }
+  .role-cutin .rc-name { font-size: 1.15rem; font-weight: 900; letter-spacing: 0.04em; }
+  .role-cutin .rc-lv { font-size: 0.8rem; font-weight: 900; letter-spacing: 0.12em; }
+  @keyframes rcText { 0%, 15% { opacity: 0; transform: scale(1.4); } 28% { opacity: 1; transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
+  .role-cutin.red { --rc: var(--color-red); --bg: url("assets/role-bg-red.webp"); }
+  .role-cutin.blue { --rc: var(--color-blue); --bg: url("assets/role-bg-blue.webp"); }
+  .role-cutin.yellow { --rc: var(--color-yellow); --bg: url("assets/role-bg-yellow.webp"); }
+  .role-cutin.green { --rc: var(--color-green); --bg: url("assets/role-bg-green.webp"); }
+  .role-cutin.pink { --rc: var(--color-pink); --bg: url("assets/role-bg-pink.webp"); }
   /* 役パネルは盤面の中に収め、はみ出す分はスクロール */
   .role-panel { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; }
   .rp-note { font-size: 0.62rem; color: var(--text-dim); }
@@ -3662,7 +3690,7 @@
       knownHeld: { my: [], op: [] },          // 確定情報の数字（山札を作り直した時に手札に残っていたカード・引き分け勝負で公開した手札）。出されるまで「!」表示
       revealedDeck: { my: [], op: [] },       // 引き分け勝負で公開した山札のカード（上から順）。手札に引いた時に確定情報になる
       tieWait: null,                          // オンライン：引き分け勝負の進行中（決着を待つ）
-      roleShown: { my: { colors: new Set(), cards: new Set() }, op: { colors: new Set(), cards: new Set() } }, // 光らせている役の色・捨て札（手札選択に入った時に更新）
+      roleShown: { my: { colors: new Set(), cards: new Set(), levels: {} }, op: { colors: new Set(), cards: new Set(), levels: {} } }, // 光らせている役の色・捨て札（手札選択に入った時に更新）
       returningNow: { my: false, op: false }, // 演出中は捨て札置き場の再描画を止める
       roundLog: [],   // ラウンドごとの収支ログ（検証用）
       roundSnap: null, // ラウンド開始時（ブースト消費前）のチップ・ポッド
@@ -5174,17 +5202,50 @@
   // 新しく成立した役があれば成立音を鳴らす（sound=false なら鳴らさない）
   function commitRoleGlow(whos, sound) {
     let newly = false;
+    const cutins = []; // 新しく発動・レベルアップした役（カットイン用）
     whos.forEach(who => {
-      const shownColors = new Set(state.roleShown[who].colors);
-      const colors = new Set(getActiveRoles(who).map(r => r.color));
-      colors.forEach(c => { if (!shownColors.has(c)) newly = true; });
+      const prevLv = state.roleShown[who].levels || {};
+      const roles = getActiveRoles(who);
+      const colors = new Set(roles.map(r => r.color));
+      const levels = {};
+      roles.forEach(r => {
+        levels[r.color] = roleLevel(r.count);
+        if (levels[r.color] > (prevLv[r.color] || 0)) { newly = true; cutins.push({ who, color: r.color, lv: levels[r.color] }); }
+      });
       const map = state[who + 'CardColors'];
       state.roleShown[who] = {
         colors,
+        levels,
         cards: new Set(state[who + 'Discard'].filter(n => colors.has(map[n])))
       };
     });
-    if (newly && sound) playRoleUpSound();
+    if (newly && sound) {
+      playRoleUpSound();
+      playRoleCutins(cutins);
+    }
+  }
+
+  // 役の発動カットイン：その色のキャラ画像の帯が、上は左から右へ、下は右から左へ流れる
+  function playRoleCutins(list) {
+    const board = document.getElementById('board');
+    if (!board || !list.length) return;
+    let delay = 0;
+    list.forEach(c => {
+      setTimeout(() => {
+        const info = ROLE_LIST.find(r => r.color === c.color) || { name: '' };
+        const wrap = document.createElement('div');
+        wrap.className = `role-cutin ${c.color} ${c.who}`;
+        // レベルは表記に合わせる（2枚=Lv2, 3枚=Lv3, 4枚=Lv4）
+        const lvLabel = `Lv${c.lv + 1}`;
+        wrap.innerHTML = `<div class="rc-band top"></div><div class="rc-band bottom"></div>
+          <div class="rc-text"><span class="rc-who">${c.who === 'my' ? 'PLAYER' : 'ENEMY'}</span><span class="rc-name">${COLOR_EN[c.color]}：${info.name}</span><span class="rc-lv">${lvLabel}</span></div>`;
+        const br = board.getBoundingClientRect();
+        Object.assign(wrap.style, { left: br.left + 'px', top: br.top + 'px', width: br.width + 'px', height: br.height + 'px' });
+        document.body.appendChild(wrap);
+        setTimeout(() => wrap.remove(), 1500);
+      }, delay);
+      delay += 900;
+    });
   }
 
   // 山札へ戻る捨て札に含まれない数字＝その時点で手札に残っていたカード（両者に分かる確定情報）
