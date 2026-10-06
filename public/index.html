@@ -869,36 +869,6 @@
 
   .hidden { display: none !important; }
 
-  .debug-panel {
-    margin-top: 10px;
-    padding: 8px 10px;
-    border-radius: 10px;
-    background: var(--bg2);
-    border: 1px dashed var(--card-border);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-  }
-  .debug-label {
-    font-size: 0.7rem;
-    font-weight: 800;
-    color: var(--text-dim);
-    opacity: 0.8;
-  }
-  .debug-row {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .btn.small {
-    font-size: 0.68rem;
-    padding: 6px 10px;
-    opacity: 0.85;
-  }
-  .board.hide-hand .select-panel #myHand, .board.hide-hand .select-panel .select-label { display: none; }
-
   .start-panel, .prep-panel {
     background: var(--bg2);
     border-radius: 16px;
@@ -1884,13 +1854,6 @@
         <button type="button" class="btn secondary" data-fx="cutin">カットイン（赤）</button>
         <button type="button" class="btn secondary wide" data-fx="double">ダブルカットイン（赤）</button>
       </div>
-    </div>
-  </div>
-
-  <div class="debug-panel hidden" id="debugPanel">
-    <div class="debug-label">🐞 デバッグ</div>
-    <div class="debug-row">
-      <button class="btn secondary small" id="dbgHideHandBtn">🙈 手札を隠す</button>
     </div>
   </div>
 
@@ -5554,7 +5517,6 @@
     btn.setAttribute('aria-label', label);
     btn.title = label;
     document.getElementById('debugState').textContent = debugMode ? 'DEBUG ON' : '';
-    document.getElementById('debugPanel').classList.toggle('hidden', !debugMode);
     document.getElementById('dbgFxBtn').classList.toggle('hidden', !debugMode);
     if (!debugMode) setDbgFx(false);
   }
@@ -5607,13 +5569,6 @@
     setDbgFx(false);
     // パネルが消えてから再生（盤面の位置を測る演出があるため）
     requestAnimationFrame(() => DEBUG_FX[btn.dataset.fx]());
-  });
-
-  // デバッグ：自分の手札（選ぶカードの列）だけを一時的に隠す。盤面だけを見たい時や撮影用
-  document.getElementById('dbgHideHandBtn').addEventListener('click', () => {
-    const board = document.getElementById('board');
-    const hidden = board.classList.toggle('hide-hand');
-    document.getElementById('dbgHideHandBtn').textContent = hidden ? '👁 手札を表示' : '🙈 手札を隠す';
   });
 
   document.getElementById('soundBtn').addEventListener('click', () => {
