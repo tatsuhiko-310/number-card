@@ -1678,7 +1678,7 @@
   .stack-dialog .recall-cards { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
   .stack-dialog .recall-cards .card { width: 54px; height: 76px; font-size: 1.5rem; cursor: pointer; }
 
-  /* ===== 背景アニメーション（漂う光・流れるネオングリッド・浮かぶ数字・走査線） ===== */
+  /* ===== 背景アニメーション（漂う光・流れるネオングリッド・浮かぶ数字） ===== */
   .bg-fx { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
   .bg-orb { position: absolute; width: 70vmax; height: 70vmax; border-radius: 50%; opacity: 0.5; will-change: transform; }
   .bg-orb.o1 { left: -30vmax; top: -30vmax; background: radial-gradient(circle, rgba(255, 43, 79, 0.35), transparent 60%); animation: bgOrb1 26s ease-in-out infinite alternate; }
@@ -1707,15 +1707,10 @@
     85% { opacity: var(--o); }
     100% { transform: translateY(-125vh) rotate(var(--r1)); opacity: 0; }
   }
-  /* 上から下へ流れる走査線 */
-  .bg-scan { position: absolute; left: 0; right: 0; top: 0; height: 22vh;
-    background: linear-gradient(to bottom, transparent, rgba(25, 211, 255, 0.06) 70%, rgba(25, 211, 255, 0.16) 99%, transparent);
-    animation: bgScan 7s linear infinite; }
-  @keyframes bgScan { from { transform: translateY(-25vh); } to { transform: translateY(105vh); } }
   .bg-fx.paused * , .bg-fx.paused *::before { animation-play-state: paused; }
   @media (prefers-reduced-motion: reduce) {
     .bg-fx *, .bg-fx *::before { animation: none !important; }
-    .bg-digit, .bg-scan { display: none; }
+    .bg-digit { display: none; }
   }
 </style>
 </head>
@@ -1724,7 +1719,6 @@
   <div class="bg-fx" id="bgFx" aria-hidden="true">
     <div class="bg-orb o1"></div><div class="bg-orb o2"></div><div class="bg-orb o3"></div>
     <div class="bg-grid"></div>
-    <div class="bg-scan"></div>
   </div>
   <script>
   (function () {
