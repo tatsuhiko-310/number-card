@@ -859,6 +859,58 @@
     box-shadow: 0 8px 30px rgba(0,0,0,0.3);
   }
   .overlay-card h2 { margin-top: 0; font-size: 1.4rem; }
+
+  /* ===== リザルト画面（決着時に全面表示） ===== */
+  .overlay.result-screen {
+    z-index: 1000; /* ログボタンより手前 */
+    padding: 0;
+    overflow-y: auto;
+    align-items: flex-start;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(30, 139, 255, 0.25), transparent 60%),
+      radial-gradient(ellipse at 50% 100%, rgba(255, 43, 79, 0.18), transparent 60%),
+      var(--bg);
+  }
+  .overlay.result-screen.show { animation: panelIn 0.3s ease; }
+  .rs-inner {
+    width: 100%; max-width: 440px; min-height: 100%; margin: 0 auto;
+    padding: 48px 16px 28px; box-sizing: border-box;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  .rs-label { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; letter-spacing: 0.3em; font-size: 0.72rem; color: var(--text-dim); }
+  .rs-outcome {
+    --c1: var(--cy-cyan); --c2: var(--win); --c3: var(--gold); --glow-c: rgba(78, 224, 138, 0.55);
+    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 4.6rem; line-height: 1.05;
+    letter-spacing: 0.06em; margin: 8px 0 4px;
+    background: linear-gradient(100deg, var(--c1), var(--c2) 60%, var(--c3));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 18px var(--glow-c));
+  }
+  .rs-outcome.lose { --c1: #ff8a3d; --c2: var(--lose); --c3: var(--cy-red); --glow-c: rgba(255, 43, 79, 0.55); }
+  .rs-outcome.draw { --c1: var(--gold); --c2: var(--tie); --c3: #ff8a3d; --glow-c: rgba(255, 203, 92, 0.5); }
+  .rs-sub { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 24px; min-height: 1.2em; }
+  .rs-score { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 26px; }
+  .rs-side { width: 110px; }
+  .rs-who { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.1em; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rs-num { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 3.2rem; line-height: 1; }
+  .rs-side.me .rs-who { color: var(--cy-blue); }
+  .rs-side.op .rs-who { color: var(--cy-red); }
+  .rs-side.me .rs-num { color: var(--cy-blue); text-shadow: 0 0 16px rgba(30, 139, 255, 0.7); }
+  .rs-side.op .rs-num { color: var(--cy-red); text-shadow: 0 0 16px rgba(255, 43, 79, 0.7); }
+  .rs-side.out .rs-num { color: #5a637a; text-shadow: none; } /* チップ0枚の側は暗く */
+  .rs-vs { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; color: var(--text-dim); }
+  .rs-panel {
+    width: 100%; box-sizing: border-box; padding: 14px 12px 8px; border-radius: 12px;
+    background: rgba(11, 16, 32, 0.9); border: 1px solid rgba(25, 211, 255, 0.35);
+    box-shadow: 0 0 18px rgba(25, 211, 255, 0.12);
+  }
+  .rs-ptitle { display: flex; justify-content: space-between; align-items: center; font-weight: 900; color: var(--cy-cyan); font-size: 0.85rem; margin-bottom: 6px; }
+  .rs-legend { display: flex; gap: 10px; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.62rem; color: var(--text-dim); }
+  .rs-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .rs-legend i.me { background: var(--cy-blue); }
+  .rs-legend i.op { background: var(--cy-red); }
+  .rs-chart { display: block; width: 100%; height: auto; }
+  .rs-btn { width: 100%; margin-top: 24px; padding: 15px; font-size: 1.05rem; font-weight: 700; letter-spacing: 0.12em; }
   .rules {
     font-size: 0.72rem;
     color: var(--text-dim);
@@ -1886,11 +1938,21 @@
 
 <div class="net-notice" id="netNotice" role="status"></div>
 
-<div class="overlay" id="overlay">
-  <div class="overlay-card">
-    <h2 id="overlayTitle">ゲーム終了</h2>
-    <p id="overlayText"></p>
-    <button class="btn" id="playAgainBtn">もう一度プレイ</button>
+<div class="overlay result-screen" id="overlay">
+  <div class="rs-inner">
+    <div class="rs-label">RESULT</div>
+    <div class="rs-outcome" id="rsOutcome">WIN</div>
+    <div class="rs-sub" id="rsSub"></div>
+    <div class="rs-score">
+      <div class="rs-side me" id="rsMe"><div class="rs-who">YOU</div><div class="rs-num" id="rsMyChips">0</div></div>
+      <div class="rs-vs">VS</div>
+      <div class="rs-side op" id="rsOp"><div class="rs-who" id="rsOpName">CPU</div><div class="rs-num" id="rsOpChips">0</div></div>
+    </div>
+    <div class="rs-panel">
+      <div class="rs-ptitle"><span>チップの推移</span><span class="rs-legend"><span><i class="me"></i>YOU</span><span><i class="op"></i><span id="rsLegendOp">CPU</span></span></span></div>
+      <svg class="rs-chart" id="rsChart" viewBox="0 0 340 230" role="img" aria-label="ラウンドごとのチップ枚数の推移"></svg>
+    </div>
+    <button class="btn rs-btn" id="playAgainBtn">タイトルに戻る</button>
   </div>
 </div>
 
@@ -2421,7 +2483,6 @@
       revealWrittenRound: 0, resolvingRound: 0, seatRev: 0, matchRev: 0
     });
     document.getElementById('resetBtn').textContent = '最初からやり直す';
-    document.getElementById('playAgainBtn').textContent = 'もう一度プレイ';
     updateOpLabel();
   }
 
@@ -2565,7 +2626,6 @@
     debugMode = !!net.match.debug;
     updateDebugBtn();
     document.getElementById('resetBtn').textContent = '対戦を抜ける';
-    document.getElementById('playAgainBtn').textContent = 'スタートに戻る';
     subscribeAll();
     joinNetRoom();
     net.phase = 'idle';
@@ -5126,23 +5186,68 @@
     }
   }
 
+  // リザルト画面：勝敗・最終チップ数・チップの推移（折れ線）を表示
   function showGameOver() {
     const overlay = document.getElementById('overlay');
-    const title = document.getElementById('overlayTitle');
-    const text = document.getElementById('overlayText');
     const w = gameWinner(state.myChips, state.opChips);
-    if (w === 'my') {
-      title.textContent = '🎉 あなたの勝ち！（相手のチップが0枚）';
-    } else if (w === 'op') {
-      title.textContent = '😢 相手の勝ち…（あなたのチップが0枚）';
-    } else if (w === 'draw') {
-      title.textContent = '引き分け（お互いのチップが0枚）';
-    } else {
-      title.textContent = '終了';
-    }
-    text.textContent = `所持チップ：あなた ${state.myChips}🪙 - 相手 ${state.opChips}🪙`;
+    const outcome = document.getElementById('rsOutcome');
+    outcome.textContent = w === 'my' ? 'WIN' : w === 'op' ? 'LOSE' : w === 'draw' ? 'DRAW' : 'END';
+    outcome.className = 'rs-outcome' + (w === 'op' ? ' lose' : w === 'draw' ? ' draw' : '');
+    const log = state.roundLog || [];
+    document.getElementById('rsSub').textContent = log.length ? `${log.length}ラウンドで決着` : '';
+    const opName = net.active ? (net.oppName || '相手') : 'CPU';
+    document.getElementById('rsOpName').textContent = opName;
+    document.getElementById('rsLegendOp').textContent = opName;
+    document.getElementById('rsMyChips').textContent = state.myChips;
+    document.getElementById('rsOpChips').textContent = state.opChips;
+    document.getElementById('rsMe').classList.toggle('out', state.myChips <= 0);
+    document.getElementById('rsOp').classList.toggle('out', state.opChips <= 0);
+    renderResultChart(log);
     if (net.active) stopTurnTimer();
     overlay.classList.add('show');
+  }
+
+  function renderResultChart(log) {
+    const svg = document.getElementById('rsChart');
+    // 開始時点（1ラウンド目の前）＋各ラウンド終了時点のチップ数
+    const first = log[0];
+    const me = [first ? first.my - first.dMy : state.myChips];
+    const op = [first ? first.op - first.dOp : state.opChips];
+    log.forEach(r => { me.push(r.my); op.push(r.op); });
+    const n = me.length;
+    const W = 340, L = 26, R = 12, T = 14, B = 196;
+    const max = Math.max(30, Math.ceil(Math.max(...me, ...op) / 10) * 10);
+    const X = i => L + (n > 1 ? i * (W - L - R) / (n - 1) : (W - L - R) / 2);
+    const Y = v => B - Math.max(0, v) * (B - T) / max;
+    let s = '<defs><linearGradient id="rsFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e8bff" stop-opacity=".35"/><stop offset="1" stop-color="#1e8bff" stop-opacity="0"/></linearGradient></defs>';
+    for (let v = 0; v <= max; v += 10) {
+      const y = Y(v);
+      s += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="${v ? '#1f2a44' : '#8fa0c4'}"${v ? ' stroke-dasharray="3 3"' : ''}/>`;
+      s += `<text x="${L - 6}" y="${y + 3.5}" fill="#8fa0c4" font-size="9" text-anchor="end">${v}</text>`;
+    }
+    // 負けた時の支払いが増える区間（LATE_ROUND を超えたラウンド）
+    if (n - 1 > LATE_ROUND) {
+      const x0 = X(LATE_ROUND);
+      s += `<rect x="${x0}" y="${T}" width="${X(n - 1) - x0}" height="${B - T}" fill="rgba(255,176,32,.07)"/>`;
+      s += `<text x="${x0 + 4}" y="${T + 10}" fill="#ffb020" font-size="8.5" font-weight="700">SPIKE</text>`;
+    }
+    const path = a => a.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
+    if (n > 1) s += `<path d="${path(me)} L${X(n - 1)},${B} L${X(0)},${B} Z" fill="url(#rsFill)"/>`;
+    s += `<path d="${path(op)}" fill="none" stroke="#ff2b4f" stroke-width="2.2" stroke-linejoin="round" style="filter:drop-shadow(0 0 4px #ff2b4f)"/>`;
+    s += `<path d="${path(me)}" fill="none" stroke="#1e8bff" stroke-width="2.8" stroke-linejoin="round" style="filter:drop-shadow(0 0 5px #1e8bff)"/>`;
+    // 点はラウンド数が多いと潰れるので少ない時だけ
+    if (n <= 21) {
+      op.forEach((v, i) => { s += `<circle cx="${X(i)}" cy="${Y(v)}" r="2.5" fill="#05070f" stroke="#ff2b4f" stroke-width="1.8"/>`; });
+      me.forEach((v, i) => { s += `<circle cx="${X(i)}" cy="${Y(v)}" r="3" fill="#05070f" stroke="#1e8bff" stroke-width="2"/>`; });
+    }
+    // 横軸ラベル：最大でおよそ13個まで間引く（最終ラウンドは必ず表示）
+    const step = Math.max(1, Math.ceil((n - 1) / 12));
+    for (let i = 0; i < n; i++) {
+      if (i % step && i !== n - 1) continue;
+      if (i !== n - 1 && n - 1 - i < step) continue; // 最終ラベルと重なるものは省く
+      s += `<text x="${X(i)}" y="${B + 20}" fill="#8fa0c4" font-size="8.5" text-anchor="middle">${i ? 'R' + i : '開始'}</text>`;
+    }
+    svg.innerHTML = s;
   }
 
   function render(fieldOnly) {
