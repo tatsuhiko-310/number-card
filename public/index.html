@@ -1482,6 +1482,13 @@
     border: 1px solid var(--card-border); background: rgba(11, 16, 32, 0.8); color: var(--text-dim); opacity: 0.7;
     transition: color 0.2s, border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
   }
+  /* デバッグ：盤面の左に出す演出再生ボタン（押すと演出一覧のパネルが中央に出る） */
+  .dbg-fx-btn { position: absolute; left: 6px; top: 52%; transform: translateY(-50%); z-index: 5; color: #ffb020; border-color: #ffb020; box-shadow: 0 0 10px rgba(255, 176, 32, 0.6); opacity: 0.9; }
+  .dbg-fx-box { border-color: #ffb020; box-shadow: 0 0 18px rgba(255, 176, 32, 0.4); }
+  .dbg-fx-box .role-list-title { color: #ffb020; }
+  .dbg-fx-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .dbg-fx-list .btn { width: 100%; margin: 0; font-size: 0.78rem; padding: 10px 6px; }
+  .dbg-fx-list .wide { grid-column: 1 / -1; }
   .debug-bug.on { color: #ffb020; border-color: #ffb020; box-shadow: 0 0 10px rgba(255, 176, 32, 0.6); opacity: 1; }
   .debug-state { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.1em; color: #ffb020; }
   /* ===== ハッキングチップ ===== */
@@ -1796,6 +1803,12 @@
 
     <!-- 中：バトル場 ⇄ 手札選択 -->
     <div class="zone-mid">
+      <button type="button" class="debug-bug dbg-fx-btn hidden" id="dbgFxBtn" aria-label="演出を再生（デバッグ）" title="演出を再生（デバッグ）">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 6.5a3 3 0 0 1 6 0"/><rect x="7" y="7.5" width="10" height="12" rx="5"/><path d="M12 11v8.5"/>
+          <path d="M7 11.5H4M17 11.5h3M7 15.5H3.5M17 15.5h3.5M8 19l-2.5 2M16 19l2.5 2M8.5 8 6 5.5M15.5 8 18 5.5"/>
+        </svg>
+      </button>
       <div class="battle-panel">
         <div class="pod-display" id="podDisplay"><span id="podValue">00</span></div>
         <div class="field-slot">
@@ -1858,14 +1871,24 @@
     <button class="btn secondary" id="resetBtn">最初からやり直す</button>
   </div>
 
+  <div class="role-list-ov" id="dbgFxOv" aria-hidden="true">
+    <div class="role-list-box dbg-fx-box" role="dialog" aria-label="演出の再生">
+      <div class="role-list-title"><span>🐞 演出の再生</span><button type="button" class="role-list-x" id="dbgFxClose" aria-label="閉じる">✕</button></div>
+      <div class="role-list-sub">押すとパネルが閉じて演出だけを再生します（チップ・ポッドは動きません）</div>
+      <div class="dbg-fx-list">
+        <button type="button" class="btn secondary" data-fx="win">WIN演出</button>
+        <button type="button" class="btn secondary" data-fx="lose">LOSE演出</button>
+        <button type="button" class="btn secondary" data-fx="jackpot">JACKPOT演出</button>
+        <button type="button" class="btn secondary" data-fx="spike">SPIKE演出</button>
+        <button type="button" class="btn secondary" data-fx="hack">HACK演出</button>
+        <button type="button" class="btn secondary" data-fx="cutin">カットイン（赤）</button>
+        <button type="button" class="btn secondary wide" data-fx="double">ダブルカットイン（赤）</button>
+      </div>
+    </div>
+  </div>
+
   <div class="debug-panel hidden" id="debugPanel">
     <div class="debug-label">🐞 デバッグ</div>
-    <div class="debug-row">
-      <button class="btn secondary small" id="dbgThroughBtn">THROUGH再生</button>
-      <button class="btn secondary small" id="dbgLoseBtn">LOSE再生</button>
-      <button class="btn secondary small" id="dbgJackpotBtn">JACKPOT再生</button>
-      <button class="btn secondary small" id="dbgSpikeBtn">SPIKE再生</button>
-    </div>
     <div class="debug-row">
       <button class="btn secondary small" id="dbgHideHandBtn">🙈 手札を隠す</button>
     </div>
@@ -5532,6 +5555,8 @@
     btn.title = label;
     document.getElementById('debugState').textContent = debugMode ? 'DEBUG ON' : '';
     document.getElementById('debugPanel').classList.toggle('hidden', !debugMode);
+    document.getElementById('dbgFxBtn').classList.toggle('hidden', !debugMode);
+    if (!debugMode) setDbgFx(false);
   }
   document.getElementById('debugModeBtn').addEventListener('click', () => {
     debugMode = !debugMode;
@@ -5558,21 +5583,30 @@
     stopBgm();
   });
 
-  // デバッグ：実際のチップ・ポッドを動かさずに、勝敗演出（THROUGH/LOSE/JACKPOT）だけを単独再生する
-  document.getElementById('dbgThroughBtn').addEventListener('click', () => {
-    updatePodDisplay('through');
-    playSe('win');
-  });
-  document.getElementById('dbgSpikeBtn').addEventListener('click', playSpikeAlert);
-  document.getElementById('dbgLoseBtn').addEventListener('click', () => {
-    updatePodDisplay('grow');
-    playSe('lose');
-    flashNum('myHP', 'pay-flash');
-  });
-  document.getElementById('dbgJackpotBtn').addEventListener('click', () => {
-    updatePodDisplay('jackpot');
-    playSe('jackpot');
-    flashNum('myHP', 'gain-flash');
+  // デバッグ：実際のチップ・ポッドを動かさずに、演出だけを単独再生する（盤面左のボタン→中央のパネルから選ぶ）
+  const DEBUG_FX = {
+    win: () => { updatePodDisplay('through'); playSe('win'); },
+    lose: () => { updatePodDisplay('grow'); playSe('lose'); flashNum('myHP', 'pay-flash'); },
+    jackpot: () => { updatePodDisplay('jackpot'); playSe('jackpot'); flashNum('myHP', 'gain-flash'); },
+    spike: () => playSpikeAlert(),
+    hack: () => playHackGlitch('HACK!!', gameToken),
+    cutin: () => { playRoleUpSound(); playRoleCutins([{ who: 'my', color: 'red', lv: 1 }]); },
+    double: () => { playRoleUpSound(); playRoleCutins([{ who: 'op', color: 'red', lv: 1 }, { who: 'my', color: 'red', lv: 1 }]); }
+  };
+  function setDbgFx(open) {
+    const ov = document.getElementById('dbgFxOv');
+    ov.classList.toggle('show', open);
+    ov.setAttribute('aria-hidden', open ? 'false' : 'true');
+  }
+  document.getElementById('dbgFxBtn').addEventListener('click', () => setDbgFx(true));
+  document.getElementById('dbgFxClose').addEventListener('click', () => setDbgFx(false));
+  document.getElementById('dbgFxOv').addEventListener('click', (e) => {
+    if (e.target.id === 'dbgFxOv') { setDbgFx(false); return; }
+    const btn = e.target.closest('[data-fx]');
+    if (!btn) return;
+    setDbgFx(false);
+    // パネルが消えてから再生（盤面の位置を測る演出があるため）
+    requestAnimationFrame(() => DEBUG_FX[btn.dataset.fx]());
   });
 
   // デバッグ：自分の手札（選ぶカードの列）だけを一時的に隠す。盤面だけを見たい時や撮影用
