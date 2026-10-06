@@ -1708,6 +1708,21 @@
     100% { transform: translateY(-125vh) rotate(var(--r1)); opacity: 0; }
   }
   .bg-fx.paused * , .bg-fx.paused *::before { animation-play-state: paused; }
+  /* リザルト画面の表示中は、背景をリザルトのすぐ下（対戦画面より手前）に持ち上げて見せる */
+  @supports selector(:has(*)) {
+    body:has(.overlay.result-screen.show) .bg-fx {
+      z-index: 1000; /* リザルトと同じ値。DOMが先なのでリザルトの下になる */
+      background:
+        radial-gradient(ellipse at 50% -10%, rgba(255, 43, 79, 0.22), transparent 45%),
+        radial-gradient(ellipse at 50% 110%, rgba(30, 139, 255, 0.22), transparent 45%),
+        var(--bg);
+    }
+    .overlay.result-screen {
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(30, 139, 255, 0.25), transparent 60%),
+        radial-gradient(ellipse at 50% 100%, rgba(255, 43, 79, 0.18), transparent 60%);
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     .bg-fx *, .bg-fx *::before { animation: none !important; }
     .bg-digit { display: none; }
