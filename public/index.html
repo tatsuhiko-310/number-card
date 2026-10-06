@@ -1607,12 +1607,13 @@
   .role-lv { opacity: 0.4; filter: grayscale(1); }
   .role-lv.on { opacity: 1; filter: none; color: #fff; }
   .role-lv b { font-size: 0.62rem; margin-right: 6px; }
-  /* カードの裏面：デザインなしの黒地（グレーの枠のみ） */
+  /* カードの裏面：グラデ枠＋中央のひし形＋内枠の下辺に役の5色（D1-P6案） */
   .card.back, .flip-back, .flying-card {
-    background: #000;
-    border: 2px solid #3a4562;
+    background: #03050b url("assets/card-back-d.svg") center / 100% 100% no-repeat;
+    border: none;
     box-sizing: border-box;
   }
+  .card.back { font-size: 0; }
   /* 情報が多い時の詰め（手札のカードを小さくしないため、周りを段階的に小さくする） */
   .board.compact-1 .zone-side { padding: 6px 12px; }
   .board.compact-1 .side-col .num { font-size: clamp(2.6rem, min(20vw, 9dvh), 6rem); }

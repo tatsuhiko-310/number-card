@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 196" preserveAspectRatio="none">
+  <!-- カード裏面：グラデ枠＋中央のひし形＋内枠の下辺に役の5色 -->
+  <defs>
+    <linearGradient id="frame" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#ff2b4f"/><stop offset="0.5" stop-color="#7a3cff"/><stop offset="1" stop-color="#1e8bff"/>
+    </linearGradient>
+    <linearGradient id="core" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#ff2b4f"/><stop offset="1" stop-color="#1e8bff"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.5"/></filter>
+  </defs>
+  <rect width="140" height="196" fill="#03050b"/>
+  <rect x="1.5" y="1.5" width="137" height="193" rx="14" fill="none" stroke="url(#frame)" stroke-width="3"/>
+  <path d="M104,183.5 H119.5 A8,8 0 0 0 127.5,175.5 V20.5 A8,8 0 0 0 119.5,12.5 H20.5 A8,8 0 0 0 12.5,20.5 V175.5 A8,8 0 0 0 20.5,183.5 H36" fill="none" stroke="#a08cff" stroke-opacity="0.35" stroke-width="1"/>
+  <polygon points="70,64.3 103.7,98 70,131.7 36.3,98" fill="none" stroke="#b06bff" stroke-width="5" opacity="0.7" filter="url(#glow)"/>
+  <polygon points="70,64.3 103.7,98 70,131.7 36.3,98" fill="#b06bff" fill-opacity="0.06" stroke="#b06bff" stroke-width="2"/>
+  <polygon points="70,83.2 84.8,98 70,112.8 55.2,98" fill="#b06bff" opacity="0.8" filter="url(#glow)"/>
+  <polygon points="70,83.2 84.8,98 70,112.8 55.2,98" fill="url(#core)"/>
+  <polygon points="46,180.1 49.4,183.5 46,186.9 42.6,183.5" fill="#ff4d4d" fill-opacity="0.8"/><polygon points="58,180.1 61.4,183.5 58,186.9 54.6,183.5" fill="#2f8fff" fill-opacity="0.8"/><polygon points="70,180.1 73.4,183.5 70,186.9 66.6,183.5" fill="#ffd400" fill-opacity="0.8"/><polygon points="82,180.1 85.4,183.5 82,186.9 78.6,183.5" fill="#2ed17a" fill-opacity="0.8"/><polygon points="94,180.1 97.4,183.5 94,186.9 90.6,183.5" fill="#ff5cb3" fill-opacity="0.8"/>
+  <text x="71.3" y="173" text-anchor="middle" font-family="Orbitron, 'Arial Black', Arial, sans-serif" font-weight="900" font-size="9" letter-spacing="2.7" fill="#b8a8ff" fill-opacity="0.8">NUMBER WAR</text>
+</svg>
