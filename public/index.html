@@ -1511,6 +1511,11 @@
   .dbg-fx-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
   .dbg-fx-list .btn { width: 100%; margin: 0; font-size: 0.78rem; padding: 10px 6px; }
   .dbg-fx-list .wide { grid-column: 1 / -1; }
+  .dbg-round { margin-top: 14px; padding-top: 10px; border-top: 1px dashed rgba(255, 176, 32, 0.4); }
+  .dbg-round-head { display: flex; justify-content: space-between; align-items: baseline; color: #ffb020; font-weight: 800; font-size: 0.8rem; }
+  .dbg-round-now { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.95rem; }
+  .dbg-round-list { grid-template-columns: repeat(4, 1fr); }
+  .dbg-round-note { margin-top: 6px; font-size: 0.68rem; opacity: 0.8; }
   .debug-bug.on { color: #ffb020; border-color: #ffb020; box-shadow: 0 0 10px rgba(255, 176, 32, 0.6); opacity: 1; }
   .debug-state { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.1em; color: #ffb020; }
   /* ===== ハッキングチップ ===== */
@@ -1906,6 +1911,17 @@
         <button type="button" class="btn secondary" data-fx="hack">HACK演出</button>
         <button type="button" class="btn secondary" data-fx="cutin">カットイン（赤）</button>
         <button type="button" class="btn secondary wide" data-fx="double">ダブルカットイン（赤）</button>
+      </div>
+      <div class="dbg-round">
+        <div class="dbg-round-head"><span>ラウンド数</span><span class="dbg-round-now" id="dbgRoundNow">ROUND 1</span></div>
+        <div class="dbg-fx-list dbg-round-list">
+          <button type="button" class="btn secondary" data-round="-10">−10</button>
+          <button type="button" class="btn secondary" data-round="-1">−1</button>
+          <button type="button" class="btn secondary" data-round="+1">+1</button>
+          <button type="button" class="btn secondary" data-round="+10">+10</button>
+          <button type="button" class="btn secondary wide" data-round="20">ROUND 20 にする（次のラウンドでSPIKE）</button>
+        </div>
+        <div class="dbg-round-note" id="dbgRoundNote">今のラウンドの番号を変えます（負けた時の支払いはこの番号で判定）</div>
       </div>
     </div>
   </div>
@@ -4403,7 +4419,7 @@
   const WIN_REWARD = 1;
   // 今のラウンド番号（オンラインは共有のラウンド番号、CPU戦は決着済みラウンド数+1）
   function currentRoundNo() {
-    return net.active ? state.round : state.roundLog.length + 1;
+    return net.active ? state.round : state.roundLog.length + 1 + (state.roundOffset || 0); // roundOffset：デバッグでのラウンド数操作
   }
 
   // 引き分け勝負の判定：数字の列を先頭から比べ、最初に違った位置で決着。
@@ -4933,7 +4949,7 @@
 
     if (state.roundSnap) {
       state.roundLog.push({
-        no: net.active ? state.round : state.roundLog.length + 1,
+        no: currentRoundNo(),
         result: outcome === 'tie' ? '引き分け' : (outcome === 'me' ? 'あなたの勝ち' : '相手の勝ち'),
         kind: res.logKind,
         cards: `あなた ${myLabel} / 相手 ${opLabel}${tbLabel}`,
@@ -5687,7 +5703,25 @@
     cutin: () => { playRoleUpSound(); playRoleCutins([{ who: 'my', color: 'red', lv: 1 }]); },
     double: () => { playRoleUpSound(); playRoleCutins([{ who: 'op', color: 'red', lv: 1 }, { who: 'my', color: 'red', lv: 1 }]); }
   };
+  // デバッグ：ラウンド数の操作（CPU戦のみ。オンライン対戦は相手と番号を揃えているため変えない）
+  function updateDbgRound() {
+    const ok = !!state && !net.active;
+    document.getElementById('dbgRoundNow').textContent = state ? `ROUND ${currentRoundNo()}` : '—';
+    document.querySelectorAll('[data-round]').forEach(b => { b.disabled = !ok; });
+    document.getElementById('dbgRoundNote').textContent = net.active
+      ? 'オンライン対戦中はラウンド数を変更できません'
+      : '今のラウンドの番号を変えます（負けた時の支払いはこの番号で判定）';
+  }
+  function setDebugRound(v) {
+    if (!state || net.active) return;
+    const cur = currentRoundNo();
+    const next = Math.max(1, /^[+-]/.test(v) ? cur + Number(v) : Number(v));
+    state.roundOffset = (state.roundOffset || 0) + (next - cur);
+    if (next <= LATE_ROUND) state.spikeShownRound = null; // 21ラウンド目に入り直した時にSPIKE演出をもう一度見られるように
+    updateDbgRound();
+  }
   function setDbgFx(open) {
+    if (open) updateDbgRound();
     const ov = document.getElementById('dbgFxOv');
     ov.classList.toggle('show', open);
     ov.setAttribute('aria-hidden', open ? 'false' : 'true');
@@ -5696,6 +5730,8 @@
   document.getElementById('dbgFxClose').addEventListener('click', () => setDbgFx(false));
   document.getElementById('dbgFxOv').addEventListener('click', (e) => {
     if (e.target.id === 'dbgFxOv') { setDbgFx(false); return; }
+    const rb = e.target.closest('[data-round]');
+    if (rb) { setDebugRound(rb.dataset.round); return; }
     const btn = e.target.closest('[data-fx]');
     if (!btn) return;
     setDbgFx(false);
