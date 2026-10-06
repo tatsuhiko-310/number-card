@@ -5192,7 +5192,6 @@
   // 役の成立表示（捨て札の光り・成立音）は、次ラウンドの手札選択に入った時にまとめて反映する。
   // 新しく成立した役があれば成立音を鳴らす（sound=false なら鳴らさない）
   function commitRoleGlow(whos, sound) {
-    let newly = false;
     const cutins = []; // 新しく発動した役（カットイン用）
     whos.forEach(who => {
       const prevLv = state.roleShown[who].levels || {};
@@ -5201,11 +5200,8 @@
       const levels = {};
       roles.forEach(r => {
         levels[r.color] = roleLevel(r.count);
-        if (levels[r.color] > (prevLv[r.color] || 0)) {
-          newly = true;
-          // カットインは初めて発動した時（Lv2）だけ。Lv3・Lv4への昇格は演出なし
-          if (!prevLv[r.color]) cutins.push({ who, color: r.color, lv: levels[r.color] });
-        }
+        // 演出（効果音・カットイン）は初めて発動した時（Lv2）だけ。Lv3・Lv4への昇格は演出なし
+        if (!prevLv[r.color]) cutins.push({ who, color: r.color, lv: levels[r.color] });
       });
       const map = state[who + 'CardColors'];
       state.roleShown[who] = {
@@ -5214,7 +5210,7 @@
         cards: new Set(state[who + 'Discard'].filter(n => colors.has(map[n])))
       };
     });
-    if (newly && sound) {
+    if (cutins.length && sound) {
       playRoleUpSound();
       playRoleCutins(cutins);
     }
