@@ -3774,6 +3774,7 @@
     };
     const describe = (ex, whoLabel, reader, owner, kind) => {
       if (!ex) return;
+      const who2 = whoLabel === 'あなた' ? '自分' : whoLabel; // 役の行の短い主語
       if (ex.hilo) add(reader, kind, `観測：${whoLabel}の手札は 小${ex.hilo.lo}枚・大${ex.hilo.hi}枚`);
       if (ex.sum != null) add(reader, kind, `解析：${whoLabel}の手札の合計は ${ex.sum}`);
       if ('deckTop' in ex) add(reader, kind, `先読み：${whoLabel}の山札の一番上は ${ex.deckTop == null ? '（空）' : ex.deckTop}`);
@@ -3781,19 +3782,19 @@
       if (ex.hidParity) add(owner, kind, `露呈：${whoLabel}の手札の1枚は ${pr(ex.hidParity)}`);
       (ex.reveal || []).forEach(r => add(r.src === '記録' ? reader : owner, kind, `${r.src}：${whoLabel}の手札の ${r.n} が確定（!）`));
       // 色の役で見えている情報
-      if (ex.roleHilo) add(reader, kind, `${roleTag('blue', reader)}${whoLabel}の手札は 小${ex.roleHilo.lo}枚・大${ex.roleHilo.hi}枚${ex.roleMax != null ? `・一番大きいのは ${ex.roleMax}` : ''}`);
-      if (ex.roleParity) add(reader, kind, `${roleTag('pink', reader)}${whoLabel}の手札は 偶数${ex.roleParity.even}枚・奇数${ex.roleParity.odd}枚${ex.roleMin != null ? `・一番小さいのは ${ex.roleMin}` : ''}`);
-      if (ex.roleSum != null) add(reader, kind, `${roleTag('green', reader)}${whoLabel}の手札の合計は ${ex.roleSum}`);
+      if (ex.roleHilo) add(reader, kind, `${roleTag('blue', reader)}${who2} 小${ex.roleHilo.lo}・大${ex.roleHilo.hi}${ex.roleMax != null ? `／最大${ex.roleMax}` : ''}`);
+      if (ex.roleParity) add(reader, kind, `${roleTag('pink', reader)}${who2} 偶${ex.roleParity.even}・奇${ex.roleParity.odd}${ex.roleMin != null ? `／最小${ex.roleMin}` : ''}`);
+      if (ex.roleSum != null) add(reader, kind, `${roleTag('green', reader)}${who2} 合計${ex.roleSum}`);
       if (ex.roleAdj) {
         if (reader === 'me') {
           const hit = state.myHand.filter(n => ex.roleAdj.includes(n));
-          add(reader, kind, `${roleTag('green', reader)}${hit.length ? `あなたの ${hit.join('・')} は相手の手札と1差（JACKPOTの狙い目）` : 'あなたの手札に、相手の手札と1差のカードはない'}`);
+          add(reader, kind, `${roleTag('green', reader)}${hit.length ? `1差あり：${hit.join('・')}（JACKPOT狙い目）` : '1差なし'}`);
         } else {
-          add(reader, kind, `${roleTag('green', reader)}${whoLabel}の手札と1差のカードがあるか`);
+          add(reader, kind, `${roleTag('green', reader)}相手が1差を確認中`);
         }
       }
-      const dk = (n) => (n == null ? '（空）' : n);
-      if ('roleDeckBottom' in ex) add(reader, kind, `${roleTag('yellow', reader)}${whoLabel}の山札の一番底は ${dk(ex.roleDeckBottom)}${'roleDeckTop' in ex ? `・一番上は ${dk(ex.roleDeckTop)}` : ''}`);
+      const dk = (n) => (n == null ? 'なし' : n);
+      if ('roleDeckBottom' in ex) add(reader, kind, `${roleTag('yellow', reader)}${who2}山札 底${dk(ex.roleDeckBottom)}${'roleDeckTop' in ex ? `／上${dk(ex.roleDeckTop)}` : ''}`);
     };
     describe(state.intel, '相手', 'me', 'op', 'see');
     describe(state.exposure, 'あなた', 'op', 'me', 'shown');
@@ -3804,11 +3805,11 @@
       const parts = state.myHand.slice().sort((a, b) => a - b).map(n => {
         const win = opp.filter(o => n > o).length;
         const tie = opp.filter(o => o === n).length;
-        return `${n}は勝ち${win}枚${state.intel.roleOddsTie ? `・引き分け${tie}枚` : ''}`;
+        return `${n}→勝${win}${state.intel.roleOddsTie ? `・分${tie}` : ''}`;
       });
-      add('me', 'see', `${roleTag('red', 'me')}${parts.join(' ／ ') || '手札なし'}`);
+      add('me', 'see', `${roleTag('red', 'me')}${parts.join('／') || '手札なし'}`);
     }
-    if (state.exposure && state.exposure.roleOdds) add('op', 'shown', `${roleTag('red', 'op')}あなたの手札に対する相手の勝算`);
+    if (state.exposure && state.exposure.roleOdds) add('op', 'shown', `${roleTag('red', 'op')}相手が勝算を確認中`);
     // 予兆（2A）：相手のブースト
     if (state.intel && state.intel.boostIntel) {
       let t;
@@ -3831,8 +3832,8 @@
     if (myBlocked) add('me', 'rule', '撹乱：相手の情報系の効果が効かない');
     const r = state.rule || {};
     const lv4My = getEnhance('my'), lv4Op = getEnhance('op');
-    if (lv4My) add('me', 'rule', `${COLOR_EN[lv4My.color]} Lv4：JACKPOTで勝てば相手から${ENHANCE_STEAL}枚奪う`);
-    if (lv4Op) add('op', 'rule', `${COLOR_EN[lv4Op.color]} Lv4：相手がJACKPOTで勝つと${ENHANCE_STEAL}枚奪われる`);
+    if (lv4My) add('me', 'rule', `${COLOR_EN[lv4My.color]} : Lv4　JACKPOT勝利で${ENHANCE_STEAL}枚奪取`);
+    if (lv4Op) add('op', 'rule', `${COLOR_EN[lv4Op.color]} : Lv4　JACKPOT勝利で${ENHANCE_STEAL}枚奪取`);
     if (r.my && r.my.free) add('me', 'rule', '伏兵：ブースト1枚目が無料');
     if (r.my && r.my.noBoost) add('me', 'rule', '重圧：このラウンドはブーストできない');
     if (r.op && r.op.free) add('op', 'rule', '伏兵：相手のブースト1枚目が無料');
