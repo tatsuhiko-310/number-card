@@ -1488,7 +1488,7 @@
   .board.hack-glitching .flip-card { filter: drop-shadow(-4px 0 rgba(255, 0, 60, 0.7)) drop-shadow(4px 0 rgba(0, 220, 255, 0.7)); }
   .board.hack-glitching .flip-front { text-shadow: -3px 0 rgba(255, 0, 60, 0.95), 3px 0 rgba(0, 220, 255, 0.95); }
   @keyframes hackShake { 0% { transform: translateX(var(--gx, 0)); } 50% { transform: translateX(calc(var(--gx, 0) * -1)) skewX(-1deg); } 100% { transform: translateX(0); } }
-  /* SPIKE演出（30ラウンド超えで負けた時の支払いが増える） */
+  /* SPIKE演出（20ラウンド超えで負けた時の支払いが増える） */
   .spike-alert {
     position: fixed; z-index: 86; pointer-events: none; overflow: hidden; border-radius: 16px;
     background: radial-gradient(ellipse at 50% 45%, rgba(45, 0, 10, 0.8), rgba(2, 4, 12, 0.9) 70%);
@@ -1864,7 +1864,7 @@
     ・<b>JACKPOT</b>＝<b>ちょうど1差</b>で勝つと、POTのチップを総取り。負けた側はPOTへ2枚支払う<br>
     ・<b>WIN</b>＝それ以外で勝つと、POTから1枚受け取る（POTが空なら受け取りなし）<br>
     ・<b>LOSE</b>＝負けると、POTへ2枚支払う（ブーストして負けた場合はブースト分に加えて2枚）<br>
-    ・<b>30ラウンド超え</b>＝31ラウンド目からは、負けた時（JACKPOTで負けた時も含む）の支払いが<b>4枚</b>に増える<br>
+    ・<b>20ラウンド超え</b>＝21ラウンド目からは、負けた時（JACKPOTで負けた時も含む）の支払いが<b>4枚</b>に増える<br>
     ・<b>引き分け</b>＝お互いの残りの手札を公開し、大きい方の勝ち（差が1ならJACKPOT）。手札も同じなら山札の一番上から順に比べる。カードが尽きた時だけ、ブースト分はPOTへ流れて引き分け<br><br>
     <b>ハッキングチップ</b>：使ったラウンドは<b>勝敗がアベコベ</b>（低い数字が勝ち。例：1が8に勝つ）。ブーストとは併用できない。使ったことはカード公開時に相手にも分かる。お互いが使っても反転は1回分。1差ならJACKPOT、引き分けの手札勝負も低い方が勝ち。勝った側は、負けた側がブーストしたチップをPOTではなく自分の手元に吸収する。<br><br>
     <b>デッキ構築</b>：1〜8のカードそれぞれに、5色（赤・青・黄・緑・ピンク）から1色を選んでデッキを組む。「役一覧」ボタンで色の役を確認できる。<br><br>
@@ -1934,7 +1934,7 @@
     jackpot: { src: 'assets/se-jackpot.mp3', volume: 0.3 }, // JACKPOT成立時
     lose: { src: 'assets/se-lose2.mp3', volume: 0.3 },      // 自分がLOSE（ブーストなしの負けでポッドへ支払い）
     win: { src: 'assets/se-win.mp3', volume: 0.3 },         // 自分が勝った時（JACKPOT以外）
-    spike: { src: 'assets/se-spike.mp3', volume: 0.3 }      // SPIKE演出（30ラウンド超えの警告）
+    spike: { src: 'assets/se-spike.mp3', volume: 0.3 }      // SPIKE演出（20ラウンド超えの警告）
   };
   const seBuffers = {};
   function loadSe(key) {
@@ -4318,8 +4318,8 @@
   const CPU_HACK_RATE = 0.6;    // 条件を満たしたラウンドで使う確率
   // 負けた側がポッドへ支払う枚数（固定）
   const LOSE_PAYMENT = 2;
-  // 長期戦の決着を早めるため、LATE_ROUNDラウンドを超えたら（31ラウンド目から）負けた時の支払いを増やす
-  const LATE_ROUND = 30;
+  // 長期戦の決着を早めるため、LATE_ROUNDラウンドを超えたら（21ラウンド目から）負けた時の支払いを増やす
+  const LATE_ROUND = 20;
   const LATE_LOSE_PAYMENT = 4;
   // 勝った時（JACKPOT以外）にポッドから受け取る枚数
   const WIN_REWARD = 1;
@@ -4565,7 +4565,7 @@
     nz.start(t); nz.stop(t + 0.62);
   }
 
-  // ===== SPIKE演出：30ラウンドを超えた最初のラウンド開始時に、警告音とともに表示（操作は止めない）=====
+  // ===== SPIKE演出：20ラウンドを超えた最初のラウンド開始時に、警告音とともに表示（操作は止めない）=====
   function playSpikeAlert() {
     const board = document.getElementById('board');
     if (!board) return;
