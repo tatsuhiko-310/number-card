@@ -1678,7 +1678,7 @@
   .stack-dialog .recall-cards { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
   .stack-dialog .recall-cards .card { width: 54px; height: 76px; font-size: 1.5rem; cursor: pointer; }
 
-  /* ===== 背景アニメーション（漂う光・流れるネオングリッド・浮かぶ数字） ===== */
+  /* ===== 背景アニメーション（漂う光・流れるネオングリッド） ===== */
   .bg-fx { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
   .bg-orb { position: absolute; width: 70vmax; height: 70vmax; border-radius: 50%; opacity: 0.5; will-change: transform; }
   .bg-orb.o1 { left: -30vmax; top: -30vmax; background: radial-gradient(circle, rgba(255, 43, 79, 0.35), transparent 60%); animation: bgOrb1 26s ease-in-out infinite alternate; }
@@ -1697,16 +1697,6 @@
     background-size: 44px 44px; background-position: center bottom;
     animation: bgGrid 2.4s linear infinite; }
   @keyframes bgGrid { from { transform: rotateX(68deg) translateY(-44px); } to { transform: rotateX(68deg) translateY(0); } }
-  /* ゆっくり昇っていく数字（1〜8・役の5色） */
-  .bg-digit { position: absolute; bottom: -12vh; font-family: 'Orbitron', sans-serif; font-weight: 900; line-height: 1;
-    color: transparent; -webkit-text-stroke: 1px var(--c); text-shadow: 0 0 12px var(--c); opacity: 0;
-    animation: bgDigit var(--d) linear var(--delay) infinite; will-change: transform, opacity; }
-  @keyframes bgDigit {
-    0% { transform: translateY(0) rotate(var(--r0)); opacity: 0; }
-    12% { opacity: var(--o); }
-    85% { opacity: var(--o); }
-    100% { transform: translateY(-125vh) rotate(var(--r1)); opacity: 0; }
-  }
   .bg-fx.paused * , .bg-fx.paused *::before { animation-play-state: paused; }
   /* リザルト画面の表示中は、背景をリザルトのすぐ下（対戦画面より手前）に持ち上げて見せる */
   @supports selector(:has(*)) {
@@ -1725,7 +1715,6 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .bg-fx *, .bg-fx *::before { animation: none !important; }
-    .bg-digit { display: none; }
   }
 </style>
 </head>
@@ -1739,23 +1728,6 @@
   (function () {
     var fx = document.getElementById('bgFx');
     if (!fx) return;
-    var colors = ['#ff4d4d', '#2f8fff', '#ffd400', '#2ed17a', '#ff5cb3', '#19d3ff'];
-    var n = window.innerWidth < 600 ? 10 : 16;
-    for (var i = 0; i < n; i++) {
-      var el = document.createElement('span');
-      el.className = 'bg-digit';
-      el.textContent = String(1 + Math.floor(Math.random() * 8));
-      var d = 18 + Math.random() * 22;
-      var r = Math.random() * 40 - 20;
-      el.style.cssText = 'left:' + (Math.random() * 96).toFixed(1) + '%;' +
-        'font-size:' + (1.4 + Math.random() * 3.2).toFixed(2) + 'rem;' +
-        '--c:' + colors[i % colors.length] + ';' +
-        '--o:' + (0.18 + Math.random() * 0.3).toFixed(2) + ';' +
-        '--d:' + d.toFixed(1) + 's;' +
-        '--delay:' + (-Math.random() * d).toFixed(1) + 's;' +
-        '--r0:' + r.toFixed(0) + 'deg;--r1:' + (r + (Math.random() * 60 - 30)).toFixed(0) + 'deg;';
-      fx.appendChild(el);
-    }
     // タブが裏にある間は止めて負荷を下げる
     document.addEventListener('visibilitychange', function () { fx.classList.toggle('paused', document.hidden); });
   })();
