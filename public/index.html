@@ -821,7 +821,9 @@
   .legend-now { font-weight: 800; }
   .legend-now.known { color: var(--known); }
 
-  .controls { text-align: center; margin-top: 16px; }
+  /* 盤面の下のボタン（サウンド・やり直し）：同じ幅で横に並べる */
+  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 420px; margin: 16px auto 0; }
+  .controls .btn.secondary { margin: 0; width: 100%; padding: 12px 8px; white-space: nowrap; }
   .btn {
     background: var(--accent);
     color: #fff;
@@ -1895,7 +1897,7 @@
   </div>
 
   <div class="controls">
-    <button class="btn secondary" id="soundBtn">🔊 サウンド ON</button>
+    <button class="btn secondary" id="soundBtn">サウンド ON</button>
     <button class="btn secondary" id="resetBtn">最初からやり直す</button>
   </div>
 
@@ -5741,7 +5743,7 @@
 
   document.getElementById('soundBtn').addEventListener('click', () => {
     soundOn = !soundOn;
-    document.getElementById('soundBtn').textContent = soundOn ? '🔊 サウンド ON' : '🔇 サウンド OFF';
+    document.getElementById('soundBtn').textContent = soundOn ? 'サウンド ON' : 'サウンド OFF';
     syncBgmToSoundToggle();
   });
 
