@@ -1336,8 +1336,6 @@
   .eff-item.see { color: var(--cy-cyan); font-weight: 700; }
   .eff-item.shown { color: var(--known); }
   .eff-item.rule { color: #ffe066; font-weight: 700; }
-  /* 効果欄のカードの数字（枚数と区別するため小さなカード枠で表示） */
-  .eff-card { display: inline-block; min-width: 1.35em; padding: 0 0.2em; margin: 0 1px; border: 1px solid currentColor; border-radius: 3px; text-align: center; line-height: 1.25; font-weight: 900; }
   /* ===== デッキ構築：役一覧 ===== */
   .prep-head { display: flex; justify-content: flex-end; align-items: center; gap: 8px; max-width: min(340px, 42dvh); margin: 0 auto 12px; padding-bottom: 10px; border-bottom: 1px solid var(--card-border); }
   /* デッキ構築の見出し（準備フェイズであることと進み具合を示す） */
@@ -3774,8 +3772,8 @@
       const r = getActiveRoles(reader === 'me' ? 'my' : 'op').find(x => x.color === color);
       return `${COLOR_EN[color]} : Lv${r ? roleLevel(r.count) + 1 : 2}　`;
     };
-    // カードの数字は ⟦n⟧ で書き、表示時に小さなカード枠にする（枚数の数字と見分けるため）
-    const cd = (n) => `⟦${n}⟧`;
+    // カードの数字は［n］で書く（枚数の数字と見分けるため）
+    const cd = (n) => `［${n}］`;
     const describe = (ex, whoLabel, reader, owner, kind) => {
       if (!ex) return;
       const who2 = whoLabel === 'あなた' ? '自分' : whoLabel; // 役の行の短い主語
@@ -3847,7 +3845,7 @@
     const fill = (row, side) => {
       const list = items[side];
       // 効果がない側は空にして行ごと消す（:empty で非表示）
-      row.innerHTML = list.map(it => `<div class="eff-item ${it.kind}">${esc(it.text).replace(/⟦(\d+)⟧/g, '<span class="eff-card">$1</span>')}</div>`).join('');
+      row.innerHTML = list.map(it => `<div class="eff-item ${it.kind}">${esc(it.text)}</div>`).join('');
     };
     fill(rowOp, 'op');
     fill(rowMe, 'me');
