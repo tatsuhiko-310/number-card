@@ -1555,6 +1555,7 @@
     border-top: 2px solid var(--rc); border-bottom: 2px solid var(--rc);
     box-shadow: 0 0 18px var(--rc); background: #000; overflow: hidden;
   }
+  .role-cutin.solo .rc-band { height: 60px; }
   .role-cutin .rc-band::before { content: ""; position: absolute; inset: 0; background: var(--bg) center 40% / cover no-repeat; }
   /* 相手：イラストを反転して左から右へ／自分：右から左へ */
   .role-cutin.op .rc-band { left: -6%; animation: rcSlideR 1.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
@@ -5222,11 +5223,13 @@
     if (!board || !list.length) return;
     // 自分側と相手側は同時に再生し、同じ側で複数発動した時だけ順番に流す
     const delays = { my: 0, op: 0 };
+    // 片方のプレイヤーだけ発動した時は、2本の帯の中間に少し太い帯を1本流す
+    const solo = new Set(list.map(c => c.who)).size === 1;
     list.forEach(c => {
       const delay = delays[c.who];
       setTimeout(() => {
         const wrap = document.createElement('div');
-        wrap.className = `role-cutin ${c.color} ${c.who}`;
+        wrap.className = `role-cutin ${c.color} ${c.who}${solo ? ' solo' : ''}`;
         wrap.innerHTML = '<div class="rc-band"></div>';
         const br = board.getBoundingClientRect();
         Object.assign(wrap.style, { left: br.left + 'px', top: br.top + 'px', width: br.width + 'px', height: br.height + 'px' });
@@ -5234,7 +5237,8 @@
         const hand = document.getElementById('myHand');
         const hr = hand && hand.getBoundingClientRect();
         const handTop = hr && hr.height ? hr.top - br.top : br.height * 0.55;
-        const bandTop = c.who === 'my' ? handTop - 44 - 8 : handTop - 44 * 2 - 8 - 4;
+        const pairMid = handTop - 8 - 44 - 2; // 2本並ぶ時の帯の境目
+        const bandTop = solo ? pairMid - 30 : c.who === 'my' ? handTop - 44 - 8 : handTop - 44 * 2 - 8 - 4;
         wrap.firstChild.style.top = Math.max(0, bandTop) + 'px';
         document.body.appendChild(wrap);
         setTimeout(() => wrap.remove(), 1400);
