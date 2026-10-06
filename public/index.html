@@ -2674,6 +2674,7 @@
       if (i >= 0) state.myHand.splice(i, 1);
       state.pendingCommit = pending;
       prepareRoundIntel();
+      commitRoleGlow(['my', 'op'], false); // 再接続：成立音は鳴らさずに光りだけ戻す
       state.chipSelect = pending.boost;
       state.locked = true;
       state.netPhase = 'committed';
@@ -2718,6 +2719,8 @@
       state.knownHeld.op = knownHeldFrom(cur);
     }
     state.opDiscard = incoming;
+    // 手札選択中に届いた相手の捨て札（ラウンド後の効果で増えた分など）は、その場で役の光り・成立音に反映
+    if (state.netPhase === 'select') commitRoleGlow(['op'], true);
     renderDiscardGrid('discardGridOp', state.opDiscard, state.opCardColors, 'op');
     refreshRolePanel();
   }
@@ -3659,7 +3662,7 @@
       knownHeld: { my: [], op: [] },          // 確定情報の数字（山札を作り直した時に手札に残っていたカード・引き分け勝負で公開した手札）。出されるまで「!」表示
       revealedDeck: { my: [], op: [] },       // 引き分け勝負で公開した山札のカード（上から順）。手札に引いた時に確定情報になる
       tieWait: null,                          // オンライン：引き分け勝負の進行中（決着を待つ）
-      roleSeen: { my: new Set(), op: new Set() }, // 直前に成立していた役（新規成立の検出用）
+      roleShown: { my: { colors: new Set(), cards: new Set() }, op: { colors: new Set(), cards: new Set() } }, // 光らせている役の色・捨て札（手札選択に入った時に更新）
       returningNow: { my: false, op: false }, // 演出中は捨て札置き場の再描画を止める
       roundLog: [],   // ラウンドごとの収支ログ（検証用）
       roundSnap: null, // ラウンド開始時（ブースト消費前）のチップ・ポッド
@@ -3681,6 +3684,7 @@
   // 所持チップが0でも参加でき、その場合は単にブーストできないだけになる。
   function startRound() {
     prepareRoundIntel();
+    commitRoleGlow(['my', 'op'], true); // 次ラウンドの手札選択に入った時に、役の光り・成立音を反映
     state.myHpShown = null;
     document.getElementById('myHP').textContent = state.myChips;
     document.getElementById('opHP').textContent = state.opChips;
@@ -5113,42 +5117,74 @@
   const RETURN_STAGGER_MS = 40;   // 1枚ごとのずらし幅（約2〜3フレーム）
   const RETURN_DURATION_MS = 260; // 1枚がフェードアウトする時間
 
-  // 役が新しく成立した瞬間の「パワーアップ」音：上昇アルペジオ＋きらめき
+  // 役が新しく成立した時の「ロックオン」音：
+  // 「ピッ…ピッ.ピピピ」と間隔が詰まる電子音のあと、澄んだ2音のロック音（細かく揺らす）。デジタルエコー付き
+  const ROLE_LOCK_GAPS = [0, 0.09, 0.07, 0.055, 0.045, 0.037, 0.032];
   function playRoleUpSound() {
     if (!soundOn) return;
     const ctx = ensureAudio();
     if (!ctx) return;
-    const t0 = ctx.currentTime;
+    const out = getTickEcho(ctx);
+    const env = (g, t, peak, attack, decay) => {
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + attack);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+    };
 
-    // 上昇する3音のアルペジオ（ド→ミ→ソ→高ド）
-    const notes = [523.25, 659.25, 783.99, 1046.5];
-    notes.forEach((freq, i) => {
-      const t = t0 + i * 0.06;
+    // 捕捉中のビープ：1音ごとに少しずつ高く
+    let t = ctx.currentTime;
+    ROLE_LOCK_GAPS.forEach((gap, i) => {
+      t += gap;
       const o = ctx.createOscillator();
       const g = ctx.createGain();
-      o.type = 'triangle';
-      o.frequency.setValueAtTime(freq, t);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.3, t + 0.012);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      o.type = 'square';
+      o.frequency.setValueAtTime(1320 + i * 40, t);
+      env(g, t, 0.09, 0.001, 0.025);
       o.connect(g); g.connect(masterGain);
-      o.start(t); o.stop(t + 0.24);
+      o.start(t); o.stop(t + 0.04);
     });
 
-    // 下から吹き上がる「きらめき」のスイープ
-    const sweep = ctx.createOscillator();
-    const sg = ctx.createGain();
-    sweep.type = 'sawtooth';
-    sweep.frequency.setValueAtTime(300, t0);
-    sweep.frequency.exponentialRampToValueAtTime(2600, t0 + 0.3);
-    const hp = ctx.createBiquadFilter();
-    hp.type = 'highpass';
-    hp.frequency.value = 800;
-    sg.gain.setValueAtTime(0.0001, t0);
-    sg.gain.exponentialRampToValueAtTime(0.1, t0 + 0.1);
-    sg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.32);
-    sweep.connect(hp); hp.connect(sg); sg.connect(masterGain);
-    sweep.start(t0); sweep.stop(t0 + 0.34);
+    // ロック音：2音を同時に鳴らし、28Hzで音量を細かく揺らす
+    const tl = t + 0.05;
+    [440 * Math.pow(2, 23 / 12), 440 * Math.pow(2, 30 / 12)].forEach(freq => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      const am = ctx.createOscillator();
+      const amg = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = freq;
+      am.type = 'square';
+      am.frequency.value = 28;
+      amg.gain.value = 0.05;
+      env(g, tl, 0.14, 0.004, 0.32);
+      am.connect(amg); amg.connect(g.gain);
+      o.connect(g); g.connect(out);
+      o.start(tl); am.start(tl); o.stop(tl + 0.36); am.stop(tl + 0.36);
+    });
+    const low = ctx.createOscillator();
+    const lg = ctx.createGain();
+    low.type = 'square';
+    low.frequency.value = 440 * Math.pow(2, 11 / 12);
+    env(lg, tl, 0.06, 0.003, 0.2);
+    low.connect(lg); lg.connect(masterGain);
+    low.start(tl); low.stop(tl + 0.22);
+  }
+
+  // 役の成立表示（捨て札の光り・成立音）は、次ラウンドの手札選択に入った時にまとめて反映する。
+  // 新しく成立した役があれば成立音を鳴らす（sound=false なら鳴らさない）
+  function commitRoleGlow(whos, sound) {
+    let newly = false;
+    whos.forEach(who => {
+      const shownColors = new Set(state.roleShown[who].colors);
+      const colors = new Set(getActiveRoles(who).map(r => r.color));
+      colors.forEach(c => { if (!shownColors.has(c)) newly = true; });
+      const map = state[who + 'CardColors'];
+      state.roleShown[who] = {
+        colors,
+        cards: new Set(state[who + 'Discard'].filter(n => colors.has(map[n])))
+      };
+    });
+    if (newly && sound) playRoleUpSound();
   }
 
   // 山札へ戻る捨て札に含まれない数字＝その時点で手札に残っていたカード（両者に分かる確定情報）
@@ -5210,16 +5246,10 @@
     }
 
     grid.innerHTML = '';
-    const activeRoles = getActiveRoles(who);
-    const glowColors = new Set(activeRoles.map(r => r.color));
-
-    // 前回の描画になかった役が新たに成立していたら、パワーアップ音を鳴らす
-    const roleKeys = new Set(activeRoles.map(r => r.name));
-    const seen = state.roleSeen[who];
-    let newlyActivated = false;
-    roleKeys.forEach(k => { if (!seen.has(k)) newlyActivated = true; });
-    state.roleSeen[who] = roleKeys;
-    if (newlyActivated) playRoleUpSound();
+    // 光らせるのは、手札選択に入った時点で反映済みの役の捨て札だけ（山札へ戻って不成立になった色はすぐ消す）
+    const activeColors = new Set(getActiveRoles(who).map(r => r.color));
+    const shown = state.roleShown[who];
+    shown.colors.forEach(c => { if (!activeColors.has(c)) shown.colors.delete(c); });
 
     const deduced = deducedHeld(who);
     for (let n = 1; n <= 8; n++) {
@@ -5228,7 +5258,7 @@
       let cls = 'discard-slot' + (isFilled ? ' filled' : '');
       if (isFilled && colorMap[n]) {
         cls += ' ' + colorMap[n];
-        if (glowColors.has(colorMap[n])) cls += ' glow';
+        if (shown.colors.has(colorMap[n]) && shown.cards.has(n)) cls += ' glow';
       }
       // 確定情報の数字：まだ出されていなければ「！」を重ねる
       const isKnown = !isFilled && (((state.knownHeld && state.knownHeld[who]) || []).includes(n) || deduced.includes(n));
