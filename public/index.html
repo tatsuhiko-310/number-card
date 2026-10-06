@@ -5234,7 +5234,7 @@
         const hand = document.getElementById('myHand');
         const hr = hand && hand.getBoundingClientRect();
         const handTop = hr && hr.height ? hr.top - br.top : br.height * 0.55;
-        const bandTop = c.who === 'my' ? handTop - 44 - 8 : handTop - 44 * 2 - 8 - 18;
+        const bandTop = c.who === 'my' ? handTop - 44 - 8 : handTop - 44 * 2 - 8 - 4;
         wrap.firstChild.style.top = Math.max(0, bandTop) + 'px';
         document.body.appendChild(wrap);
         setTimeout(() => wrap.remove(), 1400);
