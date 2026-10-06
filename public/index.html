@@ -1519,6 +1519,17 @@
   .dbg-round-list { grid-template-columns: repeat(4, 1fr); }
   .dbg-round-note { margin-top: 6px; font-size: 0.68rem; opacity: 0.8; }
   .debug-bug.on { color: #ffb020; border-color: #ffb020; box-shadow: 0 0 10px rgba(255, 176, 32, 0.6); opacity: 1; }
+  /* スタート画面・デッキ構築：サウンドのON/OFF（右下の小さなスピーカーアイコン） */
+  .sound-mini {
+    margin-left: auto; width: 32px; height: 32px; border-radius: 50%; padding: 0; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--cy-cyan); background: rgba(11, 16, 32, 0.8); color: var(--cy-cyan);
+    box-shadow: 0 0 8px rgba(25, 211, 255, 0.4); transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+  .sound-mini .snd-off { display: none; }
+  .sound-mini.off { color: var(--text-dim); border-color: var(--card-border); box-shadow: none; opacity: 0.7; }
+  .sound-mini.off .snd-on { display: none; }
+  .sound-mini.off .snd-off { display: inline; }
   .debug-state { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.1em; color: #ffb020; }
   /* ===== ハッキングチップ ===== */
   .hack-btn {
@@ -1772,6 +1783,12 @@
         </svg>
       </button>
       <span class="debug-state" id="debugState"></span>
+      <!-- サウンドのON/OFF（パネルの右下） -->
+      <button type="button" class="sound-mini" data-sound-toggle aria-pressed="true" aria-label="サウンド: ON" title="サウンド: ON">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="snd-on" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="snd-off" d="M16 9.5l5 5M21 9.5l-5 5"/>
+        </svg>
+      </button>
     </div>
   </div>
 
@@ -1814,6 +1831,13 @@
       <div class="prep-instruction">好きな方のカードを選んでください</div>
       <div class="prep-choices" id="prepChoices"></div>
       <div class="prep-wait hidden" id="prepWait">デッキ完成！相手の準備を待っています…</div>
+    </div>
+    <div class="dev-row">
+      <button type="button" class="sound-mini" data-sound-toggle aria-pressed="true" aria-label="サウンド: ON" title="サウンド: ON">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="snd-on" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="snd-off" d="M16 9.5l5 5M21 9.5l-5 5"/>
+        </svg>
+      </button>
     </div>
   </div>
 
@@ -5741,9 +5765,21 @@
     requestAnimationFrame(() => DEBUG_FX[btn.dataset.fx]());
   });
 
+  // サウンドのON/OFF：盤面下のボタンと、スタート画面・デッキ構築のアイコンを同じ状態に揃える
+  function refreshSoundButtons() {
+    document.getElementById('soundBtn').textContent = soundOn ? 'サウンド ON' : 'サウンド OFF';
+    document.querySelectorAll('[data-sound-toggle]').forEach(b => {
+      const label = `サウンド: ${soundOn ? 'ON' : 'OFF'}`;
+      b.classList.toggle('off', !soundOn);
+      b.setAttribute('aria-pressed', soundOn ? 'true' : 'false');
+      b.setAttribute('aria-label', label);
+      b.title = label;
+    });
+  }
+  document.querySelectorAll('[data-sound-toggle]').forEach(b => b.addEventListener('click', () => document.getElementById('soundBtn').click()));
   document.getElementById('soundBtn').addEventListener('click', () => {
     soundOn = !soundOn;
-    document.getElementById('soundBtn').textContent = soundOn ? 'サウンド ON' : 'サウンド OFF';
+    refreshSoundButtons();
     syncBgmToSoundToggle();
   });
 
