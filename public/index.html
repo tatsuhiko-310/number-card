@@ -1663,6 +1663,7 @@
 <body>
 <audio id="bgmAudio" loop preload="none" src="assets/bgm-battle-9v.mp3"></audio>
 <audio id="prepBgmAudio" preload="none" src="assets/bgm-prep-bitworks.mp3"></audio>
+<audio id="resultBgmAudio" preload="none" src="assets/bgm-result.mp3"></audio>
 <div class="wrap">
   <h1 class="title-logo"><img src="assets/title-logo-clear.webp" alt="NUMBER WAR" width="960" height="169"></h1>
 
@@ -2187,6 +2188,7 @@
   const BGM_TRACKS = {
     battle: { elId: 'bgmAudio', volume: 0.1 },      // 対戦中のBGM（9V）
     prep:   { elId: 'prepBgmAudio', volume: 0.12 }, // マッチング待機中・デッキ構築のBGM（ビットワークス）
+    result: { elId: 'resultBgmAudio', volume: 0.12 }, // リザルト画面のBGM
   };
   const bgmState = {}; // key: track名 -> { gainNode, buffer, bufferPromise, sourceNode }
   for (const key in BGM_TRACKS) bgmState[key] = { gainNode: null, buffer: null, bufferPromise: null, sourceNode: null };
@@ -5205,6 +5207,7 @@
     renderResultChart(log);
     if (net.active) stopTurnTimer();
     overlay.classList.add('show');
+    startBgm('result');
   }
 
   function renderResultChart(log) {
