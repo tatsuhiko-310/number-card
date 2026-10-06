@@ -63,6 +63,7 @@
     font-family: "Hiragino Sans", "Yu Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
     min-height: 100vh;
     padding: 16px;
+    padding-bottom: 60px; /* 一番下までスクロールしても、固定ボタン（サウンド・LOG）と内容が重ならない */
   }
   .wrap {
     max-width: 480px;
@@ -130,8 +131,9 @@
   .board {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 32px);
-    height: calc(100dvh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    /* 下に40pxの余白：左下のサウンド・右下のLOGボタン（画面に固定）が盤面にかからないように */
+    height: calc(100vh - 72px);
+    height: calc(100dvh - 72px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
     min-height: 560px;
     max-height: 800px;
     background: var(--bg2);
