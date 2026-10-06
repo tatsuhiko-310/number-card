@@ -1938,7 +1938,8 @@
   const SE_FILES = {
     jackpot: { src: 'assets/se-jackpot.mp3', volume: 0.3 }, // JACKPOT成立時
     lose: { src: 'assets/se-lose2.mp3', volume: 0.3 },      // 自分がLOSE（ブーストなしの負けでポッドへ支払い）
-    win: { src: 'assets/se-win.mp3', volume: 0.3 }          // 自分が勝った時（JACKPOT以外）
+    win: { src: 'assets/se-win.mp3', volume: 0.3 },         // 自分が勝った時（JACKPOT以外）
+    spike: { src: 'assets/se-spike.mp3', volume: 0.3 }      // SPIKE演出（30ラウンド超えの警告）
   };
   const seBuffers = {};
   function loadSe(key) {
@@ -4586,28 +4587,8 @@
     layer.appendChild(title);
     layer.appendChild(sub);
     document.body.appendChild(layer);
-    playSpikeSound();
+    playSe('spike');
     setTimeout(() => layer.remove(), 2200);
-  }
-  // 警告音：高低2音を交互に3回（サイレン風のビープ）
-  function playSpikeSound() {
-    if (!soundOn) return;
-    const ctx = ensureAudio();
-    if (!ctx) return;
-    const t = ctx.currentTime;
-    for (let i = 0; i < 6; i++) {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = 'square';
-      const st = t + i * 0.25;
-      o.frequency.setValueAtTime(i % 2 ? 660 : 880, st);
-      g.gain.setValueAtTime(0.0001, st);
-      g.gain.exponentialRampToValueAtTime(0.09, st + 0.015);
-      g.gain.setValueAtTime(0.09, st + 0.18);
-      g.gain.exponentialRampToValueAtTime(0.0001, st + 0.22);
-      o.connect(g); g.connect(masterGain);
-      o.start(st); o.stop(st + 0.23);
-    }
   }
 
   // ===== 引き分け→手札勝負の演出（A：サドンデス・カットイン）=====
