@@ -5220,8 +5220,10 @@
   function playRoleCutins(list) {
     const board = document.getElementById('board');
     if (!board || !list.length) return;
-    let delay = 0;
+    // 自分側と相手側は同時に再生し、同じ側で複数発動した時だけ順番に流す
+    const delays = { my: 0, op: 0 };
     list.forEach(c => {
+      const delay = delays[c.who];
       setTimeout(() => {
         const wrap = document.createElement('div');
         wrap.className = `role-cutin ${c.color} ${c.who}`;
@@ -5237,7 +5239,7 @@
         document.body.appendChild(wrap);
         setTimeout(() => wrap.remove(), 1400);
       }, delay);
-      delay += 700;
+      delays[c.who] += 700;
     });
   }
 
