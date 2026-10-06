@@ -1549,28 +1549,19 @@
   .board.compact-2 .discard-slot { font-size: 0.75rem; }
   .board.compact-2 .select-label { display: none; }
   /* 役の発動カットイン */
-  .role-cutin { position: fixed; z-index: 86; pointer-events: none; overflow: hidden; border-radius: 16px; animation: rcDim 1.4s ease forwards; }
-  @keyframes rcDim { 0% { background: rgba(0, 0, 0, 0); } 15%, 80% { background: rgba(0, 0, 0, 0.55); } 100% { background: rgba(0, 0, 0, 0); } }
+  .role-cutin { position: fixed; z-index: 86; pointer-events: none; overflow: hidden; border-radius: 16px; }
   .role-cutin .rc-band {
-    position: absolute; left: 0; width: 135%; height: 15%; min-height: 64px;
+    position: absolute; width: 88%; height: 64px;
     border-top: 2px solid var(--rc); border-bottom: 2px solid var(--rc);
-    box-shadow: 0 0 18px var(--rc);
-    background: #000 var(--bg) center / cover no-repeat;
+    box-shadow: 0 0 18px var(--rc); background: #000; overflow: hidden;
   }
-  .role-cutin .rc-band.top { top: 30%; animation: rcSlideR 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-  .role-cutin .rc-band.bottom { top: 46%; transform: scaleX(-1); animation: rcSlideL 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-  @keyframes rcSlideR { 0% { transform: translateX(-100%); opacity: 0; } 20% { transform: translateX(-12%); opacity: 1; } 75% { transform: translateX(-4%); opacity: 1; } 100% { transform: translateX(30%); opacity: 0; } }
-  @keyframes rcSlideL { 0% { transform: scaleX(-1) translateX(-100%); opacity: 0; } 20% { transform: scaleX(-1) translateX(-12%); opacity: 1; } 75% { transform: scaleX(-1) translateX(-4%); opacity: 1; } 100% { transform: scaleX(-1) translateX(30%); opacity: 0; } }
-  .role-cutin .rc-text {
-    position: absolute; left: 0; right: 0; top: 63%; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0;
-    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.75) 20%, rgba(0, 0, 0, 0.75) 80%, transparent);
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif; color: #fff; text-shadow: 0 0 10px var(--rc), 0 0 4px #000;
-    animation: rcText 1.4s ease forwards;
-  }
-  .role-cutin .rc-who { font-size: 0.62rem; font-weight: 900; letter-spacing: 0.2em; color: var(--rc); }
-  .role-cutin .rc-name { font-size: 1.15rem; font-weight: 900; letter-spacing: 0.04em; }
-  .role-cutin .rc-lv { font-size: 0.8rem; font-weight: 900; letter-spacing: 0.12em; }
-  @keyframes rcText { 0%, 15% { opacity: 0; transform: scale(1.4); } 28% { opacity: 1; transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
+  .role-cutin .rc-band::before { content: ""; position: absolute; inset: 0; background: var(--bg) center 40% / cover no-repeat; }
+  /* 相手：イラストを反転して左から右へ／自分：右から左へ */
+  .role-cutin.op .rc-band { left: -6%; animation: rcSlideR 1.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  .role-cutin.op .rc-band::before { transform: scaleX(-1); }
+  .role-cutin.my .rc-band { right: -6%; animation: rcSlideL 1.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  @keyframes rcSlideR { 0% { transform: translateX(-110%); opacity: 0; } 22% { transform: translateX(-4%); opacity: 1; } 75% { transform: translateX(4%); opacity: 1; } 100% { transform: translateX(60%); opacity: 0; } }
+  @keyframes rcSlideL { 0% { transform: translateX(110%); opacity: 0; } 22% { transform: translateX(4%); opacity: 1; } 75% { transform: translateX(-4%); opacity: 1; } 100% { transform: translateX(-60%); opacity: 0; } }
   .role-cutin.red { --rc: var(--color-red); --bg: url("assets/role-bg-red.webp"); }
   .role-cutin.blue { --rc: var(--color-blue); --bg: url("assets/role-bg-blue.webp"); }
   .role-cutin.yellow { --rc: var(--color-yellow); --bg: url("assets/role-bg-yellow.webp"); }
@@ -5225,26 +5216,28 @@
     }
   }
 
-  // 役の発動カットイン：その色のキャラ画像の帯が、上は左から右へ、下は右から左へ流れる
+  // 役の発動カットイン：その色のキャラ画像の帯が、相手は左から右へ（反転）、自分は右から左へ流れる
   function playRoleCutins(list) {
     const board = document.getElementById('board');
     if (!board || !list.length) return;
     let delay = 0;
     list.forEach(c => {
       setTimeout(() => {
-        const info = ROLE_LIST.find(r => r.color === c.color) || { name: '' };
         const wrap = document.createElement('div');
         wrap.className = `role-cutin ${c.color} ${c.who}`;
-        // レベルは表記に合わせる（2枚=Lv2, 3枚=Lv3, 4枚=Lv4）
-        const lvLabel = `Lv${c.lv + 1}`;
-        wrap.innerHTML = `<div class="rc-band top"></div><div class="rc-band bottom"></div>
-          <div class="rc-text"><span class="rc-who">${c.who === 'my' ? 'PLAYER' : 'ENEMY'}</span><span class="rc-name">${COLOR_EN[c.color]}：${info.name}</span><span class="rc-lv">${lvLabel}</span></div>`;
+        wrap.innerHTML = '<div class="rc-band"></div>';
         const br = board.getBoundingClientRect();
         Object.assign(wrap.style, { left: br.left + 'px', top: br.top + 'px', width: br.width + 'px', height: br.height + 'px' });
+        // 手札の上側（効果情報の位置）に表示：自分は手札のすぐ上、相手はその上
+        const hand = document.getElementById('myHand');
+        const hr = hand && hand.getBoundingClientRect();
+        const handTop = hr && hr.height ? hr.top - br.top : br.height * 0.55;
+        const bandTop = c.who === 'my' ? handTop - 64 - 6 : handTop - 64 * 2 - 6 - 22;
+        wrap.firstChild.style.top = Math.max(0, bandTop) + 'px';
         document.body.appendChild(wrap);
-        setTimeout(() => wrap.remove(), 1500);
+        setTimeout(() => wrap.remove(), 1400);
       }, delay);
-      delay += 900;
+      delay += 700;
     });
   }
 
