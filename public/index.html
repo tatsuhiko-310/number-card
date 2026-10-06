@@ -2022,6 +2022,14 @@
         </div>
         <div class="dbg-round-note" id="dbgRoundNote">今のラウンドの番号を変えます（負けた時の支払いはこの番号で判定）</div>
       </div>
+      <div class="dbg-round">
+        <div class="dbg-round-head"><span>決着</span></div>
+        <div class="dbg-fx-list">
+          <button type="button" class="btn secondary" data-end="win">強制勝利</button>
+          <button type="button" class="btn secondary" data-end="lose">強制敗北</button>
+        </div>
+        <div class="dbg-round-note" id="dbgEndNote">相手（または自分）のチップを0枚にして、すぐにリザルト画面を出します</div>
+      </div>
     </div>
   </div>
 
@@ -5819,7 +5827,26 @@
     if (next <= LATE_ROUND) state.spikeShownRound = null; // 21ラウンド目に入り直した時にSPIKE演出をもう一度見られるように
     updateDbgRound();
   }
+  // デバッグ：強制勝利・強制敗北（CPU戦のみ。オンライン対戦は相手と結果を揃えられないため使えない）
+  function updateDbgEnd() {
+    const ok = !!state && !net.active && !state.over;
+    document.querySelectorAll('[data-end]').forEach(b => { b.disabled = !ok; });
+    document.getElementById('dbgEndNote').textContent = net.active
+      ? 'オンライン対戦中は使えません'
+      : '相手（または自分）のチップを0枚にして、すぐにリザルト画面を出します';
+  }
+  function forceGameEnd(kind) {
+    if (!state || net.active || state.over) return;
+    gameToken++; // 進行中のラウンドの演出・CPUの手番を止める
+    if (kind === 'win') state.opChips = 0;
+    else state.myChips = 0;
+    state.over = true;
+    document.getElementById('myHP').textContent = state.myChips;
+    document.getElementById('opHP').textContent = state.opChips;
+    showGameOver();
+  }
   function setDbgFx(open) {
+    if (open) updateDbgEnd();
     if (open) updateDbgRound();
     const ov = document.getElementById('dbgFxOv');
     ov.classList.toggle('show', open);
@@ -5831,6 +5858,8 @@
     if (e.target.id === 'dbgFxOv') { setDbgFx(false); return; }
     const rb = e.target.closest('[data-round]');
     if (rb) { setDebugRound(rb.dataset.round); return; }
+    const eb = e.target.closest('[data-end]');
+    if (eb) { setDbgFx(false); forceGameEnd(eb.dataset.end); return; }
     const btn = e.target.closest('[data-fx]');
     if (!btn) return;
     setDbgFx(false);
