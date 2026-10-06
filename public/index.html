@@ -3785,17 +3785,33 @@
   // ラウンド開始フェイズ：強制供出（賭金）と、支払えない場合の即敗北は撤廃。
   // 所持チップが0でも参加でき、その場合は単にブーストできないだけになる。
   function startRound() {
+    // SPIKE演出中は手札選択などの操作を受け付けず、役のカットインは演出の後に流す
+    let spikeMs = 0;
     if (currentRoundNo() === LATE_ROUND + 1 && state.spikeShownRound !== LATE_ROUND + 1) {
       state.spikeShownRound = LATE_ROUND + 1;
-      playSpikeAlert();
+      if (playSpikeAlert()) {
+        spikeMs = SPIKE_MS;
+        state.locked = true;
+      }
     }
     prepareRoundIntel();
-    commitRoleGlow(['my', 'op'], true); // 次ラウンドの手札選択に入った時に、役の光り・成立音を反映
+    commitRoleGlow(['my', 'op'], true, spikeMs); // 次ラウンドの手札選択に入った時に、役の光り・成立音を反映
     state.myHpShown = null;
     document.getElementById('myHP').textContent = state.myChips;
     document.getElementById('opHP').textContent = state.opChips;
     updatePodDisplay();
     render();
+
+    if (spikeMs) {
+      const myToken = gameToken;
+      const roundNo = state.round;
+      setTimeout(() => {
+        if (myToken !== gameToken || !state || state.round !== roundNo) return;
+        state.locked = false;
+        render();
+        if (net.active && !state.over && state.netPhase === 'select') startTurnTimer();
+      }, spikeMs);
+    }
 
     if (net.active) {
       state.netPhase = 'select';
@@ -3805,7 +3821,7 @@
       setMode('select');
       refreshColorInfoHint();
       updateOpLabel();
-      if (!state.over) startTurnTimer();
+      if (!state.over && !spikeMs) startTurnTimer(); // SPIKE演出中は制限時間を止めておき、終わってから開始
       gameNetTick();
       return;
     }
@@ -4627,12 +4643,14 @@
     nz.start(t); nz.stop(t + 0.62);
   }
 
-  // ===== SPIKE演出：20ラウンドを超えた最初のラウンド開始時に、警告音とともに表示（操作は止めない）=====
+  // ===== SPIKE演出：20ラウンドを超えた最初のラウンド開始時に、警告音とともに表示（演出中は操作を受け付けない）=====
+  // 演出を再生した時は true を返す
+  const SPIKE_MS = 2300; // 演出の長さ（この間は操作を止め、役のカットインは演出の後に流す）
   function playSpikeAlert() {
     const board = document.getElementById('board');
-    if (!board) return;
+    if (!board) return false;
     const br = board.getBoundingClientRect();
-    if (!br.width || !br.height) return;
+    if (!br.width || !br.height) return false;
     const w = br.width, h = br.height;
     const y0 = Math.round(h * 0.56);       // 波形の基準線（手札のカードの下あたり）
     const cx = Math.round(w / 2);
@@ -4705,7 +4723,8 @@
     add('spike-frame', '', {});
     document.body.appendChild(layer);
     playSe('spike');
-    setTimeout(() => layer.remove(), 2300);
+    setTimeout(() => layer.remove(), SPIKE_MS);
+    return true;
   }
 
   // ===== 引き分け→手札勝負の演出（A：サドンデス・カットイン）=====
@@ -5417,8 +5436,8 @@
   }
 
   // 役の成立表示（捨て札の光り・成立音）は、次ラウンドの手札選択に入った時にまとめて反映する。
-  // 新しく成立した役があれば成立音を鳴らす（sound=false なら鳴らさない）
-  function commitRoleGlow(whos, sound) {
+  // 新しく成立した役があれば成立音を鳴らす（sound=false なら鳴らさない）。fxDelay(ms) があれば成立音・カットインをその分遅らせる
+  function commitRoleGlow(whos, sound, fxDelay) {
     const cutins = []; // 新しく発動した役（カットイン用）
     whos.forEach(who => {
       const prevLv = state.roleShown[who].levels || {};
@@ -5438,8 +5457,13 @@
       };
     });
     if (cutins.length && sound) {
-      playRoleUpSound();
-      playRoleCutins(cutins);
+      const fx = () => { playRoleUpSound(); playRoleCutins(cutins); };
+      if (fxDelay) {
+        const myToken = gameToken;
+        setTimeout(() => { if (myToken === gameToken) fx(); }, fxDelay);
+      } else {
+        fx();
+      }
     }
   }
 
