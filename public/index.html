@@ -1499,7 +1499,7 @@
   .howto-dots button.on { background: var(--cy-cyan); box-shadow: 0 0 6px var(--cy-cyan); }
   .howto-div { height: 1px; margin: 14px 0 22px; background: linear-gradient(90deg, transparent, rgba(25, 211, 255, 0.5), transparent); }
   /* スタート画面：デバッグモード（パネル左下の虫アイコン） */
-  .dev-row { display: flex; align-items: center; gap: 8px; margin: 8px 2px 0; }
+  .dev-row { display: flex; align-items: center; gap: 8px; margin: 8px 2px 0; padding-left: 44px; } /* 左端はサウンドボタンの場所 */
   .debug-bug {
     width: 32px; height: 32px; border-radius: 50%; padding: 0; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center;
@@ -1519,7 +1519,7 @@
   .dbg-round-list { grid-template-columns: repeat(4, 1fr); }
   .dbg-round-note { margin-top: 6px; font-size: 0.68rem; opacity: 0.8; }
   .debug-bug.on { color: #ffb020; border-color: #ffb020; box-shadow: 0 0 10px rgba(255, 176, 32, 0.6); opacity: 1; }
-  /* サウンドのON/OFF：全画面共通で左下に固定（右下のLOGボタンと対になる位置） */
+  /* サウンドのON/OFF：表示中のパネルのすぐ下・左端に置く（右端のLOGボタンと対。位置はスクリプトで合わせる） */
   .sound-mini {
     position: fixed; left: 10px; bottom: 10px; z-index: 900; width: 34px; height: 34px; border-radius: 50%; padding: 0; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center;
@@ -5871,6 +5871,50 @@
       if (open) { renderRoundLog(); document.getElementById('logBody').scrollTop = 0; }
     });
     document.getElementById('logCloseBtn').addEventListener('click', () => document.getElementById('logPanel').classList.remove('show'));
+  })();
+
+  // サウンド（左）・LOG（右）ボタンを、表示中のパネルのすぐ下に置く（パネルと重ならないように）
+  (function () {
+    const snd = document.getElementById('soundBtn');
+    const log = document.getElementById('logBtn');
+    const GAP = 10;
+    const panelNow = () => {
+      const vis = (id) => { const el = document.getElementById(id); return el && !el.classList.contains('hidden') ? el : null; };
+      if (vis('gameScreen')) return document.getElementById('board');
+      if (vis('prepScreen')) return document.getElementById('prepPanel');
+      const scr = vis('onlineScreen') || vis('startScreen');
+      if (scr) { const ps = scr.querySelectorAll('.start-panel'); return ps[ps.length - 1] || null; }
+      return null;
+    };
+    function place() {
+      const pn = panelNow();
+      if (!pn || !pn.offsetParent) {
+        // 対象のパネルがない時は画面の下端に固定
+        [snd, log].forEach(b => { b.style.position = 'fixed'; b.style.top = 'auto'; b.style.bottom = '10px'; });
+        snd.style.left = '10px'; log.style.left = 'auto'; log.style.right = '10px';
+        return;
+      }
+      const r = pn.getBoundingClientRect();
+      [snd, log].forEach(b => { b.style.position = 'absolute'; b.style.bottom = 'auto'; b.style.right = 'auto'; });
+      const hs = snd.offsetHeight, hl = log.offsetHeight, h = Math.max(hs, hl);
+      // バトル画面は盤面下の「最初からやり直す」と高さを揃えて横一列に並べる
+      const reset = pn.id === 'board' ? document.getElementById('resetBtn') : null;
+      const rr = reset && reset.offsetParent ? reset.getBoundingClientRect() : null;
+      const top = rr ? rr.top + window.scrollY + (rr.height - h) / 2 : r.bottom + window.scrollY + GAP;
+      snd.style.top = (top + (h - hs) / 2) + 'px';
+      log.style.top = (top + (h - hl) / 2) + 'px';
+      snd.style.left = (r.left + window.scrollX) + 'px';
+      log.style.left = (r.right + window.scrollX - log.offsetWidth) + 'px';
+    }
+    let queued = false;
+    const schedule = () => { if (queued) return; queued = true; requestAnimationFrame(() => { queued = false; place(); }); };
+    window.addEventListener('resize', schedule);
+    new MutationObserver(schedule).observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true, childList: true });
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(schedule);
+      ['board', 'prepPanel', 'startScreen', 'onlineScreen'].forEach(id => { const el = document.getElementById(id); if (el) ro.observe(el); });
+    }
+    place();
   })();
 </script>
 </body>
