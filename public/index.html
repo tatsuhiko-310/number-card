@@ -5193,7 +5193,7 @@
   // 新しく成立した役があれば成立音を鳴らす（sound=false なら鳴らさない）
   function commitRoleGlow(whos, sound) {
     let newly = false;
-    const cutins = []; // 新しく発動・レベルアップした役（カットイン用）
+    const cutins = []; // 新しく発動した役（カットイン用）
     whos.forEach(who => {
       const prevLv = state.roleShown[who].levels || {};
       const roles = getActiveRoles(who);
@@ -5201,7 +5201,11 @@
       const levels = {};
       roles.forEach(r => {
         levels[r.color] = roleLevel(r.count);
-        if (levels[r.color] > (prevLv[r.color] || 0)) { newly = true; cutins.push({ who, color: r.color, lv: levels[r.color] }); }
+        if (levels[r.color] > (prevLv[r.color] || 0)) {
+          newly = true;
+          // カットインは初めて発動した時（Lv2）だけ。Lv3・Lv4への昇格は演出なし
+          if (!prevLv[r.color]) cutins.push({ who, color: r.color, lv: levels[r.color] });
+        }
       });
       const map = state[who + 'CardColors'];
       state.roleShown[who] = {
