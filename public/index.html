@@ -1677,9 +1677,80 @@
   /* 回収（1A）の選択 */
   .stack-dialog .recall-cards { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
   .stack-dialog .recall-cards .card { width: 54px; height: 76px; font-size: 1.5rem; cursor: pointer; }
+
+  /* ===== 背景アニメーション（漂う光・流れるネオングリッド・浮かぶ数字・走査線） ===== */
+  .bg-fx { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
+  .bg-orb { position: absolute; width: 70vmax; height: 70vmax; border-radius: 50%; opacity: 0.5; will-change: transform; }
+  .bg-orb.o1 { left: -30vmax; top: -30vmax; background: radial-gradient(circle, rgba(255, 43, 79, 0.35), transparent 60%); animation: bgOrb1 26s ease-in-out infinite alternate; }
+  .bg-orb.o2 { right: -30vmax; bottom: -30vmax; background: radial-gradient(circle, rgba(30, 139, 255, 0.38), transparent 60%); animation: bgOrb2 31s ease-in-out infinite alternate; }
+  .bg-orb.o3 { left: 20vw; top: 30vh; width: 50vmax; height: 50vmax; background: radial-gradient(circle, rgba(122, 60, 255, 0.28), transparent 60%); animation: bgOrb3 37s ease-in-out infinite alternate; }
+  @keyframes bgOrb1 { to { transform: translate(35vw, 30vh) scale(1.2); } }
+  @keyframes bgOrb2 { to { transform: translate(-30vw, -35vh) scale(1.15); } }
+  @keyframes bgOrb3 { 0% { transform: translate(-20vw, -10vh) scale(0.9); } 100% { transform: translate(15vw, 20vh) scale(1.2); } }
+  /* 画面下の奥へ流れるグリッド（シンセウェイブ風） */
+  .bg-grid { position: absolute; left: 0; right: 0; bottom: 0; height: 45vh; perspective: 260px; perspective-origin: 50% 0;
+    -webkit-mask-image: linear-gradient(to top, #000 10%, transparent 95%); mask-image: linear-gradient(to top, #000 10%, transparent 95%); opacity: 0.55; }
+  .bg-grid::before { content: ''; position: absolute; left: -150%; right: -150%; bottom: -40%; height: 300%; transform-origin: 50% 100%;
+    background-image:
+      linear-gradient(rgba(25, 211, 255, 0.55) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 43, 79, 0.45) 1px, transparent 1px);
+    background-size: 44px 44px; background-position: center bottom;
+    animation: bgGrid 2.4s linear infinite; }
+  @keyframes bgGrid { from { transform: rotateX(68deg) translateY(-44px); } to { transform: rotateX(68deg) translateY(0); } }
+  /* ゆっくり昇っていく数字（1〜8・役の5色） */
+  .bg-digit { position: absolute; bottom: -12vh; font-family: 'Orbitron', sans-serif; font-weight: 900; line-height: 1;
+    color: transparent; -webkit-text-stroke: 1px var(--c); text-shadow: 0 0 12px var(--c); opacity: 0;
+    animation: bgDigit var(--d) linear var(--delay) infinite; will-change: transform, opacity; }
+  @keyframes bgDigit {
+    0% { transform: translateY(0) rotate(var(--r0)); opacity: 0; }
+    12% { opacity: var(--o); }
+    85% { opacity: var(--o); }
+    100% { transform: translateY(-125vh) rotate(var(--r1)); opacity: 0; }
+  }
+  /* 上から下へ流れる走査線 */
+  .bg-scan { position: absolute; left: 0; right: 0; top: 0; height: 22vh;
+    background: linear-gradient(to bottom, transparent, rgba(25, 211, 255, 0.06) 70%, rgba(25, 211, 255, 0.16) 99%, transparent);
+    animation: bgScan 7s linear infinite; }
+  @keyframes bgScan { from { transform: translateY(-25vh); } to { transform: translateY(105vh); } }
+  .bg-fx.paused * , .bg-fx.paused *::before { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) {
+    .bg-fx *, .bg-fx *::before { animation: none !important; }
+    .bg-digit, .bg-scan { display: none; }
+  }
 </style>
 </head>
 <body>
+  <!-- 背景アニメーション（装飾のみ） -->
+  <div class="bg-fx" id="bgFx" aria-hidden="true">
+    <div class="bg-orb o1"></div><div class="bg-orb o2"></div><div class="bg-orb o3"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-scan"></div>
+  </div>
+  <script>
+  (function () {
+    var fx = document.getElementById('bgFx');
+    if (!fx) return;
+    var colors = ['#ff4d4d', '#2f8fff', '#ffd400', '#2ed17a', '#ff5cb3', '#19d3ff'];
+    var n = window.innerWidth < 600 ? 10 : 16;
+    for (var i = 0; i < n; i++) {
+      var el = document.createElement('span');
+      el.className = 'bg-digit';
+      el.textContent = String(1 + Math.floor(Math.random() * 8));
+      var d = 18 + Math.random() * 22;
+      var r = Math.random() * 40 - 20;
+      el.style.cssText = 'left:' + (Math.random() * 96).toFixed(1) + '%;' +
+        'font-size:' + (1.4 + Math.random() * 3.2).toFixed(2) + 'rem;' +
+        '--c:' + colors[i % colors.length] + ';' +
+        '--o:' + (0.18 + Math.random() * 0.3).toFixed(2) + ';' +
+        '--d:' + d.toFixed(1) + 's;' +
+        '--delay:' + (-Math.random() * d).toFixed(1) + 's;' +
+        '--r0:' + r.toFixed(0) + 'deg;--r1:' + (r + (Math.random() * 60 - 30)).toFixed(0) + 'deg;';
+      fx.appendChild(el);
+    }
+    // タブが裏にある間は止めて負荷を下げる
+    document.addEventListener('visibilitychange', function () { fx.classList.toggle('paused', document.hidden); });
+  })();
+  </script>
   <!-- サウンドのON/OFF（全画面共通で左下に固定） -->
   <button type="button" class="sound-mini" id="soundBtn" aria-pressed="true" aria-label="サウンド: ON" title="サウンド: ON">
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
