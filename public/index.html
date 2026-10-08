@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>NUMBER WAR</title>
 <meta name="description" content="1〜8のカードとチップで駆け引きする2人対戦カードゲーム">
-<meta name="theme-color" content="#0c0c11">
-<link rel="preload" href="assets/fonts/archivo-variable.woff2" as="font" type="font/woff2" crossorigin>
+<meta name="theme-color" content="#03050c">
+<link rel="preload" href="assets/fonts/inter-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="assets/icon-pink.png">
 <style>
   /* 配色：ダークモード固定 */
@@ -1715,13 +1715,15 @@
     .bg-fx *, .bg-fx *::before { animation: none !important; }
   }
 </style>
-<link rel="stylesheet" href="reel.css">
+<link rel="stylesheet" href="warp.css">
 </head>
 <body>
   <!-- 背景アニメーション（装飾のみ） -->
   <div class="bg-fx" id="bgFx" aria-hidden="true">
-    <canvas class="reel-dots" id="reelDots"></canvas>
-    <div class="reel-vignette"></div>
+    <canvas class="wbg-warp" id="warpBg"></canvas>
+    <div class="wbg-floor"></div>
+    <div class="wbg-vig"></div>
+    <div class="wbg-scan"></div>
   </div>
   <script>
   (function () {
@@ -1741,16 +1743,10 @@
 <audio id="prepBgmAudio" preload="none" src="assets/bgm-prep-bitworks.mp3"></audio>
 <audio id="resultBgmAudio" preload="none" src="assets/bgm-result.mp3"></audio>
 <div class="wrap">
-  <h1 class="reel-title" aria-label="NUMBER WAR">
-    <span class="rt-kicker" data-type="CARD BATTLE&nbsp;&nbsp;/&nbsp;&nbsp;1 VS 1">CARD BATTLE&nbsp;&nbsp;/&nbsp;&nbsp;1 VS 1</span>
-    <span class="rt-word" aria-hidden="true"><span>N</span><span>U</span><span>M</span><span>B</span><span>E</span><span>R</span>&nbsp;<span>W</span><span>A</span><span>R</span></span>
-    <span class="rt-sub" aria-hidden="true">BLUFF&nbsp;·&nbsp;BOOST&nbsp;·&nbsp;JACKPOT</span>
-    <svg class="rt-stamp" viewBox="0 0 100 100" aria-hidden="true">
-      <defs><path id="rtStampPath" d="M50,50 m-36,0 a36,36 0 1,1 72,0 a36,36 0 1,1 -72,0"/></defs>
-      <circle cx="50" cy="50" r="48"/>
-      <text><textPath href="#rtStampPath">NUMBER WAR · 1—8 · 2026 · REEL ·</textPath></text>
-      <path class="rt-star" d="M50 38v24M39.6 44l20.8 12M39.6 56l20.8-12"/>
-    </svg>
+  <h1 class="warp-title" aria-label="NUMBER WAR">
+    <span class="wt-term" aria-hidden="true">&gt; connecting duel_server</span>
+    <span class="wt-lock" aria-hidden="true"><span class="wt-mark"><i class="l"></i><i class="r"></i><b>8</b></span><span class="wt-word">NUMBER <em>WAR</em></span></span>
+    <span class="wt-sub" aria-hidden="true">1–8 CARD DUEL &amp; JACKPOT</span>
   </h1>
 
   <div id="startScreen">
@@ -1984,15 +1980,19 @@
       <div class="role-list-title"><span>🐞 演出の再生</span><button type="button" class="role-list-x" id="dbgFxClose" aria-label="閉じる">✕</button></div>
       <div class="role-list-sub">押すとパネルが閉じて演出だけを再生します（チップ・ポッドは動きません）</div>
       <div class="dbg-fx-list">
-        <button type="button" class="btn secondary" data-fx="win">WIN演出</button>
-        <button type="button" class="btn secondary" data-fx="lose">LOSE演出</button>
-        <button type="button" class="btn secondary" data-fx="jackpot">JACKPOT演出</button>
-        <button type="button" class="btn secondary" data-fx="spike">SPIKE演出</button>
-        <button type="button" class="btn secondary" data-fx="hack">HACK演出</button>
-        <button type="button" class="btn secondary" data-fx="cutin">カットイン（赤）</button>
-        <button type="button" class="btn secondary" data-fx="draw">DRAW演出</button>
-        <button type="button" class="btn secondary" data-fx="countdown">カウントダウン</button>
-        <button type="button" class="btn secondary wide" data-fx="double">ダブルカットイン（赤）</button>
+        <button type="button" class="btn secondary" data-fx="countdown">FX-02 対戦開始</button>
+        <button type="button" class="btn secondary" data-fx="round">FX-02 ラウンド開始</button>
+        <button type="button" class="btn secondary" data-fx="reveal">FX-03 オープン</button>
+        <button type="button" class="btn secondary" data-fx="win">FX-04 WIN</button>
+        <button type="button" class="btn secondary" data-fx="lose">FX-05 LOSE</button>
+        <button type="button" class="btn secondary" data-fx="draw">FX-06 DRAW</button>
+        <button type="button" class="btn secondary" data-fx="jackpot">FX-07 JACKPOT</button>
+        <button type="button" class="btn secondary" data-fx="jackpotOp">FX-07 相手JACKPOT</button>
+        <button type="button" class="btn secondary" data-fx="hack">FX-08 HACK</button>
+        <button type="button" class="btn secondary" data-fx="cutin">FX-09 カットイン</button>
+        <button type="button" class="btn secondary" data-fx="double">FX-09 ダブル</button>
+        <button type="button" class="btn secondary" data-fx="spike">FX-10 SPIKE</button>
+        <button type="button" class="btn secondary wide" data-fx="victory">FX-11 試合終了（勝利）</button>
       </div>
       <div class="dbg-round">
         <div class="dbg-round-head"><span>ラウンド数</span><span class="dbg-round-now" id="dbgRoundNow">ROUND 1</span></div>
@@ -2080,7 +2080,7 @@
   </div>
 </div>
 
-<script src="reel-fx.js"></script>
+<script src="warp-fx.js"></script>
 <script src="vendor/peerjs.min.js"></script>
 <script src="net-shim.js"></script>
 <script>
@@ -3923,6 +3923,8 @@
         state.locked = true;
       }
     }
+    // ラウンド開始の演出（FX-02）。1ラウンド目は対戦開始の演出、SPIKEのラウンドはSPIKEの演出に任せる
+    if (!spikeMs && currentRoundNo() > 1 && window.ReelFX && ReelFX.round) ReelFX.round(currentRoundNo());
     prepareRoundIntel();
     commitRoleGlow(['my', 'op'], true, spikeMs); // 次ラウンドの手札選択に入った時に、役の光り・成立音を反映
     state.myHpShown = null;
@@ -4342,6 +4344,7 @@
     state.fieldOpChips = 0;
     state.fieldRevealed = true;
     playFlipSound(0); // カードをフリップする音
+    if (window.ReelFX && ReelFX.reveal) ReelFX.reveal(); // 白フラッシュと揺れ（FX-03）
     if (!state.myDiscard.includes(myCard)) state.myDiscard.push(myCard);
     if (!state.opDiscard.includes(opCard)) state.opDiscard.push(opCard);
     state.opSeen[opCard] = true;
@@ -4621,6 +4624,7 @@
         chips[winner] += jackpot;
         res.roundPodKind = 'jackpot';
         res.jackpotWinner = winner;
+        res.jackpotTake = jackpot;
         res.notes.push(winnerBoosted
           ? `JACKPOT！${nm(winner)}の+1差ブースト勝利：ポッド${jackpot}🪙を総取り`
           : `JACKPOT！${nm(winner)}のノーブースト+1差勝利：ポッド${jackpot}🪙を総取り`);
@@ -4694,6 +4698,8 @@
   // ===== ハッキングの演出（A：RGBずれ＋スライス）=====
   // 盤面が横の帯に裂けて左右にずれ、色がにじむ。カードと文字は赤・水色の2色にブレる。約1.1秒で元に戻る
   function playHackGlitch(text, myToken) {
+    // 演出テーマ（warp-fx.js）があればそちらのハッキング（FX-08）を使う
+    if (window.ReelFX && ReelFX.hack) { playHackSound(); return ReelFX.hack(text); }
     return new Promise(resolve => {
       const board = document.getElementById('board');
       if (!board) { resolve(); return; }
@@ -4776,6 +4782,12 @@
   // 演出を再生した時は true を返す
   const SPIKE_MS = 2300; // 演出の長さ（この間は操作を止め、役のカットインは演出の後に流す）
   function playSpikeAlert() {
+    // 演出テーマ（warp-fx.js）があればそちらの SPIKE（FX-10）を使う
+    if (window.ReelFX && ReelFX.spike) {
+      if (!ReelFX.spike(LATE_ROUND, LOSE_PAYMENT, LATE_LOSE_PAYMENT)) return false;
+      playSe('spike');
+      return true;
+    }
     const board = document.getElementById('board');
     if (!board) return false;
     const br = board.getBoundingClientRect();
@@ -5101,7 +5113,7 @@
       const stamp = res.roundPodKind === 'jackpot'
         ? (res.jackpotWinner === 'my' ? 'jackpot' : 'jackpot-op')
         : (outcome === 'me' ? 'win' : outcome === 'op' ? 'lose' : 'draw');
-      ReelFX.stamp(stamp, { diff: Math.abs(myEffective - opEffective), pod: state.pod, hack: res.hack });
+      ReelFX.stamp(stamp, { diff: Math.abs(myEffective - opEffective), pod: state.pod, hack: res.hack, take: res.jackpotTake });
     }
     updateHandBadges();
     const hpId = who => (who === 'my' ? 'myHP' : 'opHP');
@@ -5378,19 +5390,19 @@
     const max = Math.max(30, Math.ceil(Math.max(...me, ...op) / 10) * 10);
     const X = i => L + (n > 1 ? i * (W - L - R) / (n - 1) : (W - L - R) / 2);
     const Y = v => B - Math.max(0, v) * (B - T) / max;
-    // 配色はリザルト画面（紙色の背景）に合わせる：自分＝オレンジ、相手＝バイオレット
-    const C_ME = '#ff4b2b', C_OP = '#6b4dff', C_INK = '#14131a', C_DIM = '#8a8578';
+    // 配色はリザルト画面（紺の背景）に合わせる：自分＝青紫、相手＝ピンク
+    const C_ME = '#7f9cff', C_OP = '#ff7aa2', C_INK = '#3b4a7a', C_DIM = '#8592b8';
     let s = `<defs><linearGradient id="rsFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${C_ME}" stop-opacity=".28"/><stop offset="1" stop-color="${C_ME}" stop-opacity="0"/></linearGradient></defs>`;
     for (let v = 0; v <= max; v += 10) {
       const y = Y(v);
-      s += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="${v ? 'rgba(20,19,26,.12)' : C_INK}"${v ? ' stroke-dasharray="2 4"' : ''}/>`;
+      s += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="${v ? 'rgba(127,156,255,.14)' : C_INK}"${v ? ' stroke-dasharray="2 4"' : ''}/>`;
       s += `<text x="${L - 6}" y="${y + 3.5}" fill="${C_DIM}" font-size="9" text-anchor="end">${v}</text>`;
     }
     // 負けた時の支払いが増える区間（LATE_ROUND を超えたラウンド）
     if (n - 1 > LATE_ROUND) {
       const x0 = X(LATE_ROUND);
-      s += `<rect x="${x0}" y="${T}" width="${X(n - 1) - x0}" height="${B - T}" fill="rgba(255,75,43,.08)"/>`;
-      s += `<text x="${x0 + 4}" y="${T + 10}" fill="${C_ME}" font-size="8.5" font-weight="700">SPIKE</text>`;
+      s += `<rect x="${x0}" y="${T}" width="${X(n - 1) - x0}" height="${B - T}" fill="rgba(255,122,162,.08)"/>`;
+      s += `<text x="${x0 + 4}" y="${T + 10}" fill="${C_OP}" font-size="8.5" font-weight="700">SPIKE</text>`;
     }
     const path = a => a.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
     if (n > 1) s += `<path class="rs-area" d="${path(me)} L${X(n - 1)},${B} L${X(0)},${B} Z" fill="url(#rsFill)"/>`;
@@ -5398,8 +5410,8 @@
     s += `<path class="rs-line" pathLength="1" d="${path(me)}" fill="none" stroke="${C_ME}" stroke-width="2.6" stroke-linejoin="round"/>`;
     // 点はラウンド数が多いと潰れるので少ない時だけ
     if (n <= 21) {
-      op.forEach((v, i) => { s += `<circle class="rs-dot" style="--i:${i}" cx="${X(i)}" cy="${Y(v)}" r="2.3" fill="#efebe3" stroke="${C_OP}" stroke-width="1.6"/>`; });
-      me.forEach((v, i) => { s += `<circle class="rs-dot" style="--i:${i}" cx="${X(i)}" cy="${Y(v)}" r="2.8" fill="#efebe3" stroke="${C_ME}" stroke-width="1.8"/>`; });
+      op.forEach((v, i) => { s += `<circle class="rs-dot" style="--i:${i}" cx="${X(i)}" cy="${Y(v)}" r="2.3" fill="#070c1e" stroke="${C_OP}" stroke-width="1.6"/>`; });
+      me.forEach((v, i) => { s += `<circle class="rs-dot" style="--i:${i}" cx="${X(i)}" cy="${Y(v)}" r="2.8" fill="#070c1e" stroke="${C_ME}" stroke-width="1.8"/>`; });
     }
     // 最後の点：線の先端で光る
     if (n > 1) s += `<circle class="rs-tip" cx="${X(n - 1)}" cy="${Y(me[n - 1])}" r="4.5" fill="${C_ME}"/>`;
@@ -5621,7 +5633,10 @@
       setTimeout(() => {
         const wrap = document.createElement('div');
         wrap.className = `role-cutin ${c.color} ${c.who}${solo ? ' solo' : ''}`;
-        wrap.innerHTML = '<div class="rc-band"></div>';
+        // 帯の端に「PLAYER · R code : 勝算 Lv2」の札を付ける（FX-09）
+        const info = ROLE_LIST.find(r => r.color === c.color) || { name: '' };
+        const lbl = `${c.who === 'my' ? 'PLAYER' : 'ENEMY'} · ${COLOR_EN[c.color]} : ${info.name} Lv${(c.lv || 1) + 1}`;
+        wrap.innerHTML = `<div class="rc-band"><span class="rc-lbl">${lbl}</span></div>`;
         const br = board.getBoundingClientRect();
         Object.assign(wrap.style, { left: br.left + 'px', top: br.top + 'px', width: br.width + 'px', height: br.height + 'px' });
         // 手札の上側（効果情報の位置）に表示：自分は手札のすぐ上、相手はその上
@@ -5822,7 +5837,11 @@
   const DEBUG_FX = {
     win: () => { updatePodDisplay('through'); playSe('win'); if (window.ReelFX) ReelFX.stamp('win', { diff: 3, pod: state.pod }); },
     lose: () => { updatePodDisplay('grow'); playSe('lose'); flashNum('myHP', 'pay-flash'); if (window.ReelFX) ReelFX.stamp('lose', { diff: 3, pod: state.pod }); },
-    jackpot: () => { updatePodDisplay('jackpot'); playSe('jackpot'); flashNum('myHP', 'gain-flash'); if (window.ReelFX) ReelFX.stamp('jackpot', { diff: 1, pod: state.pod }); },
+    jackpot: () => { updatePodDisplay('jackpot'); playSe('jackpot'); flashNum('myHP', 'gain-flash'); if (window.ReelFX) ReelFX.stamp('jackpot', { diff: 1, pod: state.pod, take: 6 }); },
+    jackpotOp: () => { playSe('jackpot'); flashNum('opHP', 'gain-flash'); if (window.ReelFX) ReelFX.stamp('jackpot-op', { diff: 1, pod: state.pod, take: 6 }); },
+    round: () => { if (window.ReelFX) ReelFX.round(currentRoundNo()); },
+    reveal: () => { playFlipSound(0); if (window.ReelFX) ReelFX.reveal(); },
+    victory: () => { if (window.ReelFX && ReelFX.lockup) ReelFX.lockup({ outcome: 'my', rounds: currentRoundNo() }); },
     draw: () => { if (window.ReelFX) ReelFX.stamp('draw', { diff: 0, pod: state.pod }); },
     countdown: () => { if (window.ReelFX) ReelFX.countdown(playTickSound); },
     spike: () => playSpikeAlert(),
