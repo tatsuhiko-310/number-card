@@ -191,8 +191,8 @@
   }
 
   // ---------- FX-02 ラウンド開始 ----------
-  // 文字演出の時間配分：素早く出す → 文字がそろってから 1 秒キープ → 素早く消す
-  const IN_MS = 320, HOLD_MS = 1000, OUT_MS = 100;
+  // 文字演出の時間配分：0.3秒で出す → 文字がそろってから 0.6秒キープ → 0.1秒で消す
+  const IN_MS = 300, HOLD_MS = 600, OUT_MS = 100;
   const phase = (inMs = IN_MS, hold = HOLD_MS, out = OUT_MS) => { const T = inMs + hold + out; return { T, a: inMs / T, b: (inMs + hold) / T }; };
   // 出る→キープ→消える の 4 点キーフレーム（from は出る前、to は消えた後）
   const ioKf = (P, from, to, show = { opacity: 1, transform: 'none' }) => [from, { ...show, offset: P.a }, { ...show, offset: P.b }, to];
@@ -284,11 +284,11 @@
     return P.T;
   }
 
-  // FX-07 JACKPOT：破裂（白フラッシュ・三重の衝撃波・光条・大きな揺れ）→ 文字が膨らんで戻り、そろってから 1 秒キープ
+  // FX-07 JACKPOT：破裂（白フラッシュ・三重の衝撃波・光条・大きな揺れ）→ 文字が膨らんで戻り、そろってから 0.6 秒キープ
   function jackpot(rival, info) {
     const b = board();
-    const BURST = 500; // 破裂して文字がそろうまで
-    const P = phase(BURST, HOLD_MS + 300, OUT_MS); // 総取り枚数を数える分だけ少し長くキープ
+    const BURST = IN_MS; // 破裂して文字がそろうまで
+    const P = phase(BURST, HOLD_MS, OUT_MS);
     const L = layerOver(b, P.T + 50); L.classList.add('stamp');
     dimIn(L, P.T, 0.8, P);
     const cy = boardMidY(L);
@@ -324,16 +324,16 @@
     A(g, [{ opacity: 0, transform: 'scale(.05)' }, { opacity: 1, transform: 'scale(1.4)', offset: a1 }, { transform: 'scale(.94)', offset: a2 }, { opacity: 1, transform: 'scale(1)', offset: P.a }, { opacity: 1, transform: 'scale(1)', offset: P.b }, { opacity: 0, transform: 'scale(1)' }], P.T, 0, 'linear');
     glitchIn(g, BURST, 0, rival ? 14 : 26);
     A(sub, ioKf(P, { opacity: 0 }, { opacity: 0 }), P.T, 0, 'linear');
-    countTo(sub.querySelector('.v'), 0, take, BURST, 500);
+    countTo(sub.querySelector('.v'), 0, take, BURST, 400);
     return P.T;
   }
 
-  // ---------- FX-08 ハッキング（約1.7秒。終わったら resolve） ----------
+  // ---------- FX-08 ハッキング（約1秒。終わったら resolve） ----------
   function hack(text) {
     return new Promise(resolve => {
       const b = board();
       if (!b || reduceMotion) { setTimeout(resolve, reduceMotion ? 300 : 0); return; }
-      const P = phase(500, HOLD_MS, OUT_MS); // ノイズが収まって文字がそろってから 1 秒キープ
+      const P = phase(); // ノイズが収まって文字がそろってから 0.6 秒キープ
       const L = layerOver(b, P.T + 50);
       const H = L.clientHeight;
       dimIn(L, P.T, 0.9, P);
@@ -351,7 +351,7 @@
       shake(b, 0, 520, 9);
       warp.boost(2.6, 500); warp.tintFor('255,170,200', 900);
       A(m, ioKf(P, { opacity: 0 }, { opacity: 0 }, { opacity: 1 }), P.T, 0, 'linear');
-      glitchIn(g, 500, 0, 30);
+      glitchIn(g, IN_MS, 0, 30);
       setTimeout(resolve, P.T);
     });
   }
