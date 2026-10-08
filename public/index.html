@@ -5,10 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>NUMBER WAR</title>
 <meta name="description" content="1〜8のカードとチップで駆け引きする2人対戦カードゲーム">
-<meta name="theme-color" content="#05070f">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap">
+<meta name="theme-color" content="#03050c">
+<link rel="preload" href="assets/fonts/inter-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="assets/icon-pink.png">
 <style>
   /* 配色：ダークモード固定 */
@@ -324,6 +322,16 @@
     font-weight: 700;
     color: var(--text-dim);
     letter-spacing: 0.03em;
+  }
+  /* 手札の上に出す英語の見出し（「手札を選択」） */
+  .select-label {
+    font-family: var(--f-num);
+    font-weight: 900;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    color: var(--cy-cyan);
+    text-shadow: 0 0 8px rgba(25, 211, 255, 0.45);
+    line-height: 1;
   }
   .wrap.in-game > h1 { display: none; }
 
@@ -675,8 +683,7 @@
     0%, 100% { box-shadow: 0 0 4px var(--gc), 0 0 8px var(--gc); }
     50% { box-shadow: 0 0 9px var(--gc), 0 0 20px var(--gc), 0 0 3px #fff inset; }
   }
-  /* バッジ（枠の右上に重ねる）：ピンクトリプルで見える相手のデッキの底／確定情報 */
-  .discard-slot .peek-eye,
+  /* バッジ（枠の右上に重ねる）：確定情報 */
   .discard-slot .known-mark {
     position: absolute;
     top: -7px;
@@ -694,14 +701,6 @@
     pointer-events: none;
     z-index: 3;
     animation: peekEyeBlink 1.8s ease-in-out infinite;
-  }
-  .discard-slot .peek-eye { background: var(--color-pink); box-shadow: 0 0 4px var(--color-pink), 0 0 8px var(--color-pink); }
-  .discard-slot .peek-eye svg { width: 12px; height: 12px; }
-  .discard-slot.peek {
-    color: var(--color-pink);
-    border-color: var(--color-pink);
-    box-shadow: 0 0 0 1px var(--color-pink) inset, 0 0 8px color-mix(in srgb, var(--color-pink) 50%, transparent);
-    z-index: 1;
   }
   /* 確定情報：捨て札が山札に戻った時点で手札に残っていた数字（相手にも中身が分かっている） */
   .discard-slot .known-mark { background: var(--known); box-shadow: 0 0 4px var(--known), 0 0 8px var(--known); }
@@ -814,15 +813,15 @@
     color: #fff; font-size: 0.72rem; font-weight: 900; line-height: 1;
   }
   .legend-badge.known { background: var(--known); box-shadow: 0 0 4px var(--known); }
-  .legend-badge.peek { background: var(--color-pink); box-shadow: 0 0 4px var(--color-pink); }
   .legend-badge svg { width: 12px; height: 12px; }
   .legend-text { font-size: 0.72rem; color: var(--text-dim); line-height: 1.45; }
   .legend-text b { color: var(--text); }
   .legend-now { font-weight: 800; }
   .legend-now.known { color: var(--known); }
-  .legend-now.peek { color: var(--color-pink); }
 
-  .controls { text-align: center; margin-top: 16px; }
+  /* 盤面の下のボタン（やり直し） */
+  .controls { display: grid; grid-template-columns: 1fr; max-width: 205px; margin: 16px auto 0; }
+  .controls .btn.secondary { margin: 0; width: 100%; padding: 12px 8px; white-space: nowrap; }
   .btn {
     background: var(--accent);
     color: #fff;
@@ -860,6 +859,58 @@
     box-shadow: 0 8px 30px rgba(0,0,0,0.3);
   }
   .overlay-card h2 { margin-top: 0; font-size: 1.4rem; }
+
+  /* ===== リザルト画面（決着時に全面表示） ===== */
+  .overlay.result-screen {
+    z-index: 1000; /* ログボタンより手前 */
+    padding: 0;
+    overflow-y: auto;
+    align-items: flex-start;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(30, 139, 255, 0.25), transparent 60%),
+      radial-gradient(ellipse at 50% 100%, rgba(255, 43, 79, 0.18), transparent 60%),
+      var(--bg);
+  }
+  .overlay.result-screen.show { animation: panelIn 0.3s ease; }
+  .rs-inner {
+    width: 100%; max-width: 440px; min-height: 100%; margin: 0 auto;
+    padding: 48px 16px 28px; box-sizing: border-box;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  .rs-label { font-family: var(--f-num); font-weight: 900; letter-spacing: 0.3em; font-size: 0.72rem; color: var(--text-dim); }
+  .rs-outcome {
+    --c1: var(--cy-cyan); --c2: var(--win); --c3: var(--gold); --glow-c: rgba(78, 224, 138, 0.55);
+    font-family: var(--f-num); font-weight: 900; font-size: 4.6rem; line-height: 1.05;
+    letter-spacing: 0.06em; margin: 8px 0 4px;
+    background: linear-gradient(100deg, var(--c1), var(--c2) 60%, var(--c3));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 18px var(--glow-c));
+  }
+  .rs-outcome.lose { --c1: #ff8a3d; --c2: var(--lose); --c3: var(--cy-red); --glow-c: rgba(255, 43, 79, 0.55); }
+  .rs-outcome.draw { --c1: var(--gold); --c2: var(--tie); --c3: #ff8a3d; --glow-c: rgba(255, 203, 92, 0.5); }
+  .rs-sub { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 24px; min-height: 1.2em; }
+  .rs-score { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 26px; }
+  .rs-side { width: 110px; }
+  .rs-who { font-family: var(--f-num); font-size: 0.72rem; font-weight: 900; letter-spacing: 0.1em; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rs-num { font-family: var(--f-num); font-weight: 900; font-size: 3.2rem; line-height: 1; }
+  .rs-side.me .rs-who { color: var(--cy-blue); }
+  .rs-side.op .rs-who { color: var(--cy-red); }
+  .rs-side.me .rs-num { color: var(--cy-blue); text-shadow: 0 0 16px rgba(30, 139, 255, 0.7); }
+  .rs-side.op .rs-num { color: var(--cy-red); text-shadow: 0 0 16px rgba(255, 43, 79, 0.7); }
+  .rs-side.out .rs-num { color: #5a637a; text-shadow: none; } /* チップ0枚の側は暗く */
+  .rs-vs { font-family: var(--f-num); font-weight: 900; color: var(--text-dim); }
+  .rs-panel {
+    width: 100%; box-sizing: border-box; padding: 14px 12px 8px; border-radius: 12px;
+    background: rgba(11, 16, 32, 0.9); border: 1px solid rgba(25, 211, 255, 0.35);
+    box-shadow: 0 0 18px rgba(25, 211, 255, 0.12);
+  }
+  .rs-ptitle { display: flex; justify-content: space-between; align-items: center; font-weight: 900; color: var(--cy-cyan); font-size: 0.85rem; margin-bottom: 6px; }
+  .rs-legend { display: flex; gap: 10px; font-family: var(--f-num); font-size: 0.62rem; color: var(--text-dim); }
+  .rs-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .rs-legend i.me { background: var(--cy-blue); }
+  .rs-legend i.op { background: var(--cy-red); }
+  .rs-chart { display: block; width: 100%; height: auto; }
+  .rs-btn { width: 100%; margin-top: 24px; padding: 15px; font-size: 1.05rem; font-weight: 700; letter-spacing: 0.12em; }
   .rules {
     font-size: 0.72rem;
     color: var(--text-dim);
@@ -869,36 +920,6 @@
   }
 
   .hidden { display: none !important; }
-
-  .debug-panel {
-    margin-top: 10px;
-    padding: 8px 10px;
-    border-radius: 10px;
-    background: var(--bg2);
-    border: 1px dashed var(--card-border);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-  }
-  .debug-label {
-    font-size: 0.7rem;
-    font-weight: 800;
-    color: var(--text-dim);
-    opacity: 0.8;
-  }
-  .debug-row {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .btn.small {
-    font-size: 0.68rem;
-    padding: 6px 10px;
-    opacity: 0.85;
-  }
-  .board.hide-hand .select-panel #myHand { display: none; }
 
   .start-panel, .prep-panel {
     background: var(--bg2);
@@ -913,12 +934,6 @@
     color: var(--text-dim);
     line-height: 1.6;
     margin: 10px 0 18px;
-  }
-  .prep-progress {
-    font-size: 0.75rem;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-    letter-spacing: 0.03em;
   }
   .prep-grid {
     display: grid;
@@ -1087,26 +1102,32 @@
     border-width: 3px;
     box-shadow: 0 0 8px rgba(227, 92, 160, 0.5);
   }
-  /* カード表面の色アイコン（透かしデザイン）：手札・場のカード・デッキ構築の色選択カードのみ。捨て札には付けない */
+  /* カード表面：黒地に、その色で塗った基板パターン（SVG）を透かして置く（手札・場のカード・デッキ構築の色選択カード。捨て札には付けない） */
+  .card.red, .card.blue, .card.yellow, .card.green, .card.pink,
+  .flip-front.red, .flip-front.blue, .flip-front.yellow, .flip-front.green, .flip-front.pink,
+  .prep-choice-btn.red, .prep-choice-btn.blue, .prep-choice-btn.yellow, .prep-choice-btn.green, .prep-choice-btn.pink {
+    background: #000;
+    color: #fff;
+    overflow: hidden;
+  }
   .card.red::before, .card.blue::before, .card.yellow::before, .card.green::before, .card.pink::before,
   .flip-front.red::before, .flip-front.blue::before, .flip-front.yellow::before, .flip-front.green::before, .flip-front.pink::before,
   .prep-choice-btn.red::before, .prep-choice-btn.blue::before, .prep-choice-btn.yellow::before, .prep-choice-btn.green::before, .prep-choice-btn.pink::before {
     content: '';
     position: absolute;
-    inset: 6%;
+    left: 0; right: 0; top: 0; bottom: 0;
     z-index: -1;
-    border-radius: inherit;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    opacity: 0.26;
+    background-color: var(--chip-c);
+    -webkit-mask: url("assets/card-pcb-e.svg") center / cover no-repeat;
+    mask: url("assets/card-pcb-e.svg") center / cover no-repeat;
+    opacity: 0.4;
     pointer-events: none;
   }
-  .card.red::before, .flip-front.red::before, .prep-choice-btn.red::before { background-image: var(--icon-red); }
-  .card.blue::before, .flip-front.blue::before, .prep-choice-btn.blue::before { background-image: var(--icon-blue); }
-  .card.yellow::before, .flip-front.yellow::before, .prep-choice-btn.yellow::before { background-image: var(--icon-yellow); }
-  .card.green::before, .flip-front.green::before, .prep-choice-btn.green::before { background-image: var(--icon-green); }
-  .card.pink::before, .flip-front.pink::before, .prep-choice-btn.pink::before { background-image: var(--icon-pink); }
+  .card.red, .flip-front.red, .prep-choice-btn.red { --chip-c: var(--color-red); }
+  .card.blue, .flip-front.blue, .prep-choice-btn.blue { --chip-c: var(--color-blue); }
+  .card.yellow, .flip-front.yellow, .prep-choice-btn.yellow { --chip-c: var(--color-yellow); }
+  .card.green, .flip-front.green, .prep-choice-btn.green { --chip-c: var(--color-green); }
+  .card.pink, .flip-front.pink, .prep-choice-btn.pink { --chip-c: var(--color-pink); }
 
   /* 手札の色枠だけ、他(場のカードや捨て札)より太くする */
   .select-panel button.card.red,
@@ -1184,7 +1205,7 @@
     border-radius: 10px;
     background: linear-gradient(100deg, var(--cy-red), var(--cy-blue));
     color: #fff;
-    font-family: 'Rajdhani', "Hiragino Sans", "Yu Gothic", sans-serif;
+    font-family: var(--f-display);
     font-size: 1rem;
     letter-spacing: 0.06em;
     box-shadow: 0 0 12px rgba(255, 43, 79, 0.55), 0 0 18px rgba(30, 139, 255, 0.45);
@@ -1203,12 +1224,12 @@
     border: 1px solid var(--cy-cyan);
     color: #fff;
     box-shadow: inset 0 0 10px rgba(25, 211, 255, 0.2);
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif;
+    font-family: var(--f-num);
   }
   .room-input::placeholder { color: var(--text-dim); }
   .dev-section { border-top: 1px solid rgba(25, 211, 255, 0.3); }
   /* 大きな数字はデジタル書体で、自分＝赤・相手＝青に光らせる */
-  .num, #podValue, .room-code { font-family: 'Orbitron', "Hiragino Sans", sans-serif; }
+  .num, #podValue, .room-code { font-family: var(--f-num); }
   .zone-side.me .num { color: var(--cy-red); text-shadow: 0 0 14px rgba(255, 43, 79, 0.9); }
   .zone-side.op .num { color: var(--cy-blue); text-shadow: 0 0 14px rgba(30, 139, 255, 0.9); }
   .zone-side.op { border-bottom: 1px solid rgba(30, 139, 255, 0.5); }
@@ -1232,7 +1253,7 @@
     background: linear-gradient(90deg, rgba(255, 43, 79, 0.95), rgba(122, 60, 255, 0.95), rgba(30, 139, 255, 0.95));
     box-shadow: 0 0 22px rgba(255, 43, 79, 0.6), 0 0 30px rgba(30, 139, 255, 0.6);
     color: #fff;
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif;
+    font-family: var(--f-num);
     font-weight: 900; font-size: clamp(0.95rem, 5vw, 1.35rem); letter-spacing: 0.08em;
     text-shadow: 0 0 10px #fff;
     white-space: nowrap;
@@ -1305,7 +1326,10 @@
     display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
   }
   /* チップ選択は1行にまとめる */
-  .chip-selector { flex-direction: row; gap: 10px; }
+  /* チップブースト（上）とHACK（下）を縦に並べ、幅をそろえる */
+  .chip-selector { flex-direction: column; align-items: center; gap: 8px; }
+  .chip-selector .chip-controls { width: 168px; justify-content: space-between; box-sizing: border-box; }
+  .chip-selector .hack-btn { width: 168px; box-sizing: border-box; text-align: center; }
   .chip-controls { padding: 4px 12px; gap: 10px; }
   .color-info-hint { margin-top: 0; font-size: 0.64rem; line-height: 1.35; max-width: 100%; }
   .pod-mini { padding: 2px 10px; }
@@ -1316,35 +1340,312 @@
   /* デッキ構築：画面の高さが低い時は枠を小さくして選択肢まで収める */
   .prep-grid { max-width: min(340px, 42dvh); gap: 8px; margin-bottom: 8px; }
   .prep-peek { margin-top: 0; min-height: 0; }
-  /* ポッドまわり：発動中の効果（上＝ENEMY、下＝PLAYER） */
-  /* ポッド＋発動中の効果を1つのブロックに（幅は手札2枚分にそろえる） */
+  /* ポッドまわり：POT の下に発動中の効果を1効果＝1行で並べる（枠なし・文字だけ） */
+  /* 幅は手札2枚分にそろえる。左の縦線の色で誰が発動したかを示す（青＝相手、赤＝自分） */
   .eff-board {
     width: calc(2 * min(136px, 39vw, 15.5dvh) + 16px); max-width: 100%;
-    border: 1px solid var(--cy-cyan); border-radius: 12px; overflow: hidden;
-    background: rgba(11, 16, 32, 0.92); box-shadow: 0 0 12px rgba(25, 211, 255, 0.35);
+    display: flex; flex-direction: column; align-items: stretch; gap: 2px;
   }
-  /* 数字をブロックの中央に置き、POT はその左に添える */
   .eff-board .pod-mini {
-    display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; column-gap: 8px;
-    background: none; border: none; box-shadow: none; border-radius: 0; padding: 3px 0 2px;
+    align-self: center; background: none; border: none; box-shadow: none; border-radius: 0; padding: 0 0 1px;
   }
-  .eff-row { display: grid; grid-template-columns: 17px minmax(0, 1fr); border-top: 1px solid rgba(25, 211, 255, 0.25); font-size: 0.6rem; line-height: 1.35; }
-  .eff-row .eff-side {
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.42rem; letter-spacing: 0.08em; color: #fff;
-    writing-mode: vertical-rl; transform: rotate(180deg); padding: 3px 0;
-  }
-  .eff-row .eff-items { padding: 3px 6px; text-align: left; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-  .eff-row.op { background: rgba(30, 139, 255, 0.10); }
-  .eff-row.op .eff-side { background: var(--cy-blue); }
-  .eff-row.me { background: rgba(255, 43, 79, 0.10); }
-  .eff-row.me .eff-side { background: var(--cy-red); }
-  .eff-item { color: var(--text); }
+  .eff-board .pod-label { font-family: var(--f-num); font-weight: 900; font-size: 0.7rem; letter-spacing: 0.12em; color: var(--text-dim); }
+  .eff-row { display: flex; flex-direction: column; gap: 2px; font-size: 0.6rem; line-height: 1.35; text-align: left; }
+  .eff-row:empty { display: none; }
+  .eff-item { color: var(--text); padding-left: 6px; border-left: 3px solid; overflow-wrap: anywhere; }
+  .eff-row.op .eff-item { border-left-color: var(--cy-blue); }
+  .eff-row.me .eff-item { border-left-color: var(--cy-red); }
   .eff-item.see { color: var(--cy-cyan); font-weight: 700; }
   .eff-item.shown { color: var(--known); }
   .eff-item.rule { color: #ffe066; font-weight: 700; }
-  .eff-board .pod-label { justify-self: end; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.7rem; letter-spacing: 0.12em; color: var(--text-dim); }
-  .eff-item.none { color: var(--text-dim); opacity: 0.7; }
+  /* ===== デッキ構築：役一覧 ===== */
+  .prep-head { display: flex; justify-content: flex-end; align-items: center; gap: 8px; max-width: min(340px, 42dvh); margin: 0 auto 12px; padding-bottom: 10px; border-bottom: 1px solid var(--card-border); }
+  /* デッキ構築の見出し（準備フェイズであることと進み具合を示す） */
+  .prep-title { margin-right: auto; text-align: left; min-width: 0; }
+  .prep-title-main { font-weight: 900; font-size: 0.95rem; color: var(--text); }
+  .prep-count { margin-left: 4px; color: var(--cy-cyan); font-variant-numeric: tabular-nums; }
+  .prep-title-sub { font-size: 0.62rem; color: var(--text-dim); }
+  .role-list-btn {
+    font: inherit; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--cy-cyan); background: rgba(25, 211, 255, 0.06); color: var(--cy-cyan); box-shadow: 0 0 8px rgba(25, 211, 255, 0.35);
+  }
+  .role-list-ov {
+    position: fixed; inset: 0; z-index: 960; display: none; align-items: center; justify-content: center;
+    padding: 16px; background: rgba(0, 0, 0, 0.6);
+  }
+  .role-list-ov.show { display: flex; animation: panelIn 0.18s ease; }
+  .role-list-box {
+    width: 100%; max-width: 360px; max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain;
+    background: var(--bg2); border: 1px solid var(--cy-cyan); border-radius: 14px; box-shadow: 0 0 18px rgba(25, 211, 255, 0.4);
+    padding: 14px 14px 12px; text-align: left;
+  }
+  .role-list-title { display: flex; justify-content: space-between; align-items: center; font-weight: 900; color: var(--cy-cyan); font-size: 0.95rem; }
+  .role-list-x { font: inherit; font-size: 1.1rem; line-height: 1; color: var(--text-dim); background: none; border: none; cursor: pointer; padding: 2px 4px; }
+  .role-list-sub { font-size: 0.66rem; color: var(--text-dim); margin: 4px 0 4px; }
+  /* デッキ構築：カード効果一覧（数字ごとに2種類。選択済みの数字は選んだ方を強調） */
+  .eff-list-row {
+    display: grid; grid-template-columns: 30px 1fr 1fr; gap: 6px; align-items: stretch;
+    margin-top: 6px; padding: 7px 8px; border-radius: 10px; border: 1px solid var(--card-border); background: #0b1020;
+  }
+  .eff-list-num {
+    border-radius: 6px; border: 2px solid var(--card-border); background: var(--bg);
+    display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.9rem; color: var(--text);
+  }
+  .eff-list-num.red { border-color: var(--color-red); } .eff-list-num.blue { border-color: var(--color-blue); }
+  .eff-list-num.yellow { border-color: var(--color-yellow); } .eff-list-num.green { border-color: var(--color-green); }
+  .eff-list-num.pink { border-color: var(--color-pink); }
+  .eff-list-opt { padding: 4px 6px; border-radius: 6px; background: var(--bg2); border: 1px solid transparent; }
+  .eff-list-opt.chosen { border-color: var(--cy-cyan); box-shadow: 0 0 6px rgba(25, 211, 255, 0.35); }
+  .eff-list-opt.other { opacity: 0.4; }
+  .eff-list-name { font-weight: 800; font-size: 0.74rem; color: var(--cy-cyan); }
+  .eff-list-desc { font-size: 0.62rem; line-height: 1.35; color: var(--text); margin-top: 2px; }
+  .role-item {
+    position: relative; overflow: hidden; display: grid; grid-template-columns: 30px 1fr; gap: 8px; align-items: start;
+    min-height: 104px; padding: 9px 10px; margin-top: 6px; border-radius: 10px; border: 1px solid var(--rc); background: #0b1020;
+  }
+  /* 背景はキャラクター画像（下側に配置、上端はぼかし済み）を薄く */
+  .role-item::before { content: ''; position: absolute; inset: 0; background: var(--bg) center bottom / 100% auto no-repeat; opacity: 0.7; }
+  .role-item::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11, 16, 32, 0.55) 0%, rgba(11, 16, 32, 0.1) 45%, rgba(11, 16, 32, 0) 60%); }
+  .role-item > * { position: relative; z-index: 1; }
+  .role-item.red { --rc: var(--color-red); --bg: url("assets/role-bg-red.webp"); }
+  .role-item.blue { --rc: var(--color-blue); --bg: url("assets/role-bg-blue.webp"); }
+  .role-item.yellow { --rc: var(--color-yellow); --bg: url("assets/role-bg-yellow.webp"); }
+  .role-item.green { --rc: var(--color-green); --bg: url("assets/role-bg-green.webp"); }
+  .role-item.pink { --rc: var(--color-pink); --bg: url("assets/role-bg-pink.webp"); }
+  .role-cnt {
+    width: 30px; height: 40px; border-radius: 6px; border: 2px solid var(--rc); background: rgba(11, 16, 32, 0.7);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.05;
+    font-weight: 900; font-size: 0.8rem; color: var(--text);
+  }
+  .role-cnt small { font-size: 0.48rem; color: var(--text-dim); font-weight: 700; }
+  .role-cnt.on { box-shadow: 0 0 10px var(--rc); }
+  .role-item-name { font-weight: 800; font-size: 0.8rem; color: var(--text); text-shadow: 0 0 4px #000; }
+  .role-trig { display: inline-block; font-size: 0.58rem; font-weight: 800; padding: 1px 7px; border-radius: 8px; margin-left: 6px; color: #fff; background: var(--rc); vertical-align: 1px; text-shadow: none; }
+  .role-item.yellow .role-trig { color: #222; }
+  .role-item-desc { font-size: 0.68rem; color: #e6ecf8; line-height: 1.4; margin-top: 2px; text-shadow: 0 0 4px #000, 0 0 2px #000; }
+  /* 捨て札パネル内の役は少し低めに（顔が見える程度） */
+  .role-panel .role-item.compact { min-height: 70px; margin-top: 6px; }
+  .role-panel .role-item.compact::after { background: linear-gradient(180deg, rgba(11, 16, 32, 0.72) 0%, rgba(11, 16, 32, 0.45) 55%, rgba(11, 16, 32, 0.1) 100%); }
+  .role-panel .role-item.compact .role-item-desc { font-size: 0.64rem; }
+  .role-legend .legend-text { font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .role-panel .role-item.compact + .rp-cards-wrap { margin-top: 8px; }
+  /* ===== 遊び方（スタート画面のパネル上部。幅はボタンにそろえる） ===== */
+  .howto-inline { width: min(100%, 16rem); margin: 0 auto; }
+  .howto-viewport { overflow: hidden; touch-action: pan-y; }
+  .howto-track { display: flex; transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  /* 3行の説明はページの下端にそろえる（図解の高さがページごとに違うため） */
+  .howto-page { flex: 0 0 100%; min-width: 0; padding: 0 4px; box-sizing: border-box; text-align: center; display: flex; flex-direction: column; }
+  .howto-page .howto-text { margin-top: auto; }
+  .howto-kicker { font-family: var(--f-num); font-size: 0.6rem; font-weight: 900; letter-spacing: 0.18em; color: var(--cy-cyan); }
+  .howto-title { margin: 8px 0 10px; font-size: 1rem; font-weight: 900; color: var(--text); text-shadow: 0 0 10px rgba(25, 211, 255, 0.5); }
+  .howto-visual { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 10px; }
+  .ht-side { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .ht-card {
+    width: 52px; height: 72px; border-radius: 9px; border: 3px solid var(--hc); background: linear-gradient(160deg, var(--card-bg), var(--bg2));
+    display: flex; align-items: center; justify-content: center; font-family: var(--f-num); font-size: 1.6rem; font-weight: 900; color: #fff;
+    box-shadow: 0 0 12px var(--hc);
+  }
+  .ht-card.red { --hc: var(--color-red); } .ht-card.blue { --hc: var(--color-blue); } .ht-card.yellow { --hc: var(--color-yellow); } .ht-card.pink { --hc: var(--color-pink); }
+  .ht-vs { font-family: var(--f-num); font-weight: 900; color: var(--text-dim); }
+  .ht-tag { font-family: var(--f-num); font-size: 0.66rem; font-weight: 900; letter-spacing: 0.08em; padding: 2px 10px; border-radius: 999px; }
+  .ht-tag.win { color: #0b1020; background: var(--win, #3ddc84); }
+  .ht-tag.lose { color: #fff; background: var(--lose); }
+  .ht-boost-demo { position: relative; gap: 22px; }
+  .ht-chipcount {
+    min-width: 72px; height: 56px; display: flex; align-items: center; justify-content: center;
+    font-family: var(--f-num); font-size: 2.6rem; font-weight: 900; line-height: 1;
+    color: var(--cy-red); text-shadow: 0 0 12px rgba(255, 43, 79, 0.9);
+  }
+  /* CHIP の文字は数字の上に重ねて置き、数字の中心をカードの中心にそろえる */
+  .ht-chipside { position: relative; }
+  .ht-chipside .ht-chiplabel { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); margin-bottom: 2px; }
+  .ht-chiplabel { font-family: var(--f-num); font-size: 0.6rem; font-weight: 900; letter-spacing: 0.12em; color: var(--text-dim); }
+  .ht-arrow { font-family: var(--f-num); font-weight: 900; color: var(--text-dim); }
+  .ht-boost-tag { min-height: 1.1em; font-family: var(--f-num); font-size: 0.66rem; font-weight: 900; color: var(--gold); }
+  .ht-card.bump, .ht-chipcount.bump { animation: htBump 0.28s ease; }
+  @keyframes htBump { 0% { transform: scale(1); } 45% { transform: scale(1.22); } 100% { transform: scale(1); } }
+  .ht-card.boosted { --hc: var(--gold); }
+  .ht-fly-chip {
+    position: absolute; left: 0; top: 0; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; pointer-events: none; z-index: 2;
+    background: radial-gradient(circle at 35% 30%, #ffd0da 0%, var(--cy-red) 55%, #8a1428 100%);
+    border: 2px solid #a01a30; box-shadow: 0 0 10px rgba(255, 43, 79, 0.7);
+  }
+  .ht-boost {
+    font-family: var(--f-num); font-size: 0.8rem; font-weight: 900; color: var(--gold);
+    padding: 3px 10px; border-radius: 999px; border: 2px solid var(--gold); box-shadow: 0 0 10px rgba(255, 200, 60, 0.5);
+  }
+  .ht-jackpot {
+    font-family: var(--f-num); font-size: 1.2rem; font-weight: 900; letter-spacing: 0.06em; color: var(--gold);
+    text-shadow: 0 0 12px var(--gold), 0 0 24px rgba(255, 200, 60, 0.6); margin: 2px 0 8px; animation: htPulse 1.4s ease-in-out infinite;
+  }
+  @keyframes htPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  .ht-strips { display: grid; gap: 3px; margin: 0 0 10px; }
+  .ht-strip { height: 18px; border-radius: 6px; border: 1px solid var(--rc); background: var(--bg) center / cover no-repeat; opacity: 0.9; }
+  .ht-strip.red { --rc: var(--color-red); --bg: url("assets/role-bg-red.webp"); }
+  .ht-strip.blue { --rc: var(--color-blue); --bg: url("assets/role-bg-blue.webp"); }
+  .ht-strip.yellow { --rc: var(--color-yellow); --bg: url("assets/role-bg-yellow.webp"); }
+  .ht-strip.pink { --rc: var(--color-pink); --bg: url("assets/role-bg-pink.webp"); }
+  .ht-strip.green { --rc: var(--color-green); --bg: url("assets/role-bg-green.webp"); }
+  .howto-text { list-style: none; margin: 0; padding: 0; text-align: left; font-size: 0.7rem; line-height: 1.55; letter-spacing: -0.01em; color: var(--text); }
+  .howto-text li { position: relative; padding-left: 12px; margin: 4px 0; }
+  .howto-text li::before { content: ''; position: absolute; left: 0; top: 0.62em; width: 6px; height: 6px; border-radius: 1px; background: var(--cy-cyan); transform: rotate(45deg); }
+  .howto-text b { color: var(--cy-cyan); }
+  .howto-text .howto-em { font-weight: 800; color: #ffe066; }
+  .howto-text .howto-em::before { background: #ffe066; }
+  .howto-dots { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+  .howto-dots button { width: 8px; height: 8px; padding: 0; border: none; border-radius: 50%; background: var(--card-border); cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
+  .howto-dots button.on { background: var(--cy-cyan); box-shadow: 0 0 6px var(--cy-cyan); }
+  .howto-div { height: 1px; margin: 14px 0 22px; background: linear-gradient(90deg, transparent, rgba(25, 211, 255, 0.5), transparent); }
+  /* スタート画面：デバッグモード（パネル左下の虫アイコン） */
+  .dev-row { display: flex; align-items: center; gap: 8px; margin: 8px 2px 0; padding-left: 44px; } /* 左端はサウンドボタンの場所 */
+  .debug-bug {
+    width: 32px; height: 32px; border-radius: 50%; padding: 0; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--card-border); background: rgba(11, 16, 32, 0.8); color: var(--text-dim); opacity: 0.7;
+    transition: color 0.2s, border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+  }
+  /* デバッグ：盤面の左に出す演出再生ボタン（押すと演出一覧のパネルが中央に出る） */
+  .dbg-fx-btn { position: absolute; left: 6px; top: 52%; transform: translateY(-50%); z-index: 5; color: #ffb020; border-color: #ffb020; box-shadow: 0 0 10px rgba(255, 176, 32, 0.6); opacity: 0.9; }
+  .dbg-fx-box { border-color: #ffb020; box-shadow: 0 0 18px rgba(255, 176, 32, 0.4); }
+  .dbg-fx-box .role-list-title { color: #ffb020; }
+  .dbg-fx-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .dbg-fx-list .btn { width: 100%; margin: 0; font-size: 0.78rem; padding: 10px 6px; }
+  .dbg-fx-list .wide { grid-column: 1 / -1; }
+  .dbg-round { margin-top: 14px; padding-top: 10px; border-top: 1px dashed rgba(255, 176, 32, 0.4); }
+  .dbg-round-head { display: flex; justify-content: space-between; align-items: baseline; color: #ffb020; font-weight: 800; font-size: 0.8rem; }
+  .dbg-round-now { font-family: var(--f-num); font-size: 0.95rem; }
+  .dbg-round-list { grid-template-columns: repeat(4, 1fr); }
+  .dbg-round-note { margin-top: 6px; font-size: 0.68rem; opacity: 0.8; }
+  .debug-bug.on { color: #ffb020; border-color: #ffb020; box-shadow: 0 0 10px rgba(255, 176, 32, 0.6); opacity: 1; }
+  /* サウンドのON/OFF：表示中のパネルのすぐ下・左端に置く（右端のLOGボタンと対。位置はスクリプトで合わせる） */
+  .sound-mini {
+    position: fixed; left: 10px; bottom: 10px; z-index: 900; width: 34px; height: 34px; border-radius: 50%; padding: 0; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--cy-cyan); background: rgba(11, 16, 32, 0.8); color: var(--cy-cyan);
+    box-shadow: 0 0 8px rgba(25, 211, 255, 0.4); transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+  .sound-mini .snd-off { display: none; }
+  .sound-mini.off { color: var(--text-dim); border-color: var(--card-border); box-shadow: none; opacity: 0.7; }
+  .sound-mini.off .snd-on { display: none; }
+  .sound-mini.off .snd-off { display: inline; }
+  .debug-state { font-family: var(--f-num); font-size: 0.6rem; font-weight: 900; letter-spacing: 0.1em; color: #ffb020; }
+  /* ===== ハッキングチップ ===== */
+  .hack-btn {
+    font-family: var(--f-num); font-size: 0.7rem; font-weight: 900; letter-spacing: 0.08em;
+    padding: 7px 12px; border-radius: 999px; cursor: pointer;
+    border: 1px solid #39ff9e; background: rgba(57, 255, 158, 0.06); color: #39ff9e; box-shadow: 0 0 8px rgba(57, 255, 158, 0.3);
+  }
+  .hack-btn.on { background: #39ff9e; color: #04130b; box-shadow: 0 0 14px rgba(57, 255, 158, 0.9); }
+  .hack-btn:disabled { opacity: 0.3; cursor: default; box-shadow: none; }
+  .hack-count { font-family: var(--f-num); font-size: 0.56rem; font-weight: 900; letter-spacing: 0.06em; color: #39ff9e; }
+  .hack-count:empty { display: none; }
+  .sd-banner.hack { background: linear-gradient(90deg, rgba(4, 30, 18, 0.95), rgba(57, 255, 158, 0.95), rgba(4, 30, 18, 0.95)); color: #04130b; text-shadow: 0 0 8px #fff; box-shadow: 0 0 26px rgba(57, 255, 158, 0.8); }
+  .battle-panel.hacked .flip-card { animation: hackGlitch 0.5s steps(2) 2; }
+  @keyframes hackGlitch { 0% { transform: translate(0); filter: none; } 25% { transform: translate(-3px, 1px); filter: hue-rotate(90deg); } 50% { transform: translate(3px, -1px); } 75% { transform: translate(-1px, 2px); filter: hue-rotate(-60deg); } 100% { transform: translate(0); filter: none; } }
+  /* ハッキング演出（RGBずれ＋スライス） */
+  .hack-glitch { position: fixed; z-index: 85; pointer-events: none; overflow: hidden; border-radius: 16px; }
+  .hack-glitch-bar { position: absolute; left: -30px; right: -30px; mix-blend-mode: screen; }
+  .hack-glitch-title {
+    position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); z-index: 1; text-align: center;
+    font-family: var(--f-num); font-weight: 900; font-size: clamp(2rem, 11vw, 3rem); letter-spacing: 0.08em; color: #fff;
+    text-shadow: -4px 0 rgba(255, 0, 60, 0.9), 4px 0 rgba(0, 220, 255, 0.9), 0 0 18px rgba(57, 255, 158, 0.8);
+    animation: hackTitle 0.14s steps(2) infinite;
+  }
+  @keyframes hackTitle { 0% { transform: translate(-3px, -50%); } 50% { transform: translate(3px, calc(-50% + 1px)); } 100% { transform: translate(-1px, -50%); } }
+  .board.hack-glitching { animation: hackShake 0.14s steps(2) infinite; }
+  .board.hack-glitching .flip-card { filter: drop-shadow(-4px 0 rgba(255, 0, 60, 0.7)) drop-shadow(4px 0 rgba(0, 220, 255, 0.7)); }
+  .board.hack-glitching .flip-front { text-shadow: -3px 0 rgba(255, 0, 60, 0.95), 3px 0 rgba(0, 220, 255, 0.95); }
+  @keyframes hackShake { 0% { transform: translateX(var(--gx, 0)); } 50% { transform: translateX(calc(var(--gx, 0) * -1)) skewX(-1deg); } 100% { transform: translateX(0); } }
+  /* SPIKE演出（20ラウンド超えで負けた時の支払いが増える） */
+  .spike-alert {
+    position: fixed; z-index: 86; pointer-events: none; overflow: hidden; border-radius: 16px;
+    background: radial-gradient(ellipse at 50% 45%, rgba(45, 0, 10, 0.8), rgba(2, 4, 12, 0.9) 70%);
+    animation: spikeFade 0.2s ease both, spikeOut 0.35s ease 1.9s forwards;
+  }
+  .spike-alert svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  .spike-wave { fill: none; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+  .spike-wave.calm { stroke: var(--cy-cyan, #19d3ff); filter: drop-shadow(0 0 4px #19d3ff); animation: spikeDraw 0.5s 0.1s cubic-bezier(.5, 0, .7, 1) both; }
+  .spike-wave.peak { stroke: #ff2b4f; filter: drop-shadow(0 0 5px #ff2b4f); animation: spikeDraw 0.12s 0.6s linear both; }
+  /* スパイク後の波形：揺れ幅は大きいまま戻らない（支払いが増えた状態が続くことを表す） */
+  .spike-wave.storm { stroke: #ff2b4f; filter: drop-shadow(0 0 5px #ff2b4f); animation: spikeDraw 0.45s 0.72s linear both; }
+  .spike-storm-g { animation: spikeSurge 0.18s 1.17s ease-in-out infinite alternate; transform-box: view-box; }
+  .spike-dot { fill: #fff; filter: drop-shadow(0 0 6px #ff2b4f); animation: spikePop 0.3s 0.66s cubic-bezier(.2, 1.8, .4, 1) both; transform-box: fill-box; transform-origin: center; }
+  .spike-frame { position: absolute; inset: 0; border-radius: 16px; box-shadow: inset 0 0 0 3px #ff2b4f, inset 0 0 50px rgba(255, 43, 79, 0.6); animation: spikeFrame 0.5s 0.66s both; }
+  .spike-title {
+    position: absolute; left: 0; right: 0; text-align: center;
+    font-family: var(--f-num); font-weight: 900; font-size: clamp(2.6rem, 15vw, 4rem); letter-spacing: 0.14em; color: #fff;
+    text-shadow: 0 0 10px #ff2b4f, 0 0 26px #ff2b4f, 0 0 50px rgba(255, 43, 79, 0.7);
+    animation: spikeUp 0.4s 0.7s cubic-bezier(.2, 1.4, .4, 1) both;
+  }
+  .spike-sub { position: absolute; left: 0; right: 0; text-align: center; font-size: 0.85rem; font-weight: 800; color: #ffcc00; text-shadow: 0 0 8px rgba(0, 0, 0, 0.9); animation: spikeFade 0.25s 1.05s both; }
+  .spike-lbl { position: absolute; font-family: var(--f-num); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.15em; }
+  .spike-lbl.before { left: 12px; color: #19d3ff; opacity: 0.85; animation: spikeFade 0.2s 0.15s both; }
+  .spike-lbl.after { right: 12px; color: #ff6b7a; animation: spikeFade 0.2s 0.85s both; }
+  @keyframes spikeDraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes spikePop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes spikeFrame { 0% { opacity: 0; } 15% { opacity: 1; } 30% { opacity: 0.3; } 45%, 100% { opacity: 1; } }
+  @keyframes spikeUp { from { transform: translateY(40%) scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes spikeSurge { from { transform: scaleY(1); } to { transform: scaleY(1.12); } }
+  @keyframes spikeFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes spikeOut { to { opacity: 0; } }
+  /* 遊び方：ハッキングのページ（HACKの文字がグリッチする） */
+  .ht-hack {
+    font-family: var(--f-num); font-weight: 900; font-size: 0.9rem; letter-spacing: 0.08em; color: #fff;
+    text-shadow: -2px 0 rgba(255, 0, 60, 0.9), 2px 0 rgba(0, 220, 255, 0.9), 0 0 10px rgba(57, 255, 158, 0.8);
+    animation: htHack 1.6s steps(1) infinite;
+  }
+  @keyframes htHack {
+    0%, 70%, 100% { transform: translate(0); opacity: 1; }
+    74% { transform: translate(-3px, 1px) skewX(-8deg); }
+    78% { transform: translate(3px, -1px); opacity: 0.6; }
+    82% { transform: translate(-1px, 0) skewX(6deg); }
+    86% { transform: translate(2px, 1px); opacity: 1; }
+  }
+  /* 役の説明：成立しているレベルを強調 */
+  .role-lv { opacity: 0.4; filter: grayscale(1); }
+  .role-lv.on { opacity: 1; filter: none; color: #fff; }
+  .role-lv b { font-size: 0.62rem; margin-right: 6px; }
+  /* カードの裏面：グラデ枠＋中央のひし形＋内枠の下辺に役の5色（D1-P6案） */
+  .card.back, .flip-back, .flying-card {
+    background: #03050b url("assets/card-back-d.svg") center / 100% 100% no-repeat;
+    border: none;
+    box-sizing: border-box;
+  }
+  .card.back { font-size: 0; }
+  /* 情報が多い時の詰め（手札のカードを小さくしないため、周りを段階的に小さくする） */
+  .board.compact-1 .zone-side { padding: 6px 12px; }
+  .board.compact-1 .side-col .num { font-size: clamp(2.6rem, min(20vw, 9dvh), 6rem); }
+  .board.compact-1 .discard-col .discard-grid { max-width: 168px; gap: 4px; }
+  .board.compact-1 .eff-board .eff-item, .board.compact-1 .eff-row { font-size: 0.56rem; line-height: 1.3; }
+  .board.compact-1 .select-panel { gap: 6px; }
+  .board.compact-1 .chip-selector { gap: 5px; }
+  .board.compact-1 .chip-controls { padding: 2px 10px; }
+  .board.compact-1 .chip-btn { width: 24px; height: 24px; }
+  .board.compact-1 .hack-btn { padding: 4px 12px; }
+  .board.compact-2 .side-col .num { font-size: clamp(2.2rem, min(16vw, 7dvh), 4.8rem); }
+  .board.compact-2 .discard-col .discard-grid { max-width: 136px; gap: 3px; }
+  .board.compact-2 .discard-slot { font-size: 0.75rem; }
+  .board.compact-2 .select-label { display: none; }
+  /* 役の発動カットイン */
+  .role-cutin { position: fixed; z-index: 86; pointer-events: none; overflow: hidden; border-radius: 16px; }
+  .role-cutin .rc-band {
+    position: absolute; width: 88%; height: 44px;
+    border-top: 2px solid var(--rc); border-bottom: 2px solid var(--rc);
+    box-shadow: 0 0 18px var(--rc); background: #000; overflow: hidden;
+  }
+  .role-cutin.solo .rc-band { height: 60px; }
+  .role-cutin .rc-band::before { content: ""; position: absolute; inset: 0; background: var(--bg) center 40% / cover no-repeat; }
+  /* 相手：イラストを反転して左から右へ／自分：右から左へ */
+  .role-cutin.op .rc-band { left: -6%; animation: rcSlideR 1.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  .role-cutin.op .rc-band::before { transform: scaleX(-1); }
+  .role-cutin.my .rc-band { right: -6%; animation: rcSlideL 1.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  @keyframes rcSlideR { 0% { transform: translateX(-110%); opacity: 0; } 22% { transform: translateX(-4%); opacity: 1; } 75% { transform: translateX(4%); opacity: 1; } 100% { transform: translateX(60%); opacity: 0; } }
+  @keyframes rcSlideL { 0% { transform: translateX(110%); opacity: 0; } 22% { transform: translateX(4%); opacity: 1; } 75% { transform: translateX(-4%); opacity: 1; } 100% { transform: translateX(-60%); opacity: 0; } }
+  .role-cutin.red { --rc: var(--color-red); --bg: url("assets/role-bg-red.webp"); }
+  .role-cutin.blue { --rc: var(--color-blue); --bg: url("assets/role-bg-blue.webp"); }
+  .role-cutin.yellow { --rc: var(--color-yellow); --bg: url("assets/role-bg-yellow.webp"); }
+  .role-cutin.green { --rc: var(--color-green); --bg: url("assets/role-bg-green.webp"); }
+  .role-cutin.pink { --rc: var(--color-pink); --bg: url("assets/role-bg-pink.webp"); }
   /* 役パネルは盤面の中に収め、はみ出す分はスクロール */
   .role-panel { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; }
   .rp-note { font-size: 0.62rem; color: var(--text-dim); }
@@ -1357,7 +1658,7 @@
   .rp-eff { color: var(--cy-cyan); font-weight: 800; }
   .card-effect-label .eff-name { display: block; color: var(--cy-cyan); font-weight: 800; }
   .card-effect-label .eff-desc { display: block; font-size: 0.56rem; line-height: 1.3; margin-top: 2px; }
-  /* 情報（効果・役で見えていること） */
+  /* 情報（カード効果で見えていること） */
   .color-info-hint { line-height: 1.5; }
   .color-info-hint .intel-see { color: var(--cy-cyan); font-weight: 700; }
   .color-info-hint .intel-shown { color: var(--known); }
@@ -1371,17 +1672,160 @@
   .stack-dialog .box p { margin: 0 0 14px; font-size: 0.8rem; color: var(--text-dim); line-height: 1.5; }
   .stack-dialog .top-card { margin: 0 auto 16px; width: 70px; }
   .stack-dialog .btns { display: flex; gap: 10px; justify-content: center; }
+  /* 回収（1A）の選択 */
+  .stack-dialog .recall-cards { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .stack-dialog .recall-cards .card { width: 54px; height: 76px; font-size: 1.5rem; cursor: pointer; }
+
+  /* ===== 背景アニメーション（漂う光・流れるネオングリッド） ===== */
+  .bg-fx { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
+  .bg-orb { position: absolute; width: 70vmax; height: 70vmax; border-radius: 50%; opacity: 0.5; will-change: transform; }
+  .bg-orb.o1 { left: -30vmax; top: -30vmax; background: radial-gradient(circle, rgba(255, 43, 79, 0.35), transparent 60%); animation: bgOrb1 26s ease-in-out infinite alternate; }
+  .bg-orb.o2 { right: -30vmax; bottom: -30vmax; background: radial-gradient(circle, rgba(30, 139, 255, 0.38), transparent 60%); animation: bgOrb2 31s ease-in-out infinite alternate; }
+  .bg-orb.o3 { left: 20vw; top: 30vh; width: 50vmax; height: 50vmax; background: radial-gradient(circle, rgba(122, 60, 255, 0.28), transparent 60%); animation: bgOrb3 37s ease-in-out infinite alternate; }
+  @keyframes bgOrb1 { to { transform: translate(35vw, 30vh) scale(1.2); } }
+  @keyframes bgOrb2 { to { transform: translate(-30vw, -35vh) scale(1.15); } }
+  @keyframes bgOrb3 { 0% { transform: translate(-20vw, -10vh) scale(0.9); } 100% { transform: translate(15vw, 20vh) scale(1.2); } }
+  /* 画面下の奥へ流れるグリッド（シンセウェイブ風） */
+  .bg-grid { position: absolute; left: 0; right: 0; bottom: 0; height: 45vh; perspective: 260px; perspective-origin: 50% 0;
+    -webkit-mask-image: linear-gradient(to top, #000 10%, transparent 95%); mask-image: linear-gradient(to top, #000 10%, transparent 95%); opacity: 0.55; }
+  .bg-grid::before { content: ''; position: absolute; left: -150%; right: -150%; bottom: -40%; height: 300%; transform-origin: 50% 100%;
+    background-image:
+      linear-gradient(rgba(25, 211, 255, 0.55) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 43, 79, 0.45) 1px, transparent 1px);
+    background-size: 44px 44px; background-position: center bottom;
+    animation: bgGrid 2.4s linear infinite; }
+  @keyframes bgGrid { from { transform: rotateX(68deg) translateY(-44px); } to { transform: rotateX(68deg) translateY(0); } }
+  .bg-fx.paused * , .bg-fx.paused *::before { animation-play-state: paused; }
+  /* リザルト画面の表示中は、背景をリザルトのすぐ下（対戦画面より手前）に持ち上げて見せる */
+  @supports selector(:has(*)) {
+    body:has(.overlay.result-screen.show) .bg-fx {
+      z-index: 1000; /* リザルトと同じ値。DOMが先なのでリザルトの下になる */
+      background:
+        radial-gradient(ellipse at 50% -10%, rgba(255, 43, 79, 0.22), transparent 45%),
+        radial-gradient(ellipse at 50% 110%, rgba(30, 139, 255, 0.22), transparent 45%),
+        var(--bg);
+    }
+    .overlay.result-screen {
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(30, 139, 255, 0.25), transparent 60%),
+        radial-gradient(ellipse at 50% 100%, rgba(255, 43, 79, 0.18), transparent 60%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bg-fx *, .bg-fx *::before { animation: none !important; }
+  }
 </style>
+<link rel="stylesheet" href="warp.css?v=dev">
 </head>
 <body>
+  <!-- 背景アニメーション（装飾のみ） -->
+  <div class="bg-fx" id="bgFx" aria-hidden="true">
+    <canvas class="wbg-warp" id="warpBg"></canvas>
+    <div class="wbg-floor"></div>
+    <div class="wbg-vig"></div>
+    <div class="wbg-scan"></div>
+  </div>
+  <script>
+  (function () {
+    var fx = document.getElementById('bgFx');
+    if (!fx) return;
+    // タブが裏にある間は止めて負荷を下げる
+    document.addEventListener('visibilitychange', function () { fx.classList.toggle('paused', document.hidden); });
+  })();
+  </script>
+  <!-- サウンドのON/OFF（全画面共通で左下に固定） -->
+  <button type="button" class="sound-mini" id="soundBtn" aria-pressed="true" aria-label="サウンド: ON" title="サウンド: ON">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="snd-on" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="snd-off" d="M16 9.5l5 5M21 9.5l-5 5"/>
+    </svg>
+  </button>
 <audio id="bgmAudio" loop preload="none" src="assets/bgm-battle-9v.mp3"></audio>
 <audio id="prepBgmAudio" preload="none" src="assets/bgm-prep-bitworks.mp3"></audio>
+<audio id="resultBgmAudio" preload="none" src="assets/bgm-result.mp3"></audio>
 <div class="wrap">
-  <h1 class="title-logo"><img src="assets/title-logo-clear.webp" alt="NUMBER WAR" width="960" height="169"></h1>
+  <h1 class="warp-title" aria-label="NUMBER WAR">
+    <span class="wt-term" aria-hidden="true">&gt; connecting duel_server</span>
+    <span class="wt-lock" aria-hidden="true"><span class="wt-mark"><i class="l"></i><i class="r"></i><b>8</b></span><span class="wt-word">NUMBER <em>WAR</em></span></span>
+    <span class="wt-sub" aria-hidden="true">1–8 CARD DUEL &amp; JACKPOT</span>
+  </h1>
 
   <div id="startScreen">
-    <div class="goal">お互いチップ15枚からスタート！相手のチップを0枚にしたら勝ち</div>
     <div class="start-panel online-panel">
+      <!-- 遊び方（5ページ・各3行。自動送り・スワイプ・ドットで切り替え） -->
+      <div class="howto-inline" id="howtoInline" aria-label="遊び方">
+        <div class="howto-kicker">HOW TO PLAY</div>
+        <div class="howto-viewport" id="howtoViewport">
+          <div class="howto-track" id="howtoTrack">
+          <section class="howto-page">
+            <h2 class="howto-title">基本ルール</h2>
+            <div class="howto-visual">
+              <div class="ht-side"><div class="ht-card red">7</div><div class="ht-tag win">WIN</div></div>
+              <div class="ht-vs">VS</div>
+              <div class="ht-side"><div class="ht-card blue">4</div><div class="ht-tag lose">LOSE</div></div>
+            </div>
+            <ul class="howto-text">
+              <li>お互い<b>チップ15枚</b>でスタート</li>
+              <li><b>高い数字</b>を出した方がチップを獲得</li>
+              <li class="howto-em">相手のチップを<b>0</b>にしたら勝利！</li>
+            </ul>
+          </section>
+          <section class="howto-page">
+            <h2 class="howto-title">チップでブースト</h2>
+            <!-- 図解：持ちチップ → チップが飛ぶ → カードの数字が上がる（ゲーム内のブースト演出と同じ動き） -->
+            <div class="howto-visual ht-boost-demo" id="htBoostDemo">
+              <div class="ht-side ht-chipside"><div class="ht-chiplabel">CHIP</div><div class="ht-chipcount" id="htChipCount">15</div></div>
+              <div class="ht-arrow">→</div>
+              <div class="ht-side"><div class="ht-card blue" id="htBoostCard">5</div></div>
+            </div>
+            <ul class="howto-text">
+              <li>持ちチップ<b>1枚</b>につき数字を<b>+1</b>できる</li>
+              <li>使ったチップは<b>POT</b>に送られるので注意！</li>
+              <li class="howto-em">チップを賭けて、相手を上回れ！</li>
+            </ul>
+          </section>
+          <section class="howto-page">
+            <h2 class="howto-title">大差より、1差で勝て</h2>
+            <div class="howto-visual">
+              <div class="ht-side"><div class="ht-card yellow">6</div></div>
+              <div class="ht-vs">VS</div>
+              <div class="ht-side"><div class="ht-card pink">5</div></div>
+            </div>
+            <div class="ht-jackpot">JACKPOT!</div>
+            <ul class="howto-text">
+              <li><b>ちょうど1差</b>で勝つとJACKPOT！</li>
+              <li class="howto-em">POTに溜まったチップを<b>総取り</b>だ！</li>
+              <li>勝つ為だけの<b>過度なブースト</b>は逆効果！</li>
+            </ul>
+          </section>
+          <section class="howto-page">
+            <h2 class="howto-title">ハッキングで起死回生</h2>
+            <div class="howto-visual">
+              <div class="ht-side"><div class="ht-card blue">1</div><div class="ht-tag win">WIN</div></div>
+              <div class="ht-hack">HACK</div>
+              <div class="ht-side"><div class="ht-card red">8</div><div class="ht-tag lose">LOSE</div></div>
+            </div>
+            <ul class="howto-text">
+              <li>1試合に2回だけハッキングできる！</li>
+              <li><b>勝敗が逆転（数字の低い方が勝利）</b>するぞ！</li>
+              <li class="howto-em">さらに相手がブーストしたチップを奪える！</li>
+            </ul>
+          </section>
+          <section class="howto-page">
+            <h2 class="howto-title">デッキ構築</h2>
+            <div class="ht-strips">
+              <div class="ht-strip red"></div><div class="ht-strip blue"></div><div class="ht-strip yellow"></div><div class="ht-strip pink"></div><div class="ht-strip green"></div>
+            </div>
+            <ul class="howto-text">
+              <li>カードごとに<b>色</b>を選んでデッキ構築！</li>
+              <li>同色<b>2枚以上</b>を場に出すと効果発動！</li>
+              <li class="howto-em">相手の手札情報を見てJACKPOTを狙え！</li>
+            </ul>
+          </section>
+          </div>
+        </div>
+        <div class="howto-dots" id="howtoDots"><button type="button" aria-label="1ページ目"></button><button type="button" aria-label="2ページ目"></button><button type="button" aria-label="3ページ目"></button><button type="button" aria-label="4ページ目"></button><button type="button" aria-label="5ページ目"></button></div>
+      </div>
+      <div class="howto-div"></div>
       <div class="start-btns">
         <button class="btn" id="createRoomBtn">部屋を作る</button>
       </div>
@@ -1390,13 +1834,19 @@
         <button class="btn" id="joinRoomBtn">部屋に入る</button>
       </div>
       <div class="online-status" id="onlineStatus"></div>
-      <div class="dev-section">
-        <div class="dev-label">-開発用-</div>
-        <div class="start-btns">
-          <button class="btn secondary" id="startBtn">CPU対戦</button>
-          <button class="btn" id="debugModeBtn" style="opacity:0.75;">デバッグモード: OFF</button>
-        </div>
+      <div class="start-btns start-group">
+        <button class="btn secondary" id="startBtn">シミュレーション</button>
       </div>
+    </div>
+    <!-- 開発用：デバッグモードの切り替え（パネルの左下に小さく） -->
+    <div class="dev-row">
+      <button type="button" class="debug-bug" id="debugModeBtn" aria-pressed="false" aria-label="デバッグモード: OFF" title="デバッグモード: OFF">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 6.5a3 3 0 0 1 6 0"/><rect x="7" y="7.5" width="10" height="12" rx="5"/><path d="M12 11v8.5"/>
+          <path d="M7 11.5H4M17 11.5h3M7 15.5H3.5M17 15.5h3.5M8 19l-2.5 2M16 19l2.5 2M8.5 8 6 5.5M15.5 8 18 5.5"/>
+        </svg>
+      </button>
+      <span class="debug-state" id="debugState"></span>
     </div>
   </div>
 
@@ -1411,9 +1861,29 @@
   </div>
 
   <div id="prepScreen" class="hidden">
-    <div class="goal">準備フェイズ：カードの色を選んでデッキを組んでください</div>
+    <div class="role-list-ov" id="roleListOv" aria-hidden="true">
+      <div class="role-list-box" role="dialog" aria-label="色の役 一覧">
+        <div class="role-list-title"><span>色の役 一覧</span><button type="button" class="role-list-x" id="roleListClose" aria-label="閉じる">✕</button></div>
+        <div class="role-list-sub">捨て札に同じ色が2枚以上たまると発動し、相手の情報が見える。左の数字は今のデッキに入っている枚数</div>
+        <div id="roleListRows"></div>
+      </div>
+    </div>
+    <div class="role-list-ov" id="effListOv" aria-hidden="true">
+      <div class="role-list-box" role="dialog" aria-label="カード効果 一覧">
+        <div class="role-list-title"><span>カード効果 一覧</span><button type="button" class="role-list-x" id="effListClose" aria-label="閉じる">✕</button></div>
+        <div class="role-list-sub">各数字で2種類のうちどちらか1つを、色とセットで選ぶ。選択済みの数字は選んだ効果を強調</div>
+        <div id="effListRows"></div>
+      </div>
+    </div>
     <div class="prep-panel" id="prepPanel">
-      <div class="prep-progress" id="prepProgress">カード 1 / 8</div>
+      <div class="prep-head">
+        <div class="prep-title">
+          <div class="prep-title-main">デッキ構築 <span class="prep-count" id="prepCount">1/8</span></div>
+          <div class="prep-title-sub" id="prepSub">1〜8の色と効果を選ぶ</div>
+        </div>
+        <button type="button" class="role-list-btn" id="effListBtn">効果一覧</button>
+        <button type="button" class="role-list-btn" id="roleListBtn">役一覧</button>
+      </div>
       <div class="prep-grid" id="prepGrid"></div>
       <div class="prep-peek dim" id="prepPeek">選んだカードをタップすると効果を確認できます</div>
       <div class="prep-instruction">好きな方のカードを選んでください</div>
@@ -1428,7 +1898,7 @@
     <!-- 上：相手（チップ／捨て札） -->
     <div class="zone-side op">
       <div class="side-col">
-        <div class="side-head"><span id="opLabel">相手(CPU)</span></div>
+        <div class="side-head"><span id="opLabel">相手(CPU)</span><span class="hack-count" id="opHackCount"></span></div>
         <div class="num" id="opHP">15</div>
       </div>
       <div class="discard-col">
@@ -1438,6 +1908,12 @@
 
     <!-- 中：バトル場 ⇄ 手札選択 -->
     <div class="zone-mid">
+      <button type="button" class="debug-bug dbg-fx-btn hidden" id="dbgFxBtn" aria-label="演出を再生（デバッグ）" title="演出を再生（デバッグ）">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 6.5a3 3 0 0 1 6 0"/><rect x="7" y="7.5" width="10" height="12" rx="5"/><path d="M12 11v8.5"/>
+          <path d="M7 11.5H4M17 11.5h3M7 15.5H3.5M17 15.5h3.5M8 19l-2.5 2M16 19l2.5 2M8.5 8 6 5.5M15.5 8 18 5.5"/>
+        </svg>
+      </button>
       <div class="battle-panel">
         <div class="pod-display" id="podDisplay"><span id="podValue">00</span></div>
         <div class="field-slot">
@@ -1467,6 +1943,7 @@
           <div class="eff-row me" id="effRowMe"></div>
         </div>
         <div class="select-prompt" id="selectPrompt">出すカードを選んでください</div>
+        <div class="select-label">SELECT YOUR CARD</div>
         <div class="card-row" id="myHand"></div>
         <div class="chip-selector">
           <div class="chip-controls">
@@ -1474,6 +1951,7 @@
             <span class="chip-value" id="chipSelectedVal">0</span>
             <button class="chip-btn" id="chipPlus">+</button>
           </div>
+          <button type="button" class="hack-btn" id="hackBtn" aria-pressed="false">HACK</button>
         </div>
       </div>
       <div class="role-hint" id="roleHint">▲ タップで役を確認</div>
@@ -1494,62 +1972,117 @@
   </div>
 
   <div class="controls">
-    <button class="btn secondary" id="soundBtn">🔊 サウンド ON</button>
     <button class="btn secondary" id="resetBtn">最初からやり直す</button>
   </div>
 
-  <div class="debug-panel hidden" id="debugPanel">
-    <div class="debug-label">🐞 デバッグ</div>
-    <div class="debug-row">
-      <button class="btn secondary small" id="dbgThroughBtn">THROUGH再生</button>
-      <button class="btn secondary small" id="dbgLoseBtn">LOSE再生</button>
-      <button class="btn secondary small" id="dbgJackpotBtn">JACKPOT再生</button>
-    </div>
-    <div class="debug-row">
-      <button class="btn secondary small" id="dbgHideHandBtn">🙈 手札を隠す</button>
+  <div class="role-list-ov" id="dbgFxOv" aria-hidden="true">
+    <div class="role-list-box dbg-fx-box" role="dialog" aria-label="演出の再生">
+      <div class="role-list-title"><span>🐞 演出の再生</span><button type="button" class="role-list-x" id="dbgFxClose" aria-label="閉じる">✕</button></div>
+      <div class="role-list-sub">押すとパネルが閉じて演出だけを再生します（チップ・ポッドは動きません）</div>
+      <div class="dbg-fx-list">
+        <button type="button" class="btn secondary" data-fx="countdown">FX-02 対戦開始</button>
+        <button type="button" class="btn secondary" data-fx="round">FX-02 ラウンド開始</button>
+        <button type="button" class="btn secondary" data-fx="reveal">FX-03 オープン</button>
+        <button type="button" class="btn secondary" data-fx="win">FX-04 WIN</button>
+        <button type="button" class="btn secondary" data-fx="lose">FX-05 LOSE</button>
+        <button type="button" class="btn secondary" data-fx="draw">FX-06 DRAW</button>
+        <button type="button" class="btn secondary" data-fx="jackpot">FX-07 JACKPOT</button>
+        <button type="button" class="btn secondary" data-fx="jackpotOp">FX-07 相手JACKPOT</button>
+        <button type="button" class="btn secondary" data-fx="hack">FX-08 HACK</button>
+        <button type="button" class="btn secondary" data-fx="cutin">FX-09 カットイン</button>
+        <button type="button" class="btn secondary" data-fx="double">FX-09 ダブル</button>
+        <button type="button" class="btn secondary" data-fx="spike">FX-10 SPIKE</button>
+        <button type="button" class="btn secondary wide" data-fx="victory">FX-11 試合終了（勝利）</button>
+      </div>
+      <div class="dbg-round">
+        <div class="dbg-round-head"><span>ラウンド数</span><span class="dbg-round-now" id="dbgRoundNow">ROUND 1</span></div>
+        <div class="dbg-fx-list dbg-round-list">
+          <button type="button" class="btn secondary" data-round="-10">−10</button>
+          <button type="button" class="btn secondary" data-round="-1">−1</button>
+          <button type="button" class="btn secondary" data-round="+1">+1</button>
+          <button type="button" class="btn secondary" data-round="+10">+10</button>
+          <button type="button" class="btn secondary wide" data-round="20">ROUND 20 にする（次のラウンドでSPIKE）</button>
+        </div>
+        <div class="dbg-round-note" id="dbgRoundNote">今のラウンドの番号を変えます（負けた時の支払いはこの番号で判定）</div>
+      </div>
+      <div class="dbg-round">
+        <div class="dbg-round-head"><span>決着</span></div>
+        <div class="dbg-fx-list">
+          <button type="button" class="btn secondary" data-end="win">強制勝利</button>
+          <button type="button" class="btn secondary" data-end="lose">強制敗北</button>
+        </div>
+        <div class="dbg-round-note" id="dbgEndNote">相手（または自分）のチップを0枚にして、すぐにリザルト画面を出します</div>
+      </div>
     </div>
   </div>
 
   <div class="rules">
-    基本ルール：お互いチップ15枚からスタート（ラウンド開始時の参加費の支払いはなし）。1〜8のカードが1枚ずつ入った8枚のデッキを、<b>プレイヤーごとに1組ずつ</b>用意してシャッフル。それぞれ手札2枚になるよう自分のデッキから引く。出すカードを選ぶ際、所持チップを消費してその<b>ターンのみ</b>数字を+1できる（カード自体の数字は変わらず、ターン終了時は元の数字のまま捨て札へ）。お互い同時に1枚出し、数字を比較して勝敗を決める。<br><br>
-    決着：ラウンド終了時に<b>相手のチップを0枚</b>にした方の勝ち（お互い0枚なら引き分け）。<br><br>
-    勝敗の報酬（チップブーストが鍵）：<br>
-    ・<b>JACKPOT</b>＝ブースト有無を問わず、<b>ちょうど1差</b>で勝った時だけ、ポッドに溜まっている分を総取りできる（負けた側は、LOSE同様にポッドへ<b>2枚</b>支払う。支払いは総取りの後）<br>
-    ・<b>WIN</b>＝JACKPOT以外で勝つと、ポッドから<b>1枚</b>受け取る（ポッドが空なら受け取りなし。ブースト分・LOSEの支払いがポッドに入った後に受け取る）。ブーストなしの勝利を<b>THROUGH</b>と呼ぶ<br>
-    ・<b>LOSE</b>＝負けると、ポッドへチップを<b>2枚</b>支払う（持っている分だけ）。ブーストして負けた場合は、ブースト分に加えて<b>2枚</b>支払う<br>
-    ・<b>引き分け</b>＝お互いの残りの手札（素の数字）を公開し、大きい方の勝ち。差がちょうど1ならJACKPOT、それ以外は通常の勝ち負けと同じ扱い。手札も同じ数字なら、山札の一番上から順に公開して決着するまで比べる（山札が空なら捨て札をシャッフルして山札にする。カードが尽きた時だけ、ブーストはすべてポッドへ流れて引き分け）。公開した手札は手札に戻り、捨て札の枠に<b style="color:var(--known)">!</b>が付く。公開した山札のカードは山札に戻り、手札に引いた時に<b style="color:var(--known)">!</b>が付く<br>
-    ・それ以外の結果（JACKPOTにならなかったブースト、ブーストしての負け等）は、使ったブースト分がそのままポッドへ流れる（ブーストしての負けは、さらにLOSEの2枚も支払う）<br><br>
-    カード効果：各数字にA・B2種類の効果があり、デッキ構築で<b>色とセットで</b>どちらかを選ぶ。相手がどちらを選んだかは、そのカードが出された時に分かる（捨て札をタップして開くパネルで、カードをタップすると効果が見られる。一度出たカードの色と効果は山札に戻っても記録される）。発動中の効果はポッドの上下に表示される（ENEMY＝相手が発動、PLAYER＝自分が発動／水色＝相手の情報が見える、オレンジ＝自分の情報が相手に見えている、黄色＝このラウンドのルール）。<br>
-    ・<b>1</b>　A <b>偵察</b>：次のラウンド、相手の手札2枚の偶数・奇数の内訳が見える／B <b>撹乱</b>：次のラウンド、相手の情報系の効果・役（黄・ピンク含む）が自分に効かない<br>
-    ・<b>2</b>　A <b>予兆</b>：次のラウンド、相手がブーストするか（枚数の範囲も）が見える／B <b>伏兵</b>：次のラウンド、自分のブースト1枚目が無料<br>
-    ・<b>3</b>　A <b>先読み</b>：次のラウンド、相手の山札の一番上が見える／B <b>仕込み</b>：出した後、自分の山札の一番上を見て、そのまま残すか一番下へ送るか選べる<br>
-    ・<b>4</b>　A <b>観測</b>：次のラウンド、相手の手札2枚の大小（1〜4／5〜8）の内訳が見える／B <b>保険</b>：このカードで負けたら、LOSEの支払いが1枚減る<br>
-    ・<b>5</b>　A <b>解析</b>：次のラウンド、相手の手札2枚の合計が見える／B <b>記録</b>：このカードで勝ったら、相手の残りの手札1枚が確定情報（!）になる<br>
-    ・<b>6</b>　A <b>露呈・小</b>：出すと、次のラウンド自分の残りの手札の大小が相手に見える／B <b>代償・小</b>：出すと、チップ1枚をポッドへ払う<br>
-    ・<b>7</b>　A <b>露呈・中</b>：出すと、次のラウンド自分の残りの手札の偶数・奇数が相手に見える／B <b>重圧</b>：出すと、次のラウンド自分はブーストできない<br>
-    ・<b>8</b>　A <b>全公開</b>：出すと、自分の残りの手札が相手に公開される（確定情報 !）／B <b>代償・大</b>：出すと、チップ2枚をポッドへ払う<br>
-    <br>
-    色の役(自分の捨て札の色構成で常時判定)：<b>色トリプル</b>(同色3枚以上)。成立すると捨て札が光り、タップで確認できます。<b>赤</b>(攻め)＝JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）／<b>青</b>(守り)＝ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ）／<b>緑</b>(安定)＝THROUGH(ブーストなしの勝利)時、WINの1🪙に加えて、ポッドに残っていればさらに1🪙回収できる／<b>ピンク</b>＝相手のデッキの底が見える／<b>黄</b>＝手札選択中に相手がブーストするかどうかだけ見える(枚数は伏せる)。<br><br>
-    確定情報：山札がなくなり捨て札を山札に戻した時に手札に残っていたカード、引き分けの手札勝負で公開した手札、引き分けの山札勝負で公開して後から手札に引いたカードの数字、山札を引ききった時の最後の手札など捨て札（と山札にあると分かっているカード）から手札が絞り込めた数字は、お互いに分かる。その数字は捨て札の枠に<b style="color:var(--known)">!</b>が表示され、出されるまで残る。<br><br>
-    色：各カードには赤・青・黄・緑・ピンクいずれかの色がある（デッキ構築時に選択）。現時点では色トリプル以外の効果条件には未使用。<br><br>
-    オンライン対戦：「部屋を作る」で表示される4桁のコードを相手に伝え、相手が入室したら準備フェイズ（それぞれ非公開でデッキを組む）へ進み、両者の準備が終わると対戦開始。手札のカードをタップした時点でそのラウンドの手が確定し、両者が確定したら一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになると手札からランダムに1枚、ブースト0で自動的に出す。黄の役は、相手が確定した時点でブーストの有無が見える。通信はブラウザ同士の直接通信で、部屋を作った人のブラウザが対戦データを持つため、対戦中はそのページを閉じないこと。途中で抜けても、同じブラウザから同じ部屋コードで入り直せば続きから再開できる。<br><br>
-    画面：カードを選ぶ時は「手札選択」画面、カードを出すと「バトル場」画面に自動で切り替わり、決着後にまた手札選択へ戻ります。
+    <b>基本ルール</b>：お互いチップ<b>15枚</b>とハッキングチップ<b>2枚</b>を持ってスタート。1〜8のカードが1枚ずつ入った自分のデッキ（8枚）から、手札が2枚になるように引く。お互い同時に1枚出し、<b>数字が高い方</b>がそのラウンドの勝ち。相手のチップを<b>0枚</b>にした方が勝利（お互い0枚なら引き分け）。<br><br>
+    <b>チップでブースト</b>：カードを出す時、持ちチップ<b>1枚につき数字を+1</b>できる（そのラウンドだけ。使ったチップはPOTへ送られる）。<br><br>
+    <b>勝敗とチップ</b>：<br>
+    ・<b>JACKPOT</b>＝<b>ちょうど1差</b>で勝つと、POTのチップを総取り。負けた側はPOTへ2枚支払う<br>
+    ・<b>WIN</b>＝それ以外で勝つと、POTから1枚受け取る（POTが空なら受け取りなし）<br>
+    ・<b>LOSE</b>＝負けると、POTへ2枚支払う（ブーストして負けた場合はブースト分に加えて2枚）<br>
+    ・<b>20ラウンド超え</b>＝21ラウンド目からは、負けた時（JACKPOTで負けた時も含む）の支払いが<b>4枚</b>に増える<br>
+    ・<b>引き分け</b>＝お互いの残りの手札を公開し、大きい方の勝ち（差が1ならJACKPOT）。手札も同じなら山札の一番上から順に比べる。カードが尽きた時だけ、ブースト分はPOTへ流れて引き分け<br><br>
+    <b>ハッキングチップ</b>：使ったラウンドは<b>勝敗がアベコベ</b>（低い数字が勝ち。例：1が8に勝つ）。ブーストとは併用できない。使ったことはカード公開時に相手にも分かる。お互いが使っても反転は1回分。1差ならJACKPOT、引き分けの手札勝負も低い方が勝ち。勝った側は、負けた側がブーストしたチップをPOTではなく自分の手元に吸収する。<br><br>
+    <b>デッキ構築</b>：1〜8のカードそれぞれに、5色（赤・青・黄・緑・ピンク）から1色を選んでデッキを組む。「役一覧」ボタンで色の役を確認できる。<br><br>
+    <b>色の役</b>：自分の捨て札に同じ色のカードがたまると発動し、相手の情報が見える（POTの下に水色で表示。捨て札をタップすると発動中の役を確認できる）。<br>
+    ・<b>B code（観測）</b>＝Lv2：相手の手札の大小（小1〜4・大5〜8の枚数）／Lv3：相手の手札で一番大きい数字<br>
+    ・<b>P code（透視）</b>＝Lv2：相手の手札の偶奇（偶数・奇数の枚数）／Lv3：相手の手札で一番小さい数字<br>
+    ・<b>G code（解析）</b>＝Lv2：相手の手札の合計／Lv3：自分の手札に、相手の手札とちょうど1差のカードがあるか<br>
+    ・<b>Y code（先読み）</b>＝Lv2：相手の山札の一番底／Lv3：相手の山札の一番上<br>
+    ・<b>R code（勝算）</b>＝Lv2：自分の手札それぞれが、相手の手札に何枚勝てるか／Lv3：引き分けになる枚数<br>
+    ・<b>Lv4（全色共通）</b>＝JACKPOTで勝った時、総取りに加えて相手のチップを直接<b>2枚</b>奪う<br>
+    （同色2枚でLv2、3枚でLv3、4枚でLv4。複数の色が発動していれば全部見える）<br><br>
+    <b>確定情報（<span style="color:var(--known)">!</span>）</b>：相手の手札にあることが確定しているカード。山札を作り直した時に手札に残っていたカード、引き分けの勝負で公開したカード、捨て札から絞り込めた数字などが対象で、捨て札の枠に<b style="color:var(--known)">!</b>が付く（出されるまで残る）。<br><br>
+    <b>オンライン対戦</b>：「部屋を作る」で表示される4桁の番号を相手に伝え、相手が「部屋に入る」で入室するとデッキ構築へ。手札のカードをタップした時点で手が確定し、両者がそろうと一斉に公開する。選択の制限時間は<b>60秒</b>で、時間切れになるとランダムな1枚をブーストなしで出す。部屋を作った人のブラウザが対戦データを持つので、対戦中はページを閉じないこと（同じブラウザから同じ部屋番号で入り直せば続きから再開できる）。<br><br>
+    <b>シミュレーション</b>：CPUと対戦できる。CPUは手持ちチップが少なくなると、ハッキングチップを使ってくることがある。<br><br>
+    <b>カード効果</b>（デバッグモード専用・バランス調整中）：各数字に2種類の効果があり、デッキ構築で色とセットで選ぶ。発動中の効果はPOTの下に表示される。
   </div>
   </div>
 </div>
 
 <div class="net-notice" id="netNotice" role="status"></div>
 
-<div class="overlay" id="overlay">
-  <div class="overlay-card">
-    <h2 id="overlayTitle">ゲーム終了</h2>
-    <p id="overlayText"></p>
-    <button class="btn" id="playAgainBtn">もう一度プレイ</button>
+<div class="overlay result-screen" id="overlay">
+  <div class="rs-inner">
+    <div class="rs-label"><span class="rs-idx">[05]</span><span class="rs-rule"></span><span class="rs-type" id="rsKicker">MATCH RESULT</span></div>
+    <div class="rs-head">
+      <div class="rs-outcome" id="rsOutcome">WIN</div>
+      <svg class="rs-stamp" viewBox="0 0 100 100" aria-hidden="true">
+        <defs><path id="rsStampPath" d="M50,50 m-36,0 a36,36 0 1,1 72,0 a36,36 0 1,1 -72,0"/></defs>
+        <circle cx="50" cy="50" r="48"/>
+        <text><textPath href="#rsStampPath" id="rsStampText">GAME SET · NUMBER WAR · 2026 ·</textPath></text>
+        <path class="rt-star" d="M50 38v24M39.6 44l20.8 12M39.6 56l20.8-12"/>
+      </svg>
+    </div>
+    <div class="rs-bar"></div>
+    <div class="rs-sub" id="rsSub"></div>
+    <div class="rs-score">
+      <div class="rs-side me" id="rsMe"><div class="rs-who">CHIPS · YOU</div><div class="rs-num" id="rsMyChips">0</div></div>
+      <div class="rs-ring" aria-hidden="true">
+        <svg viewBox="0 0 100 100">
+          <circle class="rr-track" cx="50" cy="50" r="42"/>
+          <circle class="rr-op" id="rsRingOp" cx="50" cy="50" r="42" pathLength="100"/>
+          <circle class="rr-me" id="rsRingMe" cx="50" cy="50" r="42" pathLength="100"/>
+          <circle class="rr-inner" cx="50" cy="50" r="30" pathLength="100"/>
+        </svg>
+        <div class="rr-val"><span id="rsRingPct">0</span><small>%</small><em>SHARE</em></div>
+      </div>
+      <div class="rs-side op" id="rsOp"><div class="rs-who"><span>CHIPS · </span><span id="rsOpName">CPU</span></div><div class="rs-num" id="rsOpChips">0</div></div>
+    </div>
+    <div class="rs-panel">
+      <div class="rs-ptitle"><span>チップの推移</span><span class="rs-legend"><span><i class="me"></i>YOU</span><span><i class="op"></i><span id="rsLegendOp">CPU</span></span></span></div>
+      <svg class="rs-chart" id="rsChart" viewBox="0 0 340 230" role="img" aria-label="ラウンドごとのチップ枚数の推移"></svg>
+    </div>
+    <button class="btn rs-btn" id="playAgainBtn">タイトルに戻る</button>
   </div>
 </div>
 
+<script src="warp-fx.js?v=dev"></script>
 <script src="vendor/peerjs.min.js"></script>
-<script src="net-shim.js"></script>
+<script src="net-shim.js?v=dev"></script>
 <script>
 (function() {
   let state = null;
@@ -1587,7 +2120,8 @@
   const SE_FILES = {
     jackpot: { src: 'assets/se-jackpot.mp3', volume: 0.3 }, // JACKPOT成立時
     lose: { src: 'assets/se-lose2.mp3', volume: 0.3 },      // 自分がLOSE（ブーストなしの負けでポッドへ支払い）
-    win: { src: 'assets/se-win.mp3', volume: 0.3 }          // 自分が勝った時（JACKPOT以外）
+    win: { src: 'assets/se-win.mp3', volume: 0.3 },         // 自分が勝った時（JACKPOT以外）
+    spike: { src: 'assets/se-spike.mp3', volume: 0.3 }      // SPIKE演出（20ラウンド超えの警告）
   };
   const seBuffers = {};
   function loadSe(key) {
@@ -1778,6 +2312,7 @@
   const BGM_TRACKS = {
     battle: { elId: 'bgmAudio', volume: 0.1 },      // 対戦中のBGM（9V）
     prep:   { elId: 'prepBgmAudio', volume: 0.12 }, // マッチング待機中・デッキ構築のBGM（ビットワークス）
+    result: { elId: 'resultBgmAudio', volume: 0.12 }, // リザルト画面のBGM
   };
   const bgmState = {}; // key: track名 -> { gainNode, buffer, bufferPromise, sourceNode }
   for (const key in BGM_TRACKS) bgmState[key] = { gainNode: null, buffer: null, bufferPromise: null, sourceNode: null };
@@ -1863,6 +2398,7 @@
 
   const COLORS = ['red', 'blue', 'yellow', 'green', 'pink'];
   const COLOR_LABEL = { red: '赤', blue: '青', yellow: '黄', green: '緑', pink: 'ピンク' };
+  const COLOR_EN = { red: 'R code', blue: 'B code', yellow: 'Y code', green: 'G code', pink: 'P code' }; // 役一覧の見出し用（色の頭文字＋code）
   let debugMode = false; // デバッグモード：準備フェイズで全色から選べるようにする
   // 決着判定：ラウンド終了時に相手のチップを0枚にした方の勝ち。'my' / 'op' / 'draw'（両者0枚）/ null（続行）
   function gameWinner(myChips, opChips) {
@@ -1871,9 +2407,6 @@
     if (myChips <= 0) return 'op';
     return null;
   }
-  // 対人戦(2人対戦・画面を渡し合う想定)に備えて、情報系の役(ピンク・黄)は「今画面を見ている側」基準で判定する。
-  // 現状は常にmy(人間側)が画面を見ているが、将来オセットで表示を切り替える際はここを変更するだけでよい。
-  let activeViewer = 'my';
   function otherOf(who) { return who === 'my' ? 'op' : 'my'; }
   let prepMyColors = {};
   let prepOpColors = {};
@@ -2076,7 +2609,6 @@
       revealWrittenRound: 0, resolvingRound: 0, seatRev: 0, matchRev: 0
     });
     document.getElementById('resetBtn').textContent = '最初からやり直す';
-    document.getElementById('playAgainBtn').textContent = 'もう一度プレイ';
     updateOpLabel();
   }
 
@@ -2145,7 +2677,7 @@
       net.matchRev = 1;
       const m = {
         gameId: net.gameId, code, hostId: net.uid, guestId: '', status: 'waiting', debug: !!debugMode,
-        round: 0, chips: { host: 15, guest: 15 }, pod: 0, rev: 1, createdAt: Date.now(), updatedAt: Date.now()
+        round: 0, chips: { host: 15, guest: 15 }, hacks: { host: HACK_START, guest: HACK_START }, pod: 0, rev: 1, createdAt: Date.now(), updatedAt: Date.now()
       };
       net.match = m;
       await net.db.doc(matchPath()).set(m);
@@ -2220,7 +2752,6 @@
     debugMode = !!net.match.debug;
     updateDebugBtn();
     document.getElementById('resetBtn').textContent = '対戦を抜ける';
-    document.getElementById('playAgainBtn').textContent = 'スタートに戻る';
     subscribeAll();
     joinNetRoom();
     net.phase = 'idle';
@@ -2252,7 +2783,7 @@
       else if (myDone && net.phase !== 'prepWait') { net.phase = 'prepWait'; showPrepWait(); }
       const op = oppSeatC();
       if (net.role === 'host' && myDone && op && op.prepDone) {
-        writeMatch({ status: 'playing', round: 1, chips: { host: 15, guest: 15 }, pod: 0 });
+        writeMatch({ status: 'playing', round: 1, chips: { host: 15, guest: 15 }, hacks: { host: HACK_START, guest: HACK_START }, pod: 0 });
         return onNetUpdate();
       }
       return;
@@ -2278,7 +2809,6 @@
     showScreen('prep');
     if (net.priv && net.priv.colors) prepMyColors = Object.assign({}, net.priv.colors);
     prepStep = 9;
-    document.getElementById('prepProgress').textContent = 'デッキ完成';
     renderPrepGrid();
     document.getElementById('prepChoices').innerHTML = '';
     document.getElementById('prepPanel').classList.add('waiting');
@@ -2288,7 +2818,7 @@
     const deck = shuffle([1, 2, 3, 4, 5, 6, 7, 8]);
     const hand = [deck.pop(), deck.pop()];
     writePriv({ colors: Object.assign({}, prepMyColors), effects: Object.assign({}, prepMyEffects), deck, hand, pending: null, drawnRound: 1, log: [], prev: null });
-    writeMySeat({ prepDone: true, discard: [], commitRound: 0, commitHash: null, boostFlag: null, reveal: null, deckBottom: null });
+    writeMySeat({ prepDone: true, discard: [], commitRound: 0, commitHash: null, boostFlag: null, reveal: null });
     net.phase = 'prepWait';
     showPrepWait();
     onNetUpdate();
@@ -2302,6 +2832,7 @@
     document.getElementById('overlay').classList.remove('show');
     showScreen('game');
     startBgm('battle');
+    if (window.ReelFX && !(pv.log && pv.log.length)) ReelFX.countdown(playTickSound); // 再開時は出さない
     const R = m.round;
     const my = net.mySeat || {};
     const op = oppSeatC() || {};
@@ -2322,6 +2853,7 @@
       myChips: m.chips[net.role], opChips: m.chips[oppRole()], pod: m.pod,
       round: R, roundLog: (pv.log || []).slice()
     });
+    if (m.hacks) state.hacks = { my: m.hacks[net.role], op: m.hacks[oppRole()] };
     net.hostResolvedRound = 0;
     net.revealWrittenRound = 0;
     net.resolvingRound = 0;
@@ -2331,18 +2863,33 @@
     let pending = pv.pending || null;
     if ((pv.drawnRound || 1) < R) {
       // 前ラウンドの決着後、ドローする前に中断していた → ここでドローして続きから
+      // 前ラウンドに出したカードの掘削（6B）・回収（1A）もここで行う
+      let lastKey = null;
       if (pending && pending.round < R) {
         const i = state.myHand.indexOf(pending.card);
         if (i >= 0) state.myHand.splice(i, 1);
+        if (pending.eff) lastKey = pending.card + pending.eff;
         pending = null;
       }
-      while (state.myHand.length < 2) {
-        const before = state.myHand.length;
-        drawInto(state.myHand, 'my');
-        if (state.myHand.length === before) break;
-      }
-      persistAfterRoundDraw();
+      const token = gameToken;
+      state.netPhase = 'resolving';
+      (m.status === 'over' ? Promise.resolve() : selfPostRound(lastKey, token)).then(() => {
+        if (token !== gameToken) return;
+        while (state.myHand.length < 2) {
+          const before = state.myHand.length;
+          drawInto(state.myHand, 'my');
+          if (state.myHand.length === before) break;
+        }
+        persistAfterRoundDraw();
+        state.netPhase = null;
+        resumeOnlineRound(m, pending);
+      });
+      return;
     }
+    resumeOnlineRound(m, pending);
+  }
+  function resumeOnlineRound(m, pending) {
+    const R = m.round;
     if (m.status === 'over') {
       state.over = true;
       render();
@@ -2355,6 +2902,7 @@
       if (i >= 0) state.myHand.splice(i, 1);
       state.pendingCommit = pending;
       prepareRoundIntel();
+      commitRoleGlow(['my', 'op'], false); // 再接続：成立音は鳴らさずに光りだけ戻す
       state.chipSelect = pending.boost;
       state.locked = true;
       state.netPhase = 'committed';
@@ -2375,16 +2923,13 @@
     }
   }
 
-  function myDeckBottomPublic() {
-    // 相手がピンクの役を持っている時だけ、自分のデッキの底を公開する
-    if (!state || !hasColorTriple('op', 'pink') || (state.prev && state.prev.my.key === '1B')) return null;
-    return state.myDeck.length ? state.myDeck[0] : null;
-  }
   function persistAfterRoundDraw() {
     const opSeen = {};
     Object.keys(state.opSeen).forEach(n => { opSeen[n] = { c: state.opCardColors[n] || null, e: state.opCardEffects[n] || null }; });
     writePriv({ deck: state.myDeck.slice(), hand: state.myHand.slice(), pending: null, drawnRound: state.round, log: state.roundLog, prev: state.prev, opSeen });
-    writeMySeat({ discard: discEntries('my'), deckBottom: myDeckBottomPublic() });
+    // 回収（1A）した数字も伝える（相手が「山札へ戻った」と取り違えないように）
+    writeMySeat({ discard: discEntries('my'), recall: state.recalledNow != null ? { n: state.recalledNow } : null });
+    state.recalledNow = null;
   }
 
   // 相手の捨て札を共有データに合わせる（山札へ戻った時は戻る演出）
@@ -2392,14 +2937,18 @@
     (op.discard || []).forEach(e => { if (e.c) state.opCardColors[e.n] = e.c; if (e.e) state.opCardEffects[e.n] = e.e; state.opSeen[e.n] = true; });
     const incoming = (op.discard || []).map(e => e.n);
     const cur = state.opDiscard;
-    const bottom = getDeckBottom('op');
-    if (incoming.length === cur.length && incoming.every((n, i) => n === cur[i]) && bottom === state.lastOpBottom) return;
-    if (cur.length && cur.some(n => !incoming.includes(n))) {
+    if (incoming.length === cur.length && incoming.every((n, i) => n === cur[i])) return;
+    const removed = cur.filter(n => !incoming.includes(n));
+    if (removed.length === 1 && op.recall && op.recall.n === removed[0]) {
+      // 回収（1A）：捨て札から相手の手札へ → 確定情報
+      if (!state.knownHeld.op.includes(removed[0])) state.knownHeld.op.push(removed[0]);
+    } else if (removed.length) {
       state.returning.op = cur.slice();
       state.knownHeld.op = knownHeldFrom(cur);
     }
     state.opDiscard = incoming;
-    state.lastOpBottom = bottom;
+    // 手札選択中に届いた相手の捨て札（ラウンド後の効果で増えた分など）は、その場で役の光り・成立音に反映
+    if (state.netPhase === 'select') commitRoleGlow(['op'], true);
     renderDiscardGrid('discardGridOp', state.opDiscard, state.opCardColors, 'op');
     refreshRolePanel();
   }
@@ -2428,12 +2977,6 @@
       reconcileWithMatch();
     }
 
-    // ピンク：相手が役を持っていれば自分のデッキの底を公開（変化した時だけ書く）
-    if (me && state.netPhase !== 'resolving') {
-      const bottom = myDeckBottomPublic();
-      if ((typeof me.deckBottom === 'number' ? me.deckBottom : null) !== bottom) writeMySeat({ deckBottom: bottom });
-    }
-
     // 両者が確定 → 自分の手を公開
     const oc = oppCommittedNow();
     if (state.netPhase === 'committed' && oc && state.pendingCommit && net.revealWrittenRound !== R && !(me && me.reveal && me.reveal.round === R)) {
@@ -2441,7 +2984,7 @@
       const pc = state.pendingCommit;
       const discard = discEntries('my').filter(e => e.n !== pc.card);
       discard.push({ n: pc.card, c: pc.color, e: pc.eff || null });
-      writeMySeat({ reveal: { round: R, card: pc.card, color: pc.color, eff: pc.eff || null, boost: pc.boost, free: pc.free || 0, salt: pc.salt }, discard });
+      writeMySeat({ reveal: { round: R, card: pc.card, color: pc.color, eff: pc.eff || null, boost: pc.boost, hack: pc.hack || 0, free: pc.free || 0, salt: pc.salt }, discard });
     }
     if (state.netPhase === 'committed' && oc) {
       const rm = document.getElementById('resultMsg');
@@ -2462,6 +3005,7 @@
   function reconcileWithMatch() {
     const m = net.match;
     state.reconciledRound = state.round;
+    if (m.hacks) { state.hacks = { my: m.hacks[net.role], op: m.hacks[oppRole()] }; updateHackUI(); }
     const myC = m.chips[net.role], opC = m.chips[oppRole()];
     if (myC === state.myChips && opC === state.opChips && m.pod === state.pod) return;
     console.warn('[online] 集計のずれを補正', { local: [state.myChips, state.opChips, state.pod], host: [myC, opC, m.pod] });
@@ -2469,6 +3013,9 @@
     const last = state.roundLog[state.roundLog.length - 1];
     if (last) {
       last.notes = (last.notes ? last.notes + ' / ' : '') + `⚠ ホストの集計と差異があったため補正（あなた${myC}・相手${opC}・ポッド${m.pod}）`;
+      // 表示用のチップ数・増減もホストの値にそろえる
+      last.dMy += myC - last.my; last.dOp += opC - last.op; last.dPod += m.pod - last.pod;
+      last.my = myC; last.op = opC; last.pod = m.pod;
       renderRoundLog();
     }
     document.getElementById('opHP').textContent = state.opChips;
@@ -2484,9 +3031,11 @@
     const hs = net.seats.host, gs = net.seats.guest;
     if (!hs || !gs || !hs.reveal || !gs.reveal || hs.reveal.round !== R || gs.reveal.round !== R) return;
     if (net.hostResolvedRound >= R) return;
+    const hk = m.hacks || { host: HACK_START, guest: HACK_START };
+    const hHack = !!hs.reveal.hack && hk.host > 0, gHack = !!gs.reveal.hack && hk.guest > 0;
     const hFree = hs.reveal.free ? 1 : 0, gFree = gs.reveal.free ? 1 : 0;
-    const hB = Math.max(0, Math.min(hs.reveal.boost | 0, m.chips.host + hFree));
-    const gB = Math.max(0, Math.min(gs.reveal.boost | 0, m.chips.guest + gFree));
+    const hB = hHack ? 0 : Math.max(0, Math.min(hs.reveal.boost | 0, m.chips.host + hFree));
+    const gB = gHack ? 0 : Math.max(0, Math.min(gs.reveal.boost | 0, m.chips.guest + gFree));
     const hP = Math.max(0, hB - hFree), gP = Math.max(0, gB - gFree);
     let tie = null;
     if (hs.reveal.card + hB === gs.reveal.card + gB) {
@@ -2501,10 +3050,11 @@
       myCard: hs.reveal.card, opCard: gs.reveal.card, myBoost: hB, opBoost: gB, myPaid: hP, opPaid: gP,
       myKey: hs.reveal.eff ? hs.reveal.card + hs.reveal.eff : null, opKey: gs.reveal.eff ? gs.reveal.card + gs.reveal.eff : null,
       myChips: m.chips.host - hP, opChips: m.chips.guest - gP, pod: m.pod,
-      myDisc: hs.discard || [], opDisc: gs.discard || [], round: R, tie
+      myDisc: hs.discard || [], opDisc: gs.discard || [], round: R, tie,
+      myHack: hHack, opHack: gHack
     });
     const over = !m.debug && gameWinner(res.myChips, res.opChips) !== null;
-    writeMatch({ round: R + 1, chips: { host: res.myChips, guest: res.opChips }, pod: res.pod, status: over ? 'over' : 'playing', lastRound: R });
+    writeMatch({ round: R + 1, chips: { host: res.myChips, guest: res.opChips }, pod: res.pod, hacks: { host: hk.host - (hHack ? 1 : 0), guest: hk.guest - (gHack ? 1 : 0) }, status: over ? 'over' : 'playing', lastRound: R });
   }
 
   async function hiddenCardHash(r, card, salt2) {
@@ -2523,23 +3073,24 @@
     const R = state.round;
     const token = gameToken;
     const free = state.rule && state.rule.my.free ? 1 : 0;
-    const boost = Math.max(0, Math.min(state.chipSelect, maxBoostNow()));
+    const hack = !!(state.hackSelect && state.hacks.my > 0);
+    const boost = hack ? 0 : Math.max(0, Math.min(state.chipSelect, maxBoostNow()));
     const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
     const salt2 = Math.random().toString(36).slice(2) + Date.now().toString(36);
-    const pc = { round: R, card, boost, free: free && boost > 0 ? 1 : 0, salt, salt2, color: state.myCardColors[card] || null, eff: state.myCardEffects[card] || null };
+    const pc = { round: R, card, boost, hack: hack ? 1 : 0, free: free && boost > 0 ? 1 : 0, salt, salt2, color: state.myCardColors[card] || null, eff: state.myCardEffects[card] || null };
     state.pendingCommit = pc;
     stopTurnTimer();
-    const hash = await commitHash(R, card, boost, salt);
+    const hash = await commitHash(R, card, boost + (hack ? 'H' : ''), salt);
     // 残りの手札は中身を見せずにハッシュだけ記録する（引き分けの手札勝負で公開した時に照合）
     const hiddenHash = await hiddenCardHash(R, state.myHand[0], salt2);
     if (token !== gameToken || !net.active) return;
     writePriv({ pending: pc });
-    // 相手の黄の役・予兆（2A）が効いていれば、ブーストの有無（予兆は枚数の範囲も）を公開する。撹乱中は公開しない
+    // 相手の予兆（2A）が効いていれば、ブーストの有無と枚数の範囲を公開する。撹乱中は公開しない
     const ex = state.exposure || {};
-    const showFlag = !ex.blocked && (hasColorTriple('op', 'yellow') || ex.boostIntel);
+    const showFlag = !ex.blocked && ex.boostIntel;
     writeMySeat({ commitRound: R, commitHash: hash, hiddenHash,
       boostFlag: showFlag ? boost > 0 : null,
-      boostRange: !ex.blocked && ex.boostIntel ? boostRangeText(boost) : null });
+      boostRange: showFlag ? boostRangeText(boost) : null });
     state.netPhase = 'committed';
     gameNetTick();
   }
@@ -2549,13 +3100,14 @@
     const R = state.round;
     state.netPhase = 'resolving';
     const op = oppSeatC();
-    const h = await commitHash(R, oppReveal.card, oppReveal.boost, oppReveal.salt);
+    const h = await commitHash(R, oppReveal.card, oppReveal.boost + (oppReveal.hack ? 'H' : ''), oppReveal.salt);
     if (token !== gameToken) return;
     state.tamperNote = (h && op && op.commitHash && h !== op.commitHash) ? '⚠ 相手の公開内容が確定時の記録と一致しません' : '';
     if (oppReveal.color) state.opCardColors[oppReveal.card] = oppReveal.color;
     if (oppReveal.eff) state.opCardEffects[oppReveal.card] = oppReveal.eff;
     state.opPendingChips = oppReveal.boost | 0;
     state.opPendingFree = !!oppReveal.free;
+    state.opPendingHack = !!oppReveal.hack;
     state.chipSelect = state.pendingCommit.boost;
     state.fieldOpPlaced = true;
     state.fieldMyPlaced = true;
@@ -2613,11 +3165,15 @@
 
   function onlineNextRound() {
     // 相手が引き分け勝負で公開した山札のカードは、上から1枚ずつ相手の手札に入る → 確定情報へ
-    if (state.revealedDeck.op.length) {
+    // （相手の掘削なら一番上は捨て札へ、回収なら相手は引かない）
+    const pv = state.prev;
+    if (pv && pv.op.key === '6B' && state.revealedDeck.op.length) state.revealedDeck.op.shift();
+    if (!state.opRecallPending && state.revealedDeck.op.length) {
       const n = state.revealedDeck.op.shift();
       if (!state.knownHeld.op.includes(n)) state.knownHeld.op.push(n);
     }
-    drawInto(state.myHand, 'my');
+    state.opRecallPending = false;
+    if (state.myHand.length < 2) drawInto(state.myHand, 'my');
     state.fieldMy = null;
     state.fieldOp = null;
     state.fieldMyCardId = null;
@@ -2679,7 +3235,7 @@
   function updateOpLabel() {
     const el = document.getElementById('opLabel');
     if (!el) return;
-    if (!net.active) { el.textContent = '相手(CPU)'; return; }
+    if (!net.active) { el.textContent = ''; return; } // CPU戦では表示しない
     const name = net.oppName || '相手';
     let st = '';
     if (net.oppOnline === false) st = '離席中';
@@ -2690,24 +3246,24 @@
   }
 
   // ===== カード効果（各数字にA/Bの2パターン。デッキ構築で色とセットで選ぶ）=====
-  // 小さい数字は「情報を得る／守る」、大きい数字は「強いが代償（情報を渡す／チップを払う）」
+  // 小さい数字は「情報を得る／守る／カードを取り戻す」、大きい数字は「強いが代償（情報を渡す／チップを払う／カードを失う）」
   const EFFECT_DEFS = {
-    1: { A: { name: '偵察', desc: '次のラウンド、相手の手札2枚の偶数・奇数の内訳が見える' },
-         B: { name: '撹乱', desc: '次のラウンド、相手の情報系の効果・役（黄・ピンク含む）が自分に効かない' } },
-    2: { A: { name: '予兆', desc: '次のラウンド、相手がブーストするか（枚数の範囲も）が見える' },
-         B: { name: '伏兵', desc: '次のラウンド、自分のブースト1枚目が無料' } },
-    3: { A: { name: '先読み', desc: '次のラウンド、相手の山札の一番上が見える' },
-         B: { name: '仕込み', desc: '出した後、自分の山札の一番上を見て、そのまま残すか一番下へ送るか選べる' } },
-    4: { A: { name: '観測', desc: '次のラウンド、相手の手札2枚の大小（1〜4／5〜8）の内訳が見える' },
-         B: { name: '保険', desc: 'このカードで負けたら、LOSEの支払いが1枚減る' } },
-    5: { A: { name: '解析', desc: '次のラウンド、相手の手札2枚の合計が見える' },
-         B: { name: '記録', desc: 'このカードで勝ったら、相手の残りの手札1枚が確定情報（!）になる' } },
-    6: { A: { name: '露呈・小', desc: '出すと、次のラウンド自分の残りの手札の大小が相手に見える' },
-         B: { name: '代償・小', desc: '出すと、チップ1枚をポッドへ払う' } },
-    7: { A: { name: '露呈・中', desc: '出すと、次のラウンド自分の残りの手札の偶数・奇数が相手に見える' },
-         B: { name: '重圧', desc: '出すと、次のラウンド自分はブーストできない' } },
-    8: { A: { name: '全公開', desc: '出すと、自分の残りの手札が相手に公開される（確定情報 !）' },
-         B: { name: '代償・大', desc: '出すと、チップ2枚をポッドへ払う' } }
+    1: { A: { name: '回収', desc: 'ドローの代わりに捨て札から1枚（1以外）を手札へ。そのカードは確定情報に' },
+         B: { name: '撹乱', desc: '次ラウンド、相手の情報系効果を無効' } },
+    2: { A: { name: '予兆', desc: '次ラウンド、相手のブースト枚数の目安が見える' },
+         B: { name: '伏兵', desc: '次ラウンド、ブースト1枚目が無料' } },
+    3: { A: { name: '先読み', desc: '次ラウンド、相手の山札の一番上が見える' },
+         B: { name: '仕込み', desc: '山札の一番上を見て、残すか一番下へ送る' } },
+    4: { A: { name: '観測', desc: '次ラウンド、相手の手札の大小（1〜4/5〜8）が見える' },
+         B: { name: '保険', desc: '負けた時の支払い-1' } },
+    5: { A: { name: '解析', desc: '次ラウンド、相手の手札の合計が見える' },
+         B: { name: '記録', desc: '勝つと相手の手札1枚が確定情報に' } },
+    6: { A: { name: '露呈・小', desc: '次ラウンド、自分の手札1枚の大小が相手に見える' },
+         B: { name: '掘削', desc: '山札の一番上を公開して捨て札へ' } },
+    7: { A: { name: '露呈・中', desc: '次ラウンド、自分の手札1枚の偶奇が相手に見える' },
+         B: { name: '重圧', desc: '次ラウンド、自分はブーストできない' } },
+    8: { A: { name: '全公開', desc: '自分の手札1枚が確定情報に' },
+         B: { name: '代償・大', desc: 'チップ2枚をPOTへ払う' } }
   };
   function effectDef(n, ab) { return (EFFECT_DEFS[n] && EFFECT_DEFS[n][ab]) || null; }
   // そのプレイヤーのカード n の効果キー（例 '6B'）。分からなければ null
@@ -2740,6 +3296,7 @@
   // kind: 'jackpot'(総取りで派手に) / 'grow'(ポッドへ流入、やや強め) / 未指定(通常のポップ)
   // バトル画面の巨大表示(#podValue)と、手札選択画面のコンパクト表示(#podValueMini)を両方更新する
   function updatePodDisplay(kind) {
+    if (window.ReelFX) ReelFX.hud({ round: currentRoundNo(), pod: state.pod });
     const podText = String(state.pod).padStart(2, '0');
 
     const el = document.getElementById('podValue');
@@ -2773,15 +3330,22 @@
     setTimeout(() => el.classList.remove(cls), 600);
   }
 
-  // === 色の役：色トリプル（捨て札に同色3枚以上）のみ。成立すれば出したカードの色を問わず常時発動 ===
-  const COLOR_ROLE_MIN = 3; // 色の役が成立する同色枚数
-  const COLOR_TRIPLE_DESC = {
-    red: '攻めの一撃：JACKPOT成立時、総取りに加えて相手のチップを直接2🪙奪う（相手の残りが2枚未満なら0枚になるまで）',
-    blue: '守りの軽減：ブーストして負けた時、ポッドへ流れる分が半分になる（端数はポッドへ。例：3🪙ブースト→2🪙がポッドへ、1🪙は手元に残る）',
-    green: 'コツコツ回収：THROUGH（ブーストなしの勝利）時、WINの1🪙に加えて、ポッドに残っていればさらに1🪙回収できる',
-    pink: '情報アドバンテージ：相手のデッキの底（次に引かれる最後のカード）の捨て札枠に👁が表示される',
-    yellow: '情報アドバンテージ：手札選択中、相手がブーストするかどうかだけ見える(枚数は伏せる)'
-  };
+  // === 色の役：捨て札に同色2枚以上で成立。成立している間は毎ラウンド、相手の情報が1つ見える（情報系） ===
+  const COLOR_ROLE_MIN = 2; // 色の役が成立する同色枚数
+  // === 色の役 Lv4：捨て札に同色4枚以上で成立（どの色でも同じ効果）。JACKPOTで勝った時、相手のチップを直接2🪙奪う ===
+  const ENHANCE_MIN = 4;
+  const ENHANCE_STEAL = 2;
+  // 捨て札（{n, c} の配列）で Lv4 が成立している色。なければ null
+  function enhanceColorOf(entries) {
+    const counts = {};
+    (entries || []).forEach(e => { if (e.c) counts[e.c] = (counts[e.c] || 0) + 1; });
+    return COLORS.find(c => (counts[c] || 0) >= ENHANCE_MIN) || null;
+  }
+  function getEnhance(who) {
+    const counts = getColorCounts(who);
+    const color = COLORS.find(c => (counts[c] || 0) >= ENHANCE_MIN);
+    return color ? { color, count: counts[color] } : null;
+  }
   function getColorCounts(who) {
     const discard = state[who + 'Discard'];
     const colors = state[who + 'CardColors'];
@@ -2792,13 +3356,6 @@
     });
     return counts;
   }
-  function hasColorTriple(who, color) {
-    return (getColorCounts(who)[color] || 0) >= COLOR_ROLE_MIN;
-  }
-  function hasTripleColor(who) {
-    const counts = getColorCounts(who);
-    return COLORS.find(c => counts[c] >= COLOR_ROLE_MIN) || null;
-  }
 
   // 現在発動している役の一覧（捨て札の光り表示・役パネルの両方で使う）。同時に複数色が成立することもある
   function getActiveRoles(who) {
@@ -2806,7 +3363,7 @@
     const roles = [];
     COLORS.forEach(color => {
       if ((counts[color] || 0) >= COLOR_ROLE_MIN) {
-        roles.push({ name: `色トリプル(${COLOR_LABEL[color]})`, color, count: counts[color], desc: COLOR_TRIPLE_DESC[color] });
+        roles.push({ name: `色の役(${COLOR_LABEL[color]})`, color, count: counts[color] });
       }
     });
     return roles;
@@ -2836,33 +3393,17 @@
       e.textContent = '発動中の役はありません';
       panel.appendChild(e);
     }
+    // デッキ構築の役一覧と同じカード型（左の数字は捨て札にあるその色の枚数）
     roles.forEach(r => {
-      const row = document.createElement('div');
-      row.className = 'role-row';
-      const dot = document.createElement('div');
-      dot.className = 'role-dot ' + r.color;
-      const body = document.createElement('div');
-      const nm = document.createElement('div');
-      nm.className = 'role-name';
-      nm.textContent = `${r.name}　捨て札の${COLOR_LABEL[r.color]} ${r.count}枚`;
-      const ds = document.createElement('div');
-      ds.className = 'role-desc';
-      ds.textContent = r.desc;
-      if (r.color === 'blue') {
-        const status = document.createElement('div');
-        status.className = 'role-desc';
-        status.style.opacity = '0.85';
-        status.textContent = state.blueChargeUsed[who] ? '(残り0/1回・使用済み)' : '(残り1/1回・未使用)';
-        ds.appendChild(document.createElement('br'));
-        ds.appendChild(status);
-      }
-      body.appendChild(nm);
-      body.appendChild(ds);
-      row.appendChild(dot);
-      row.appendChild(body);
-      panel.appendChild(row);
+      const info = ROLE_LIST.find(x => x.color === r.color);
+      if (!info) return;
+      panel.insertAdjacentHTML('beforeend', `<div class="role-item compact ${r.color}">
+        <div class="role-cnt on">${r.count}<small>枚</small></div>
+        <div><div class="role-item-name">${COLOR_EN[r.color]}：${info.name}</div>
+        <div class="role-item-desc">${roleDescHtml(info, roleLevel(r.count))}</div></div></div>`);
     });
-    panel.appendChild(buildCardList(who));
+    // 相手のカード一覧は表示しない（自分のカードのみ）
+    if (who === 'my') panel.appendChild(buildCardList(who));
     panel.appendChild(buildMarkLegend(who));
   }
 
@@ -2906,22 +3447,14 @@
       const d = effectDef(n, ab);
       const col = state[who + 'CardColors'][n];
       det.innerHTML = `<b>${n}</b>${col ? `<span class="rp-col ${col}">${COLOR_LABEL[col]}</span>` : ''}` +
-        (d ? `<span class="rp-eff">${ab}：${d.name}</span><br>${d.desc}` : '：効果なし');
+        (d ? `<span class="rp-eff">${d.name}</span><br>${d.desc}` : '：効果なし');
     }
     wrap.appendChild(det);
     return wrap;
   }
 
-  // 捨て札に重ねて出るマーク（「!」＝確定情報、目＝デッキの底）の説明。今そのマークが付いている数字も添える
-  const EYE_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 5C5 5 1 12 1 12s4 7 11 7 11-7 11-7-4-7-11-7zm0 11a4 4 0 110-8 4 4 0 010 8zm0-2a2 2 0 100-4 2 2 0 000 4z"/></svg>';
+  // 捨て札に重ねて出るマーク（「!」＝確定情報）の説明。今そのマークが付いている数字も添える
   function buildMarkLegend(who) {
-    const gridId = who === 'my' ? 'discardGridMy' : 'discardGridOp';
-    const marked = (sel) => [...document.querySelectorAll('#' + gridId + ' > .discard-slot')]
-      .filter(sl => sl.querySelector(sel)).map(sl => sl.firstChild && sl.firstChild.nodeType === 3 ? sl.firstChild.nodeValue : sl.textContent);
-    const knownNow = marked('.known-mark');
-    const peekNow = marked('.peek-eye');
-    const owner = who === 'my' ? 'あなた' : '相手';
-
     const wrap = document.createElement('div');
     wrap.className = 'role-legend';
     const t = document.createElement('div');
@@ -2942,15 +3475,7 @@
       row.appendChild(tx);
       wrap.appendChild(row);
     };
-    addRow('known', '!',
-      `<b>確定情報</b>：山札を作り直した時に手札に残っていた数字や、引き分け勝負で公開された数字、山札を引ききるなどして捨て札から絞り込めた数字。今も${owner}の手札にあることがお互いに分かっている（出されると消える）` +
-      (knownNow.length ? `<br><span class="legend-now known">いま：${knownNow.join('・')}</span>` : ''));
-    addRow('peek', EYE_SVG,
-      who === 'op'
-        ? `<b>デッキの底</b>：あなたのピンクの役（ピンクトリプル）で見えている、相手が最後に引くカード` +
-          (peekNow.length ? `<br><span class="legend-now peek">いま：${peekNow.join('・')}</span>` : '')
-        : `<b>デッキの底</b>：ピンクの役（ピンクトリプル）が成立すると、相手の捨て札に相手が最後に引くカードが表示される` +
-          (hasColorTriple(otherOf(activeViewer), 'pink') ? '<br><span class="legend-now peek">いま相手のピンクの役で、あなたのデッキの底が相手に見えている</span>' : ''));
+    addRow('known', '!', '<b>確定情報</b>：手札にあることが確定しているカード');
     return wrap;
   }
   // ヒントの横位置を、相手の捨て札置き場の中央に合わせる
@@ -2991,6 +3516,7 @@
     document.getElementById('prepScreen').classList.toggle('hidden', name !== 'prep');
     document.getElementById('gameScreen').classList.toggle('hidden', name !== 'game');
     document.querySelector('.wrap').classList.toggle('in-game', name === 'game');
+    if (window.ReelFX) ReelFX.screen(name); // 画面切り替えのワイプ演出・HUD表示
   }
 
   function pickTwoRandomColors() {
@@ -3016,29 +3542,160 @@
     prepMyEffects = {};
     prepStep = 1;
     prepPeekNum = null;
+    // カード効果はデバッグモード専用：通常モードでは効果一覧ボタンと案内を隠す
+    document.getElementById('effListBtn').classList.toggle('hidden', !debugMode);
+    document.getElementById('prepSub').textContent = debugMode ? '1〜8の色と効果を選ぶ' : '1〜8の色を選ぶ';
     showScreen('prep');
     renderPrepStep();
   }
 
-  // デッキ構築の選択肢：ランダムな2色に、効果AとBを1つずつ割り当てる（どちらの色がAになるかもランダム）
-  // デバッグモードでは全色×A/Bを並べる
+  // デッキ構築の選択肢：ランダムな2色。
+  // カード効果はバランス未調整のためデバッグモード専用：全色×効果A/Bを並べる（通常モードは効果なし）
   function prepOptionsFor() {
     if (debugMode) {
       const all = [];
       COLORS.forEach(color => ['A', 'B'].forEach(eff => all.push({ color, eff })));
       return all;
     }
-    const cols = pickTwoRandomColors();
-    const effs = Math.random() < 0.5 ? ['A', 'B'] : ['B', 'A'];
-    return cols.map((color, i) => ({ color, eff: effs[i] })).sort((a, b) => (a.eff < b.eff ? -1 : 1));
+    return pickTwoRandomColors().map(color => ({ color, eff: null }));
   }
+
+  // ===== 遊び方（スタート画面に常に表示。自動送り・スワイプ・ドットで切り替え） =====
+  (function setupHowto() {
+    const track = document.getElementById('howtoTrack');
+    const dots = [...document.querySelectorAll('#howtoDots button')];
+    const total = dots.length;
+    const AUTO_MS = 6000;
+    let page = 0, timer = null;
+    const show = (i) => {
+      page = (i + total) % total;
+      track.style.transform = `translateX(${-100 * page}%)`;
+      dots.forEach((d, k) => d.classList.toggle('on', k === page));
+      if (page === 1) runDemo(); else stopDemo();
+    };
+    const restart = () => { clearInterval(timer); timer = setInterval(() => show(page + 1), AUTO_MS); };
+    // 2ページ目の図解：チップが1枚ずつカードへ飛び、持ちチップが減ってカードの数字が上がる（ゲーム内の演出と同じ流れ）
+    const demo = document.getElementById('htBoostDemo');
+    const countEl = document.getElementById('htChipCount');
+    const cardEl = document.getElementById('htBoostCard');
+    let demoToken = 0;
+    const bump = (el) => { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); };
+    const wait = (ms) => new Promise(r => setTimeout(r, ms));
+    const center = (el) => {
+      const d = demo.getBoundingClientRect(), r = el.getBoundingClientRect();
+      return { x: r.left - d.left + r.width / 2, y: r.top - d.top + r.height / 2 };
+    };
+    async function runDemo() {
+      const my = ++demoToken;
+      const alive = () => my === demoToken;
+      while (alive()) {
+        countEl.textContent = '15'; cardEl.textContent = '5'; cardEl.classList.remove('boosted');
+        await wait(700);
+        for (let k = 1; k <= 2 && alive(); k++) {
+          const a = center(countEl), b = center(cardEl);
+          const chip = document.createElement('div');
+          chip.className = 'ht-fly-chip';
+          demo.appendChild(chip);
+          countEl.textContent = String(15 - k); bump(countEl); // 飛び立つ時に持ちチップが減る
+          const lift = -28;
+          const anim = chip.animate([
+            { transform: `translate(${a.x}px, ${a.y}px) scale(0.9)`, opacity: 1 },
+            { transform: `translate(${(a.x + b.x) / 2}px, ${Math.min(a.y, b.y) + lift}px) scale(1.15)`, opacity: 1, offset: 0.5 },
+            { transform: `translate(${b.x}px, ${b.y}px) scale(0.7)`, opacity: 0.2 }
+          ], { duration: 460, easing: 'ease-in-out' });
+          await anim.finished.catch(() => {});
+          chip.remove();
+          if (!alive()) return;
+          cardEl.textContent = String(5 + k); cardEl.classList.add('boosted'); bump(cardEl); // 着地でカードの数字が上がる
+          await wait(240);
+        }
+        await wait(1800);
+      }
+    }
+    const stopDemo = () => { demoToken++; demo.querySelectorAll('.ht-fly-chip').forEach(c => c.remove()); };
+    dots.forEach((d, k) => d.addEventListener('click', () => { show(k); restart(); }));
+    let sx = null, sy = 0;
+    const vp = document.getElementById('howtoViewport');
+    vp.addEventListener('pointerdown', (e) => { sx = e.clientX; sy = e.clientY; });
+    vp.addEventListener('pointerup', (e) => {
+      if (sx == null) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      sx = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { show(page + (dx < 0 ? 1 : -1)); restart(); }
+    });
+    vp.addEventListener('pointercancel', () => { sx = null; });
+    show(0);
+    restart();
+  })();
+
+  // ===== デッキ構築：役一覧（今のデッキの色の枚数つき） =====
+  // 色の役：同色2枚でLv2、3枚でLv3（Lv3はLv2の情報に加えて見える）。内部の段階は roleLevel()=1/2
+  const ROLE_LIST = [
+    { color: 'blue', name: '観測', trig: '毎ラウンド', lv1: '相手の手札の大小（小1〜4・大5〜8の枚数）', lv2: '＋相手の手札で一番大きい数字' },
+    { color: 'pink', name: '透視', trig: '毎ラウンド', lv1: '相手の手札の偶奇（偶数・奇数の枚数）', lv2: '＋相手の手札で一番小さい数字' },
+    { color: 'green', name: '解析', trig: '毎ラウンド', lv1: '相手の手札の合計', lv2: '＋自分の手札に、相手の手札とちょうど1差のカードがあるか' },
+    { color: 'yellow', name: '先読み', trig: '毎ラウンド', lv1: '相手の山札の一番底', lv2: '＋相手の山札の一番上' },
+    { color: 'red', name: '勝算', trig: '毎ラウンド', lv1: '自分の手札それぞれが、相手の手札に勝てる枚数', lv2: '＋引き分けになる枚数' }
+  ];
+  const ROLE_LV2_MIN = COLOR_ROLE_MIN + 1;
+  const roleLevel = (count) => (count >= ENHANCE_MIN ? 3 : (count >= ROLE_LV2_MIN ? 2 : (count >= COLOR_ROLE_MIN ? 1 : 0)));
+  const ROLE_LV4_DESC = `JACKPOT勝利で相手のチップを${ENHANCE_STEAL}枚奪う`;
+  // 役の説明（2枚／3枚）。lv を渡すと、成立しているレベルを強調する
+  function roleDescHtml(r, lv) {
+    // 表記は枚数に合わせて Lv2（2枚）／Lv3（3枚）。発動していない段階はグレーアウト
+    return `<span class="role-lv${lv >= 1 ? ' on' : ''}"><b>Lv${COLOR_ROLE_MIN}</b> ${r.lv1}</span><br><span class="role-lv${lv >= 2 ? ' on' : ''}"><b>Lv${ROLE_LV2_MIN}</b> ${r.lv2.replace(/^＋/, '')}</span><br><span class="role-lv${lv >= 3 ? ' on' : ''}"><b>Lv${ENHANCE_MIN}</b> ${ROLE_LV4_DESC}</span>`;
+  }
+  function renderRoleList() {
+    const counts = {};
+    Object.values(prepMyColors).forEach(c => { counts[c] = (counts[c] || 0) + 1; });
+    document.getElementById('roleListRows').innerHTML = ROLE_LIST.map(r => {
+      const n = counts[r.color] || 0;
+      return `<div class="role-item ${r.color}">
+        <div class="role-cnt${n >= COLOR_ROLE_MIN ? ' on' : ''}">${n}<small>枚</small></div>
+        <div><div class="role-item-name">${COLOR_EN[r.color]}：${r.name}</div>
+        <div class="role-item-desc">${roleDescHtml(r, 3)}</div></div></div>`; // デッキ構築ではグレーアウトしない
+    }).join('');
+  }
+  function setRoleList(open) {
+    const ov = document.getElementById('roleListOv');
+    if (open) renderRoleList();
+    ov.classList.toggle('show', open);
+    ov.setAttribute('aria-hidden', open ? 'false' : 'true');
+  }
+  document.getElementById('roleListBtn').addEventListener('click', () => setRoleList(true));
+  document.getElementById('roleListClose').addEventListener('click', () => setRoleList(false));
+  document.getElementById('roleListOv').addEventListener('click', (e) => { if (e.target.id === 'roleListOv') setRoleList(false); });
+
+  // ===== デッキ構築：カード効果一覧 =====
+  function renderEffList() {
+    let html = '';
+    for (let n = 1; n <= 8; n++) {
+      const chosen = prepMyEffects[n];
+      const col = prepMyColors[n];
+      html += `<div class="eff-list-row"><div class="eff-list-num${chosen && col ? ' ' + col : ''}">${n}</div>` +
+        ['A', 'B'].map(ab => {
+          const d = effectDef(n, ab);
+          const cls = chosen ? (chosen === ab ? ' chosen' : ' other') : '';
+          return `<div class="eff-list-opt${cls}"><div class="eff-list-name">${d.name}</div><div class="eff-list-desc">${d.desc}</div></div>`;
+        }).join('') + '</div>';
+    }
+    document.getElementById('effListRows').innerHTML = html;
+  }
+  function setEffList(open) {
+    const ov = document.getElementById('effListOv');
+    if (open) renderEffList();
+    ov.classList.toggle('show', open);
+    ov.setAttribute('aria-hidden', open ? 'false' : 'true');
+  }
+  document.getElementById('effListBtn').addEventListener('click', () => setEffList(true));
+  document.getElementById('effListClose').addEventListener('click', () => setEffList(false));
+  document.getElementById('effListOv').addEventListener('click', (e) => { if (e.target.id === 'effListOv') setEffList(false); });
 
   function renderPrepStep(justLandedNum) {
     if (prepStep > 8) {
       finishPrep();
       return;
     }
-    document.getElementById('prepProgress').textContent = `カード ${prepStep} / 8`;
     renderPrepGrid(justLandedNum);
     renderPrepPeek();
 
@@ -3057,13 +3714,14 @@
       btn.addEventListener('click', () => choosePrepColor(color, btn, eff));
       option.appendChild(btn);
 
-      // 選ぶと付く効果（名前と説明）
+      // 選ぶと付く効果（名前と説明）。効果なし（通常モード）の時は出さない
       const d = effectDef(prepStep, eff);
+      if (!d) { choicesEl.appendChild(option); return; }
       const effectsEl = document.createElement('div');
       effectsEl.className = 'prep-option-effects';
       const nameRow = document.createElement('div');
       nameRow.className = 'prep-effect-row prep-effect-name';
-      nameRow.textContent = d ? `${eff}：${d.name}` : '━';
+      nameRow.textContent = d ? d.name : '━';
       effectsEl.appendChild(nameRow);
       const divider = document.createElement('div');
       divider.className = 'prep-effect-divider';
@@ -3086,17 +3744,18 @@
     const d = n != null ? effectDef(n, prepMyEffects[n]) : null;
     if (!d) {
       el.className = 'prep-peek dim';
-      el.textContent = prepStep > 1 ? '選んだカードをタップすると効果を確認できます' : '';
+      el.textContent = prepStep > 1 && debugMode ? '選んだカードをタップすると効果を確認できます' : '';
       return;
     }
     const col = prepMyColors[n];
     el.className = 'prep-peek';
-    el.innerHTML = `<b>${n}</b>${col ? `<span class="rp-col ${col}">${COLOR_LABEL[col]}</span>` : ''}<span class="rp-eff">${prepMyEffects[n]}：${d.name}</span><br>${d.desc}`;
+    el.innerHTML = `<b>${n}</b>${col ? `<span class="rp-col ${col}">${COLOR_LABEL[col]}</span>` : ''}<span class="rp-eff">${d.name}</span><br>${d.desc}`;
   }
   let prepPeekNum = null; // デッキ構築：タップして効果を確認中の数字
   function renderPrepGrid(justLandedNum) {
     const grid = document.getElementById('prepGrid');
     grid.innerHTML = '';
+    document.getElementById('prepCount').textContent = Math.min(prepStep, 8) + '/8';
     if (prepPeekNum != null && prepPeekNum >= prepStep) prepPeekNum = null;
     for (let n = 1; n <= 8; n++) {
       const slot = document.createElement('div');
@@ -3175,10 +3834,12 @@
     showScreen('game');
     newGame(prepMyColors, prepOpColors, prepMyEffects, prepOpEffects);
     startBgm('battle');
+    if (window.ReelFX) ReelFX.countdown(playTickSound); // 対戦開始の 3・2・1
   }
 
   function backToStart() {
     gameToken++; // 進行中の演出タイマーを無効化
+    if (window.ReelFX) ReelFX.clear();
     openRoleWho = null;
     document.getElementById('overlay').classList.remove('show');
     if (net.active) leaveOnline();
@@ -3232,8 +3893,7 @@
       knownHeld: { my: [], op: [] },          // 確定情報の数字（山札を作り直した時に手札に残っていたカード・引き分け勝負で公開した手札）。出されるまで「!」表示
       revealedDeck: { my: [], op: [] },       // 引き分け勝負で公開した山札のカード（上から順）。手札に引いた時に確定情報になる
       tieWait: null,                          // オンライン：引き分け勝負の進行中（決着を待つ）
-      roleSeen: { my: new Set(), op: new Set() }, // 直前に成立していた役（新規成立の検出用）
-      blueChargeUsed: { my: false, op: false }, // 青トリプル：今の成立中に1回分の蒸発無効を使い切ったか
+      roleShown: { my: { colors: new Set(), cards: new Set(), levels: {} }, op: { colors: new Set(), cards: new Set(), levels: {} } }, // 光らせている役の色・捨て札（手札選択に入った時に更新）
       returningNow: { my: false, op: false }, // 演出中は捨て札置き場の再描画を止める
       roundLog: [],   // ラウンドごとの収支ログ（検証用）
       roundSnap: null, // ラウンド開始時（ブースト消費前）のチップ・ポッド
@@ -3243,7 +3903,10 @@
       opPendingChips: 0,
       tamperNote: '',
       reconciledRound: 0,
-      lastOpBottom: null,
+      hacks: { my: HACK_START, op: HACK_START }, // ハッキングチップの残り枚数（通常のチップとは別枠）
+      hackSelect: false,     // このラウンドにハッキングを使うか（自分）
+      opPendingHack: false,  // 相手がこのラウンドにハッキングを使うか
+      roundHack: false,      // このラウンドの勝敗が反転しているか
       opSeen: {}             // 一度でも出された相手の数字（色・効果が分かっている）
     };
   }
@@ -3251,12 +3914,40 @@
   // ラウンド開始フェイズ：強制供出（賭金）と、支払えない場合の即敗北は撤廃。
   // 所持チップが0でも参加でき、その場合は単にブーストできないだけになる。
   function startRound() {
+    // SPIKE演出中は手札選択などの操作を受け付けず、役のカットインは演出の後に流す
+    let spikeMs = 0;
+    if (currentRoundNo() === LATE_ROUND + 1 && state.spikeShownRound !== LATE_ROUND + 1) {
+      state.spikeShownRound = LATE_ROUND + 1;
+      if (playSpikeAlert()) {
+        spikeMs = SPIKE_MS;
+        state.locked = true;
+      }
+    }
+    // ラウンド開始の演出（FX-02）。1ラウンド目は対戦開始の演出、SPIKEのラウンドはSPIKEの演出に任せる
+    // 役のカットインは、ラウンド開始（またはSPIKE）の演出が終わってから流す
+    let roundFxMs = 0;
+    if (!spikeMs && currentRoundNo() > 1 && window.ReelFX && ReelFX.round) roundFxMs = (ReelFX.round(currentRoundNo()) || 0) + 100;
     prepareRoundIntel();
+    const roleFxMs = commitRoleGlow(['my', 'op'], true, spikeMs || roundFxMs); // 次ラウンドの手札選択に入った時に、役の光り・成立音を反映
+    // ラウンド開始・SPIKE・役のカットインが終わるまでは手札を選べない（演出が重ならないように）
+    const lockMs = Math.max(spikeMs, roundFxMs, roleFxMs || 0);
+    if (lockMs) state.locked = true;
     state.myHpShown = null;
     document.getElementById('myHP').textContent = state.myChips;
     document.getElementById('opHP').textContent = state.opChips;
     updatePodDisplay();
     render();
+
+    if (lockMs) {
+      const myToken = gameToken;
+      const roundNo = state.round;
+      setTimeout(() => {
+        if (myToken !== gameToken || !state || state.round !== roundNo) return;
+        state.locked = false;
+        render();
+        if (net.active && !state.over && state.netPhase === 'select') startTurnTimer();
+      }, lockMs);
+    }
 
     if (net.active) {
       state.netPhase = 'select';
@@ -3266,12 +3957,12 @@
       setMode('select');
       refreshColorInfoHint();
       updateOpLabel();
-      if (!state.over) startTurnTimer();
+      if (!state.over && !lockMs) startTurnTimer(); // 演出中は制限時間を止めておき、終わってから開始
       gameNetTick();
       return;
     }
 
-    decideOpponentMove(); // 黄の役で相手のブースト予定を見せるため、選択フェイズが始まる前に相手の手を決めておく
+    decideOpponentMove(); // 予兆で相手のブースト予定を見せるため、選択フェイズが始まる前に相手の手を決めておく
     render();
     setMode('select');
     refreshColorInfoHint();
@@ -3290,82 +3981,113 @@
       const maxBoost = Math.min(3, avail);
       chips = Math.floor(Math.random() * maxBoost) + 1;
     }
+    // ハッキング：手持ちチップが6枚以下、かつ出すカードが4以下の時に、ランダムで使う（ブーストとは併用しない）
+    state.opPendingHack = false;
+    if (state.hacks.op > 0 && state.opChips <= CPU_HACK_CHIP_MAX && state.opPendingCard <= CPU_HACK_CARD_MAX && Math.random() < CPU_HACK_RATE) {
+      state.opPendingHack = true;
+      chips = 0;
+    }
     state.opPendingChips = chips;
     state.opPendingFree = rule.free && chips > 0;
   }
 
-  // 黄・ピンクの役が発動中なら、選択フェイズ中にヒントを表示する（ピンクの「見える」側は捨て札グリッドの目のアイコンで表現）
-  // 自分の役で相手の情報が見える場合と、相手の役で自分の情報が見えてしまっている場合の両方を表示する（対人戦でどちらが役を揃えても機能するように）
-  // 発動中のカード効果・役を、ポッドの上(ENEMY＝相手が発動)と下(PLAYER＝自分が発動)にまとめて表示
+  // 発動中のカード効果を、ポッドの下に1効果＝1行で表示（左の縦線：青＝相手が発動、赤＝自分が発動）
   //   水色 ＝ 自分に見えている相手の情報 ／ オレンジ ＝ 相手に見えている自分の情報 ／ 黄色 ＝ このラウンドのルール
   function refreshColorInfoHint() {
     const rowOp = document.getElementById('effRowOp');
     const rowMe = document.getElementById('effRowMe');
     if (!rowOp || !rowMe || !state) return;
     if (net.active) readOpIntel();
-    const me = activeViewer;
-    const opp = otherOf(me);
     const pv = state.prev;
-    const opBlocked = !!(pv && pv.op.key === '1B');  // 相手の撹乱：自分の情報系の効果・役が効かない
-    const myBlocked = !!(pv && pv.my.key === '1B');  // 自分の撹乱：相手の情報系の効果・役が効かない
+    const opBlocked = !!(pv && pv.op.key === '1B');  // 相手の撹乱：自分の情報系の効果が効かない
+    const myBlocked = !!(pv && pv.my.key === '1B');  // 自分の撹乱：相手の情報系の効果が効かない
     const items = { me: [], op: [] };
     const add = (side, kind, text) => items[side].push({ kind, text });
     const hl = (n) => (n === 'hi' ? '大(5〜8)' : '小(1〜4)');
     const pr = (n) => (n === 'even' ? '偶数' : '奇数');
     // ex：whoLabel の手札について見えている情報。読む側の効果は reader、自分をさらす効果は owner が発動したもの
+    // 色の役の見出し：「G code : Lv2」（読む側の役のレベル）
+    const roleTag = (color, reader) => {
+      const r = getActiveRoles(reader === 'me' ? 'my' : 'op').find(x => x.color === color);
+      return `${COLOR_EN[color]} : Lv${r ? roleLevel(r.count) + 1 : 2}　`;
+    };
+    // カードの数字は［n］で書く（枚数の数字と見分けるため）
+    const cd = (n) => `［${n}］`;
     const describe = (ex, whoLabel, reader, owner, kind) => {
       if (!ex) return;
-      if (ex.parity) add(reader, kind, `偵察：${whoLabel}の手札は 偶数${ex.parity.even}枚・奇数${ex.parity.odd}枚`);
+      const who2 = whoLabel === 'あなた' ? '自分' : whoLabel; // 役の行の短い主語
       if (ex.hilo) add(reader, kind, `観測：${whoLabel}の手札は 小${ex.hilo.lo}枚・大${ex.hilo.hi}枚`);
       if (ex.sum != null) add(reader, kind, `解析：${whoLabel}の手札の合計は ${ex.sum}`);
       if ('deckTop' in ex) add(reader, kind, `先読み：${whoLabel}の山札の一番上は ${ex.deckTop == null ? '（空）' : ex.deckTop}`);
       if (ex.hidHilo) add(owner, kind, `露呈：${whoLabel}の手札の1枚は ${hl(ex.hidHilo)}`);
       if (ex.hidParity) add(owner, kind, `露呈：${whoLabel}の手札の1枚は ${pr(ex.hidParity)}`);
       (ex.reveal || []).forEach(r => add(r.src === '記録' ? reader : owner, kind, `${r.src}：${whoLabel}の手札の ${r.n} が確定（!）`));
+      // 色の役で見えている情報
+      if (ex.roleHilo) add(reader, kind, `${roleTag('blue', reader)}${who2} 小${ex.roleHilo.lo}枚・大${ex.roleHilo.hi}枚${ex.roleMax != null ? `／最大${cd(ex.roleMax)}` : ''}`);
+      if (ex.roleParity) add(reader, kind, `${roleTag('pink', reader)}${who2} 偶数${ex.roleParity.even}枚・奇数${ex.roleParity.odd}枚${ex.roleMin != null ? `／最小${cd(ex.roleMin)}` : ''}`);
+      if (ex.roleSum != null) add(reader, kind, `${roleTag('green', reader)}${who2} 合計${ex.roleSum}`);
+      if (ex.roleAdj) {
+        if (reader === 'me') {
+          const hit = state.myHand.filter(n => ex.roleAdj.includes(n));
+          add(reader, kind, `${roleTag('green', reader)}${hit.length ? `1差あり：${hit.map(cd).join('')}（JACKPOT狙い目）` : '1差なし'}`);
+        } else {
+          add(reader, kind, `${roleTag('green', reader)}相手が1差を確認中`);
+        }
+      }
+      const dk = (n) => (n == null ? 'なし' : cd(n));
+      if ('roleDeckBottom' in ex) add(reader, kind, `${roleTag('yellow', reader)}${who2}山札 底${dk(ex.roleDeckBottom)}${'roleDeckTop' in ex ? `／上${dk(ex.roleDeckTop)}` : ''}`);
     };
     describe(state.intel, '相手', 'me', 'op', 'see');
     describe(state.exposure, 'あなた', 'op', 'me', 'shown');
 
-    // 予兆（2A）・黄の役：相手のブースト
-    const intelBoost = !!(state.intel && state.intel.boostIntel);
-    const yellow = hasColorTriple(me, 'yellow') && !opBlocked;
-    if (intelBoost || yellow) {
-      const tag = intelBoost ? '予兆' : '黄の役';
+    // 赤の役（勝算）：自分の手札それぞれが、相手の手札に何枚勝てるか（Lv3は引き分けも）
+    if (state.intel && state.intel.roleOdds) {
+      const opp = state.intel.roleOdds;
+      const parts = state.myHand.slice().sort((a, b) => a - b).map(n => {
+        const win = opp.filter(o => n > o).length;
+        const tie = opp.filter(o => o === n).length;
+        return `${cd(n)}→勝${win}枚${state.intel.roleOddsTie ? `・分${tie}枚` : ''}`;
+      });
+      add('me', 'see', `${roleTag('red', 'me')}${parts.join('／') || '手札なし'}`);
+    }
+    if (state.exposure && state.exposure.roleOdds) add('op', 'shown', `${roleTag('red', 'op')}相手が勝算を確認中`);
+    // 予兆（2A）：相手のブースト
+    if (state.intel && state.intel.boostIntel) {
       let t;
       if (net.active) {
         const op = oppSeatC();
         if (op && op.commitRound === state.round) {
-          if (intelBoost && op.boostRange) t = `相手は${op.boostRange}`;
+          if (op.boostRange) t = `相手は${op.boostRange}`;
           else if (typeof op.boostFlag === 'boolean') t = `相手は${op.boostFlag ? 'ブーストする' : 'ブーストしない'}`;
           else t = '相手は確定済み（ブースト情報なし）';
         } else {
-          t = `相手の選択待ち（確定すると${intelBoost ? 'ブースト枚数の範囲' : 'ブーストの有無'}が見える）`;
+          t = '相手の選択待ち（確定するとブースト枚数の範囲が見える）';
         }
       } else {
-        t = intelBoost ? `相手は${boostRangeText(state.opPendingChips)}予定` : `相手は${state.opPendingChips > 0 ? 'ブーストする' : 'ブーストしない'}予定`;
+        t = `相手は${boostRangeText(state.opPendingChips)}予定`;
       }
-      add('me', 'see', `${tag}：${t}`);
+      add('me', 'see', `予兆：${t}`);
     }
     if (state.exposure && state.exposure.boostIntel) add('op', 'shown', '予兆：あなたのブースト枚数の範囲');
-    else if (hasColorTriple(opp, 'yellow') && !myBlocked) add('op', 'shown', '黄の役：あなたがブーストするか');
-    if (hasColorTriple(opp, 'pink') && !myBlocked) add('op', 'shown', 'ピンクの役：あなたのデッキの底');
-    if (opBlocked) add('op', 'rule', '撹乱：あなたの情報系の効果・役が効かない');
-    if (myBlocked) add('me', 'rule', '撹乱：相手の情報系の効果・役が効かない');
+    if (opBlocked) add('op', 'rule', '撹乱：あなたの情報系の効果が効かない');
+    if (myBlocked) add('me', 'rule', '撹乱：相手の情報系の効果が効かない');
     const r = state.rule || {};
+    const lv4My = getEnhance('my'), lv4Op = getEnhance('op');
+    if (lv4My) add('me', 'rule', `${COLOR_EN[lv4My.color]} : Lv4　JACKPOT勝利で${ENHANCE_STEAL}枚奪取`);
+    if (lv4Op) add('op', 'rule', `${COLOR_EN[lv4Op.color]} : Lv4　JACKPOT勝利で${ENHANCE_STEAL}枚奪取`);
     if (r.my && r.my.free) add('me', 'rule', '伏兵：ブースト1枚目が無料');
     if (r.my && r.my.noBoost) add('me', 'rule', '重圧：このラウンドはブーストできない');
     if (r.op && r.op.free) add('op', 'rule', '伏兵：相手のブースト1枚目が無料');
     if (r.op && r.op.noBoost) add('op', 'rule', '重圧：相手はこのラウンドブーストできない');
 
     const esc = (t) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-    const fill = (row, side, label) => {
+    const fill = (row, side) => {
       const list = items[side];
-      row.innerHTML = `<span class="eff-side">${label}</span><div class="eff-items">` +
-        (list.length ? list.map(it => `<div class="eff-item ${it.kind}">${esc(it.text)}</div>`).join('') : '<div class="eff-item none">発動中の効果なし</div>') +
-        '</div>';
+      // 効果がない側は空にして行ごと消す（:empty で非表示）
+      row.innerHTML = list.map(it => `<div class="eff-item ${it.kind}">${esc(it.text)}</div>`).join('');
     };
-    fill(rowOp, 'op', 'ENEMY');
-    fill(rowMe, 'me', 'PLAYER');
+    fill(rowOp, 'op');
+    fill(rowMe, 'me');
     fitSelectPanel();
   }
 
@@ -3374,17 +4096,28 @@
     const mid = document.querySelector('.zone-mid');
     const sp = document.querySelector('.select-panel');
     if (!mid || !sp) return;
+    const board = document.getElementById('board');
     sp.style.removeProperty('--hand-w');
-    const cs = getComputedStyle(mid);
-    const avail = mid.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-    // 念のため収まるまで数回詰める
+    board.classList.remove('compact-1', 'compact-2');
+    const overNow = () => {
+      const cs = getComputedStyle(mid);
+      const avail = mid.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      return sp.scrollHeight - avail;
+    };
+    // まずは手札以外（上下の盤面・効果の行・ボタン）を段階的に詰める。手札のカードはできるだけ小さくしない
+    if (overNow() <= 0) return;
+    board.classList.add('compact-1');
+    if (overNow() <= 0) return;
+    board.classList.add('compact-2');
+    // それでも足りない時だけ、カードを縮める（下限あり）
+    const MIN_CARD = 92;
     for (let i = 0; i < 4; i++) {
-      const over = sp.scrollHeight - avail;
+      const over = overNow();
       const card = sp.querySelector('button.card');
       if (over <= 0 || !card) return;
       const w = card.getBoundingClientRect().width;
-      if (w <= 48) return;
-      sp.style.setProperty('--hand-w', Math.max(48, Math.floor(w - over / 1.4 - 1)) + 'px');
+      if (w <= MIN_CARD) return;
+      sp.style.setProperty('--hand-w', Math.max(MIN_CARD, Math.floor(w - over / 1.4 - 1)) + 'px');
     }
   }
   window.addEventListener('resize', () => { if (state) fitSelectPanel(); });
@@ -3581,6 +4314,15 @@
   function resolveRound(myCard, opCard, myToken) {
     state.roundSnap = { my: state.myChips, op: state.opChips, pod: state.pod };
     // ブーストで上がる数字（Used）と、実際に払うチップ（Paid）。伏兵（2B）なら1枚目は無料
+    // ハッキングチップ（使ったらブーストなし）
+    const myHack = net.active ? !!(state.pendingCommit && state.pendingCommit.hack) : (state.hackSelect && state.hacks.my > 0);
+    const opHack = !!state.opPendingHack && state.hacks.op > 0;
+    if (myHack) { state.hacks.my -= 1; state.chipSelect = 0; }
+    if (opHack) { state.hacks.op -= 1; state.opPendingChips = 0; }
+    state.hackSelect = false;
+    state.opPendingHack = false;
+    state.roundHack = myHack || opHack;
+    state.roundHackBy = { my: myHack, op: opHack };
     const myFree = state.rule && state.rule.my.free ? 1 : 0;
     const myChipsUsed = Math.min(state.chipSelect, state.myChips + myFree);
     const myPaid = Math.max(0, myChipsUsed - myFree);
@@ -3607,6 +4349,7 @@
     state.fieldOpChips = 0;
     state.fieldRevealed = true;
     playFlipSound(0); // カードをフリップする音
+    if (window.ReelFX && ReelFX.reveal) ReelFX.reveal(); // 白フラッシュと揺れ（FX-03）
     if (!state.myDiscard.includes(myCard)) state.myDiscard.push(myCard);
     if (!state.opDiscard.includes(opCard)) state.opDiscard.push(opCard);
     state.opSeen[opCard] = true;
@@ -3620,8 +4363,16 @@
     const rm0 = document.getElementById('resultMsg');
     rm0.textContent = (myChipsUsed > 0 || opChipsUsed > 0) ? 'チップを集計中…' : '';
     rm0.className = 'result-msg';
+    updateHackUI();
+    const hackText = myHack && opHack ? 'DOUBLE HACK!!' : (myHack ? 'HACK!!' : 'HACKED!!');
 
+    // ハッキングの演出は、ブースト演出が終わってから勝敗判定の前に入れる
     const finalize = () => {
+      if (myToken !== gameToken) return;
+      if (!state.roundHack) { judge(); return; }
+      playHackGlitch(hackText, myToken).then(() => { if (myToken === gameToken) judge(); });
+    };
+    const judge = () => {
       if (myToken !== gameToken) return;
       const done = (tie) => finalizeRound(myCard, opCard, myChipsUsed, opChipsUsed, myEffective, opEffective, myToken, tie);
       if (myEffective !== opEffective) { done(null); return; }
@@ -3775,13 +4526,21 @@
     return state[who + 'Discard'].map(n => ({ n, c: colors[n] || null, e: effs[n] || null }));
   }
 
+  // ハッキングチップ：使ったラウンドは勝敗がアベコベ（低い方が勝ち）。ブーストとは併用不可
+  const HACK_START = 2;
+  const CPU_HACK_CHIP_MAX = 6;  // CPUがハッキングを使い始める手持ちチップ数
+  const CPU_HACK_CARD_MAX = 4;  // CPUがハッキングを使う、出すカードの上限
+  const CPU_HACK_RATE = 0.6;    // 条件を満たしたラウンドで使う確率
   // 負けた側がポッドへ支払う枚数（固定）
   const LOSE_PAYMENT = 2;
+  // 長期戦の決着を早めるため、LATE_ROUNDラウンドを超えたら（21ラウンド目から）負けた時の支払いを増やす
+  const LATE_ROUND = 20;
+  const LATE_LOSE_PAYMENT = 4;
   // 勝った時（JACKPOT以外）にポッドから受け取る枚数
   const WIN_REWARD = 1;
   // 今のラウンド番号（オンラインは共有のラウンド番号、CPU戦は決着済みラウンド数+1）
   function currentRoundNo() {
-    return net.active ? state.round : state.roundLog.length + 1;
+    return net.active ? state.round : state.roundLog.length + 1 + (state.roundOffset || 0); // roundOffset：デバッグでのラウンド数操作
   }
 
   // 引き分け勝負の判定：数字の列を先頭から比べ、最初に違った位置で決着。
@@ -3800,38 +4559,47 @@
   // p.tie は引き分け時の勝負に使うカードの数字の列 { my: [手札, 山札の一番上, 次…], op: [...] }（null＝カードなし）
   // p.myBoost / p.opBoost はブーストで上がった数字、p.myPaid / p.opPaid は実際に払ったチップ（伏兵の無料分を除く）
   // p.myKey / p.opKey は出したカードの効果（例 '4B'）
+  // p.myHack / p.opHack はハッキングチップを使ったか。どちらか（両方でも）が使えば勝敗は反転し、
+  // 勝った側は負けた側のブーストをポッドではなく自分の手元に吸収する
   function computeRoundResult(p) {
+    const hack = !!(p.myHack || p.opHack);
     const chips = { my: p.myChips, op: p.opChips };
-    const loseCost = LOSE_PAYMENT;
+    const late = (p.round || 0) > LATE_ROUND;
+    const loseCost = late ? LATE_LOSE_PAYMENT : LOSE_PAYMENT;
     let pod = p.pod;
     const nm = who => (who === 'my' ? 'あなた' : '相手');
     const paid = { my: p.myPaid != null ? p.myPaid : p.myBoost, op: p.opPaid != null ? p.opPaid : p.opBoost };
     const key = { my: p.myKey || null, op: p.opKey || null };
-    // 代償（6B・8B）：出したらチップをポッドへ払う
+    // 代償・大（8B）：出したらチップをポッドへ払う
     const costNotes = [];
     ['my', 'op'].forEach(w => {
-      const cost = key[w] === '6B' ? 1 : (key[w] === '8B' ? 2 : 0);
+      const cost = key[w] === '8B' ? 2 : 0;
       const pay = Math.min(cost, chips[w]);
       if (pay > 0) { chips[w] -= pay; pod += pay; costNotes.push(`${effectDef(+key[w][0], 'B').name}：${nm(w)}がポッドへ${pay}🪙`); }
     });
     // 負けた時の支払い（保険4Bなら1枚減る）
     const losePay = (who) => Math.max(0, loseCost - (key[who] === '4B' ? 1 : 0));
-    const has = (who, color) => ((who === 'my' ? p.myDisc : p.opDisc) || []).filter(e => e.c === color).length >= COLOR_ROLE_MIN;
     const myEffective = p.myCard + p.myBoost;
     const opEffective = p.opCard + p.opBoost;
     const res = {
-      outcome: myEffective === opEffective ? 'tie' : (myEffective > opEffective ? 'me' : 'op'),
+      outcome: myEffective === opEffective ? 'tie' : ((myEffective > opEffective) !== hack ? 'me' : 'op'),
       myEffective, opEffective, notes: [], logKind: '', roundPodKind: 'through',
-      jackpotWinner: null, losePayer: null, drawBothFlash: false, carried: 0, tiebreak: null
+      jackpotWinner: null, losePayer: null, drawBothFlash: false, carried: 0, tiebreak: null,
+      hack
     };
+    if (hack) {
+      const who = p.myHack && p.opHack ? 'お互い' : nm(p.myHack ? 'my' : 'op');
+      res.notes.push(`HACK：${who}がハッキングチップを使用。勝敗が反転`);
+    }
     res.notes.push(...costNotes);
+    if (late) res.notes.push(`${LATE_ROUND}ラウンド超え：負けた時の支払いが${loseCost}🪙に増加`);
     // 引き分け：残りの手札（素の数字）で勝負。手札も同じなら山札の一番上から順に比べる
     let diff = Math.abs(myEffective - opEffective);
     if (res.outcome === 'tie' && p.tie) {
       const dec = decideTie(p.tie.my, p.tie.op);
       if (dec.status === 'decided') {
         const a = p.tie.my[dec.d], b = p.tie.op[dec.d];
-        res.outcome = a > b ? 'me' : 'op';
+        res.outcome = (a > b) !== hack ? 'me' : 'op';
         diff = Math.abs(a - b);
         res.tiebreak = { d: dec.d, my: a, op: b };
         res.notes.push(`引き分け→${dec.d === 0 ? '手札' : '山札'}勝負 あなた${a} / 相手${b}`);
@@ -3839,7 +4607,7 @@
     }
 
     if (res.outcome === 'tie') {
-      // DRAW：場に出ていたブーストチップはすべてポッドへ（青トリプルの軽減は効かない）
+      // DRAW：場に出ていたブーストチップはすべてポッドへ
       const carried = paid.my + paid.op;
       pod += carried;
       res.carried = carried;
@@ -3861,6 +4629,7 @@
         chips[winner] += jackpot;
         res.roundPodKind = 'jackpot';
         res.jackpotWinner = winner;
+        res.jackpotTake = jackpot;
         res.notes.push(winnerBoosted
           ? `JACKPOT！${nm(winner)}の+1差ブースト勝利：ポッド${jackpot}🪙を総取り`
           : `JACKPOT！${nm(winner)}のノーブースト+1差勝利：ポッド${jackpot}🪙を総取り`);
@@ -3874,32 +4643,30 @@
             res.notes.push(`${nm(loser)}がポッドへ${payment}🪙支払い（JACKPOT敗者${key[loser] === '4B' ? '・保険で-1' : ''}）`);
           }
         }
-        // 赤トリプル（攻め）：総取りに加えて相手のチップを直接2🪙奪う（0枚になるまで）
-        if (has(winner, 'red')) {
-          const steal = Math.min(2, chips[loser]);
+        // 色の役 Lv4：勝った側の捨て札に同色4枚以上なら、総取りに加えて相手のチップを直接奪う（0枚になるまで）
+        if (enhanceColorOf(winner === 'my' ? p.myDisc : p.opDisc)) {
+          const steal = Math.min(ENHANCE_STEAL, chips[loser]);
           if (steal > 0) {
             chips[loser] -= steal;
             chips[winner] += steal;
-            res.notes.push(`赤トリプル：${nm(winner)}が${nm(loser)}から${steal}🪙を直接強奪`);
+            res.notes.push(`色の役Lv4：${nm(winner)}が${nm(loser)}から${steal}🪙を直接奪取`);
           }
         }
       } else {
-        // 青トリプル（守り）：ブーストして負けた側は、ポッドへ流れる分が半分（端数はポッドへ）
-        let loserProtected = 0;
-        if (loserBoost > 0 && has(loser, 'blue')) loserProtected = Math.floor(loserBoost / 2);
-        const loserToPod = loserBoost - loserProtected;
-        const toPod = winnerBoost + loserToPod;
+        // ブーストはすべてポッドへ。ただしハッキング中は、負けた側のブーストを勝った側が吸収する
+        const absorbed = hack ? loserBoost : 0;
+        if (absorbed > 0) {
+          chips[winner] += absorbed;
+          res.notes.push(`HACK：${nm(winner)}が${nm(loser)}のブースト${absorbed}🪙を吸収`);
+        }
+        const toPod = winnerBoost + loserBoost - absorbed;
         if (toPod > 0) {
           pod += toPod;
           res.roundPodKind = 'grow';
           const parts = [];
           if (winnerBoost > 0) parts.push(`${nm(winner)}のブースト${winnerBoost}🪙`);
-          if (loserToPod > 0) parts.push(`${nm(loser)}のブースト${loserToPod}🪙`);
+          if (loserBoost - absorbed > 0) parts.push(`${nm(loser)}のブースト${loserBoost - absorbed}🪙`);
           res.notes.push(`${parts.join('＋')}がポッドへ`);
-        }
-        if (loserProtected > 0) {
-          chips[loser] += loserProtected; // 手元に残る分（ブースト消費時に一度引かれているので戻す）
-          res.notes.push(`青トリプル：${nm(loser)}はブースト失敗分のうち${loserProtected}🪙を手元に残した`);
         }
 
         {
@@ -3909,7 +4676,8 @@
           pod += payment;
           if (payment > 0 && res.roundPodKind === 'through') res.roundPodKind = 'grow';
           res.losePayer = loser;
-          res.notes.push(`${loserBoosted ? 'ブースト負け' : 'LOSE'}：${nm(loser)}がポッドへ${payment}🪙支払い${key[loser] === '4B' ? '（保険で-1）' : ''}`);
+          const cuts = key[loser] === '4B' ? '保険で-1' : '';
+          res.notes.push(`${loserBoosted ? 'ブースト負け' : 'LOSE'}：${payment > 0 ? `${nm(loser)}がポッドへ${payment}🪙支払い` : `${nm(loser)}の支払いなし`}${cuts ? `（${cuts}）` : ''}`);
         }
         // WIN：勝った側はポッドから受け取る（ポッドにある分だけ。LOSEの支払い・ブースト流入の後）
         const reward = Math.min(WIN_REWARD, pod);
@@ -3921,13 +4689,6 @@
         } else {
           res.notes.push(`WIN：${nm(winner)}の勝利（ポッドが空のため受け取りなし）`);
         }
-        // 緑トリプル（安定）：THROUGH（ブーストなしの勝利）時、さらにポッドから1🪙回収
-        if (!winnerBoosted && has(winner, 'green') && pod > 0) {
-          pod -= 1;
-          chips[winner] += 1;
-          res.roundPodKind = 'grow';
-          res.notes.push(`緑トリプル：${nm(winner)}がTHROUGHでポッドから追加で1🪙回収`);
-        }
       }
       res.logKind = diff === 1
         ? 'JACKPOT'
@@ -3937,6 +4698,179 @@
     res.opChips = chips.op;
     res.pod = pod;
     return res;
+  }
+
+  // ===== ハッキングの演出（A：RGBずれ＋スライス）=====
+  // 盤面が横の帯に裂けて左右にずれ、色がにじむ。カードと文字は赤・水色の2色にブレる。約1.1秒で元に戻る
+  function playHackGlitch(text, myToken) {
+    // 演出テーマ（warp-fx.js）があればそちらのハッキング（FX-08）を使う
+    if (window.ReelFX && ReelFX.hack) { playHackSound(); return ReelFX.hack(text); }
+    return new Promise(resolve => {
+      const board = document.getElementById('board');
+      if (!board) { resolve(); return; }
+      const br = board.getBoundingClientRect();
+      const layer = document.createElement('div');
+      layer.className = 'hack-glitch';
+      Object.assign(layer.style, { left: br.left + 'px', top: br.top + 'px', width: br.width + 'px', height: br.height + 'px' });
+      const title = document.createElement('div');
+      title.className = 'hack-glitch-title';
+      title.textContent = text;
+      layer.appendChild(title);
+      document.body.appendChild(layer);
+      board.classList.add('hack-glitching');
+      playHackSound();
+      const colors = ['rgba(255, 0, 60, 0.55)', 'rgba(0, 220, 255, 0.5)', 'rgba(57, 255, 158, 0.45)'];
+      const bars = [];
+      // 帯をランダムに作り直してずらす（約70msごと）
+      const frame = () => {
+        bars.forEach(b => b.remove());
+        bars.length = 0;
+        const n = 4 + Math.floor(Math.random() * 4);
+        for (let i = 0; i < n; i++) {
+          const b = document.createElement('div');
+          b.className = 'hack-glitch-bar';
+          const h = 4 + Math.random() * 40;
+          b.style.top = (Math.random() * (br.height - h)) + 'px';
+          b.style.height = h + 'px';
+          b.style.transform = `translateX(${(Math.random() - 0.5) * 60}px)`;
+          b.style.background = colors[i % colors.length];
+          layer.appendChild(b);
+          bars.push(b);
+        }
+        board.style.setProperty('--gx', ((Math.random() - 0.5) * 14).toFixed(1) + 'px');
+        board.style.setProperty('--gc', `inset(${(Math.random() * 60).toFixed(0)}% 0 ${(Math.random() * 30).toFixed(0)}% 0)`);
+      };
+      frame();
+      const timer = setInterval(frame, 70);
+      setTimeout(() => {
+        clearInterval(timer);
+        layer.remove();
+        board.classList.remove('hack-glitching');
+        board.style.removeProperty('--gx');
+        board.style.removeProperty('--gc');
+        resolve();
+      }, 1100);
+    });
+  }
+  // ハッキングの音：短いデジタルノイズと不安定な電子音
+  function playHackSound() {
+    if (!soundOn) return;
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    for (let i = 0; i < 6; i++) {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'square';
+      const st = t + i * 0.09;
+      o.frequency.setValueAtTime(200 + Math.random() * 1600, st);
+      g.gain.setValueAtTime(0.0001, st);
+      g.gain.exponentialRampToValueAtTime(0.08, st + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, st + 0.07);
+      o.connect(g); g.connect(masterGain);
+      o.start(st); o.stop(st + 0.08);
+    }
+    const nz = ctx.createBufferSource();
+    nz.buffer = getNoise(ctx);
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 3000;
+    const gn = ctx.createGain();
+    gn.gain.setValueAtTime(0.0001, t);
+    gn.gain.exponentialRampToValueAtTime(0.15, t + 0.03);
+    gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+    nz.connect(bp); bp.connect(gn); gn.connect(masterGain);
+    nz.start(t); nz.stop(t + 0.62);
+  }
+
+  // ===== SPIKE演出：20ラウンドを超えた最初のラウンド開始時に、警告音とともに表示（演出中は操作を受け付けない）=====
+  // 演出を再生した時は true を返す
+  const SPIKE_MS = 2300; // 演出の長さ（この間は操作を止め、役のカットインは演出の後に流す）
+  function playSpikeAlert() {
+    // 演出テーマ（warp-fx.js）があればそちらの SPIKE（FX-10）を使う
+    if (window.ReelFX && ReelFX.spike) {
+      if (!ReelFX.spike(LATE_ROUND, LOSE_PAYMENT, LATE_LOSE_PAYMENT)) return false;
+      playSe('spike');
+      return true;
+    }
+    const board = document.getElementById('board');
+    if (!board) return false;
+    const br = board.getBoundingClientRect();
+    if (!br.width || !br.height) return false;
+    const w = br.width, h = br.height;
+    const y0 = Math.round(h * 0.56);       // 波形の基準線（手札のカードの下あたり）
+    const cx = Math.round(w / 2);
+    const top = Math.round(h * 0.42);      // スパイクの頂点
+    const amp = Math.round(h * 0.06);      // スパイク後の揺れ幅（大きいまま）
+    const pt = (x, y) => `${x.toFixed(1)} ${y.toFixed(1)}`;
+    // スパイク前：小さな揺れの水色の波形
+    const calm = [pt(0, y0)];
+    const blips = [0.12, 0.3, 0.42];
+    blips.forEach(f => {
+      const x = w * f;
+      calm.push(pt(x - 10, y0), pt(x - 4, y0 - 8), pt(x + 3, y0 + 7), pt(x + 9, y0));
+    });
+    calm.push(pt(cx - 16, y0));
+    // スパイク：真上に跳ね、下へ振り切る
+    const peak = [pt(cx - 16, y0), pt(cx - 8, y0 + 10), pt(cx, top), pt(cx + 11, y0 + amp * 0.8), pt(cx + 20, y0)];
+    // スパイク後：大きな揺れ幅を保ったまま右端まで続く赤い波形
+    const storm = [pt(cx + 20, y0)];
+    let up = true;
+    for (let x = cx + 30; x < w; x += 14) {
+      const a = amp * (0.75 + Math.random() * 0.35);
+      storm.push(pt(x, up ? y0 - a : y0 + a));
+      up = !up;
+    }
+    storm.push(pt(w, y0));
+    const NS = 'http://www.w3.org/2000/svg';
+    const layer = document.createElement('div');
+    layer.className = 'spike-alert';
+    Object.assign(layer.style, { left: br.left + 'px', top: br.top + 'px', width: w + 'px', height: h + 'px' });
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('width', w);
+    svg.setAttribute('height', h);
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    const path = (cls, pts, parent) => {
+      const el = document.createElementNS(NS, 'path');
+      el.setAttribute('class', 'spike-wave ' + cls);
+      el.setAttribute('d', 'M' + pts.join(' L'));
+      el.setAttribute('pathLength', '1');
+      el.setAttribute('stroke-dasharray', '1');
+      (parent || svg).appendChild(el);
+    };
+    const base = document.createElementNS(NS, 'line');
+    Object.entries({ x1: 0, y1: y0, x2: w, y2: y0, stroke: '#19d3ff', 'stroke-opacity': 0.15 }).forEach(([k, v]) => base.setAttribute(k, v));
+    svg.appendChild(base);
+    path('calm', calm);
+    path('peak', peak);
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'spike-storm-g');
+    g.style.transformOrigin = `0 ${y0}px`;
+    svg.appendChild(g);
+    path('storm', storm, g);
+    const dot = document.createElementNS(NS, 'circle');
+    dot.setAttribute('class', 'spike-dot');
+    dot.setAttribute('cx', cx);
+    dot.setAttribute('cy', top);
+    dot.setAttribute('r', 5);
+    svg.appendChild(dot);
+    layer.appendChild(svg);
+    const add = (cls, text, style) => {
+      const el = document.createElement('div');
+      el.className = cls;
+      el.textContent = text;
+      Object.assign(el.style, style);
+      layer.appendChild(el);
+    };
+    add('spike-title', 'SPIKE', { top: Math.round(h * 0.2) + 'px' });
+    add('spike-sub', `負けた時の支払い ${LOSE_PAYMENT} → ${LATE_LOSE_PAYMENT}🪙`, { top: Math.round(h * 0.2 + 80) + 'px' });
+    add('spike-lbl before', `ROUND ${LATE_ROUND}`, { top: (y0 + amp + 14) + 'px' });
+    add('spike-lbl after', `ROUND ${LATE_ROUND + 1} ▲`, { top: (y0 + amp + 14) + 'px' });
+    add('spike-frame', '', {});
+    document.body.appendChild(layer);
+    playSe('spike');
+    setTimeout(() => layer.remove(), SPIKE_MS);
+    return true;
   }
 
   // ===== 引き分け→手札勝負の演出（A：サドンデス・カットイン）=====
@@ -4016,7 +4950,7 @@
           await wait(700);
           continue;
         }
-        const meWin = an > bn;
+        const meWin = (an > bn) !== !!state.roundHack; // ハッキング中は低い方が勝ち
         (meWin ? cMe : cOp).classList.add('tb-win');
         (meWin ? cOp : cMe).classList.add('tb-lose');
         rm.textContent = `${a.src === 'deck' ? '山札' : '手札'}勝負 ${an} vs ${bn} → ${meWin ? 'あなたの勝ち' : '相手の勝ち'}`;
@@ -4069,6 +5003,30 @@
     nz.start(t); nz.stop(t + 0.3);
   }
 
+  // ログに出す「発動した効果」：出したカードの効果、成立した色の役、手札勝負（side: 'me' / 'op' / 'both'）
+  function logEffects(res, outcome, myKey, opKey) {
+    const out = [];
+    const winSide = outcome === 'me' ? 'me' : (outcome === 'op' ? 'op' : null);
+    const loseSide = winSide === 'me' ? 'op' : (winSide === 'op' ? 'me' : null);
+    [[myKey, 'me'], [opKey, 'op']].forEach(([k, side]) => {
+      const d = k ? effectDef(+k[0], k.slice(1)) : null;
+      if (d) out.push({ side, t: d.name });
+    });
+    res.notes.forEach(n => {
+      const m = n.match(/^(赤|青|黄|緑|ピンク)の役（(.+?)）：(あなた|相手)/);
+      if (m) out.push({ side: m[3] === 'あなた' ? 'me' : 'op', t: `${m[1]}の役：${m[2]}` });
+      const m4 = n.match(/^色の役Lv4：(あなた|相手)が/);
+      if (m4) out.push({ side: m4[1] === 'あなた' ? 'me' : 'op', t: '色の役Lv4：2枚奪取' });
+      if (n.includes('緑の役で+1') && winSide) out.push({ side: winSide, t: '緑の役：コツコツ回収' });
+      if (n.includes('青の役で-1') && loseSide) out.push({ side: loseSide, t: '青の役：守り' });
+    });
+    if (res.tiebreak) out.push({ side: 'both', t: `${res.tiebreak.d === 0 ? '手札' : '山札'}勝負 ${res.tiebreak.my} vs ${res.tiebreak.op}` });
+    const hb = state.roundHackBy || {};
+    if (hb.my) out.unshift({ side: 'me', t: 'HACK：勝敗反転' });
+    if (hb.op) out.unshift({ side: 'op', t: 'HACK：勝敗反転' });
+    return out;
+  }
+
   function finalizeRound(myCard, opCard, myChipsUsed, opChipsUsed, myEffective, opEffective, myToken, tie) {
     // 捨て札に行くまでは、場の数字はチップで上がった数値のまま表示する
     state.fieldMy = myEffective;
@@ -4083,7 +5041,8 @@
       myKey: effKey('my', myCard), opKey: effKey('op', opCard),
       myChips: state.myChips, opChips: state.opChips, pod: state.pod,
       myDisc: discEntries('my'), opDisc: discEntries('op'), round: currentRoundNo(),
-      tie: tie ? { my: tie.my.map(tieNum), op: tie.op.map(tieNum) } : null
+      tie: tie ? { my: tie.my.map(tieNum), op: tie.op.map(tieNum) } : null,
+      myHack: !!(state.roundHackBy && state.roundHackBy.my), opHack: !!(state.roundHackBy && state.roundHackBy.op)
     });
     state.myChips = res.myChips;
     state.opChips = res.opChips;
@@ -4120,7 +5079,7 @@
 
     if (state.roundSnap) {
       state.roundLog.push({
-        no: net.active ? state.round : state.roundLog.length + 1,
+        no: currentRoundNo(),
         result: outcome === 'tie' ? '引き分け' : (outcome === 'me' ? 'あなたの勝ち' : '相手の勝ち'),
         kind: res.logKind,
         cards: `あなた ${myLabel} / 相手 ${opLabel}${tbLabel}`,
@@ -4128,7 +5087,14 @@
         dOp: state.opChips - state.roundSnap.op,
         dPod: state.pod - state.roundSnap.pod,
         my: state.myChips, op: state.opChips, pod: state.pod,
-        notes: noteText + (state.tamperNote ? ' / ' + state.tamperNote : '')
+        notes: noteText + (state.tamperNote ? ' / ' + state.tamperNote : ''),
+        // プレイヤー向けログの表示用
+        v: {
+          outcome, jackpot: res.logKind === 'JACKPOT', sd: !!tb,
+          my: { n: myCard, c: state.myCardColors[myCard] || null, b: myChipsUsed },
+          op: { n: opCard, c: state.opCardColors[opCard] || null, b: opChipsUsed },
+          eff: logEffects(res, outcome, effKey('my', myCard), effKey('op', opCard))
+        }
       });
       state.roundSnap = null;
       renderRoundLog();
@@ -4147,6 +5113,14 @@
     if (res.roundPodKind === 'jackpot') playSe('jackpot');
     else if (res.outcome === 'me') playSe('win');    // 自分が勝った時（JACKPOTはJACKPOTの音だけ）
     else playSe('lose'); // 自分の負け（LOSE・ブーストしての負け）と引き分け。JACKPOTで負けた時はJACKPOTの音だけ
+    let resultFxMs = 0; // 勝敗演出の長さ。終わってから次（ラウンド開始の演出）へ進む
+    if (window.ReelFX) {
+      // 勝敗のスタンプ演出（盤面中央の帯）
+      const stamp = res.roundPodKind === 'jackpot'
+        ? (res.jackpotWinner === 'my' ? 'jackpot' : 'jackpot-op')
+        : (outcome === 'me' ? 'win' : outcome === 'op' ? 'lose' : 'draw');
+      resultFxMs = ReelFX.stamp(stamp, { diff: Math.abs(myEffective - opEffective), pod: state.pod, hack: res.hack, take: res.jackpotTake }) || 0;
+    }
     updateHandBadges();
     const hpId = who => (who === 'my' ? 'myHP' : 'opHP');
     if (res.jackpotWinner) flashNum(hpId(res.jackpotWinner), 'gain-flash');
@@ -4167,17 +5141,18 @@
       setTimeout(() => {
         if (myToken !== gameToken) return;
         showGameOver();
-      }, 1100);
+      }, Math.max(RESULT_HOLD_MS, resultFxMs + 150));
       return;
     }
 
     setTimeout(() => {
       if (myToken !== gameToken) return;
-      stackChoice(myToken).then(() => {
+      postRoundEffects(myToken).then(() => {
       if (myToken !== gameToken) return;
       if (net.active) { onlineNextRound(); return; }
-      drawInto(state.myHand, 'my');
-      drawInto(state.opHand, 'op');
+      // 回収（1A）で手札に加えた時は引かない
+      if (state.myHand.length < 2) drawInto(state.myHand, 'my');
+      if (state.opHand.length < 2) drawInto(state.opHand, 'op');
       state.fieldMy = null;
       state.fieldOp = null;
       state.fieldMyCardId = null;
@@ -4190,7 +5165,93 @@
       state.locked = false;
       startRound();
       });
-    }, 1100);
+    }, Math.max(RESULT_HOLD_MS, resultFxMs + 150));
+  }
+  // 勝敗の後に次へ進むまでの最短の時間（勝敗の演出がある時は、その演出が終わるまで待つ）
+  const RESULT_HOLD_MS = 1100;
+
+  // 決着後・ドロー前の効果：仕込み（3B）→ 掘削（6B）→ 回収（1A）
+  function postRoundEffects(myToken) {
+    const pv = state.prev;
+    // オンラインでは、相手が回収するかどうかを相手の捨て札（このラウンドの分まで）から決めておく
+    state.opRecallPending = !!(pv && pv.op.key === '1A' && recallCandidates('op').length);
+    return stackChoice(myToken).then(() => {
+      if (myToken !== gameToken || !pv) return;
+      if (!net.active) {
+        // CPU：掘削は自動、回収は捨て札の一番大きい数字を選ぶ
+        if (pv.op.key === '6B') { const n = digTop('op'); if (n != null) logEffectDetail('op', '掘削', `掘削：${n}が捨て札へ`); }
+        if (pv.op.key === '1A') {
+          const c = recallCandidates('op');
+          if (c.length) { const n = Math.max(...c); applyRecall('op', n); logEffectDetail('op', '回収', `回収：${n}を手札へ`); }
+        }
+      }
+      return selfPostRound(pv.my.key, myToken);
+    }).then(() => { renderHandsAndDiscard(); });
+  }
+  // 自分の掘削（6B）・回収（1A）。key は直前に出したカードの効果
+  function selfPostRound(key, myToken) {
+    if (key === '6B') {
+      const n = digTop('my');
+      if (n != null) logEffectDetail('me', '掘削', `掘削：${n}が捨て札へ`);
+      return Promise.resolve();
+    }
+    if (key !== '1A') return Promise.resolve();
+    const cands = recallCandidates('my').sort((a, b) => a - b);
+    if (!cands.length) return Promise.resolve();
+    return new Promise(resolve => {
+      const wrap = document.createElement('div');
+      wrap.className = 'stack-dialog';
+      const cards = cands.map(n => `<button class="card ${state.myCardColors[n] || ''}" data-n="${n}">${n}</button>`).join('');
+      wrap.innerHTML = `<div class="box overlay-card"><h3>回収</h3><p>捨て札から手札に加えるカードを選んでください。<br>選んだカードは相手にも分かります（!）</p>
+        <div class="recall-cards">${cards}</div></div>`;
+      document.body.appendChild(wrap);
+      wrap.addEventListener('click', (e) => {
+        const b = e.target && e.target.closest ? e.target.closest('[data-n]') : null;
+        if (!b) return;
+        playSelectSound();
+        wrap.remove();
+        if (myToken === gameToken) {
+          const n = +b.dataset.n;
+          applyRecall('my', n);
+          if (net.active) state.recalledNow = n;
+          logEffectDetail('me', '回収', `回収：${n}を手札へ`);
+        }
+        resolve();
+      });
+    });
+  }
+  // 掘削：山札の一番上を捨て札へ送る。山札が空なら何もしない。送った数字を返す
+  function digTop(who) {
+    const deck = state[who + 'Deck'];
+    if (!deck.length) return null;
+    const n = deck.pop();
+    const rv = state.revealedDeck[who];
+    const i = rv.indexOf(n);
+    if (i >= 0) rv.splice(i, 1);
+    if (!state[who + 'Discard'].includes(n)) state[who + 'Discard'].push(n);
+    if (who === 'op') state.opSeen[n] = true;
+    return n;
+  }
+  // 回収で選べるカード：捨て札のうち1以外
+  function recallCandidates(who) {
+    return state[who + 'Discard'].filter(n => n !== 1);
+  }
+  // 回収：捨て札から手札へ。手札に加えたカードは確定情報（!）
+  function applyRecall(who, n) {
+    const d = state[who + 'Discard'];
+    const i = d.indexOf(n);
+    if (i < 0) return;
+    d.splice(i, 1);
+    state[who + 'Hand'].push(n);
+    if (!state.knownHeld[who].includes(n)) state.knownHeld[who].push(n);
+  }
+  // 直前のラウンドのログの効果名に、動いたカードを書き足す
+  function logEffectDetail(side, name, text) {
+    const last = state.roundLog[state.roundLog.length - 1];
+    const eff = last && last.v && last.v.eff ? last.v.eff.find(e => e.side === side && e.t === name) : null;
+    if (!eff) return;
+    eff.t = text;
+    renderRoundLog();
   }
 
   // 仕込み（3B）：出した後、自分の山札の一番上を見て、そのまま残すか一番下へ送るか選ぶ（CPUはランダム）
@@ -4233,11 +5294,25 @@
     const blocked = pv[who].key === '1B'; // 撹乱：相手の情報系の効果・役が効かない
     ex.blocked = blocked;
     const by = (k) => !blocked && pv[other].key === k;
-    if (by('1A')) ex.parity = { even: hand.filter(n => n % 2 === 0).length, odd: hand.filter(n => n % 2 === 1).length };
     if (by('4A')) ex.hilo = { lo: hand.filter(n => n <= 4).length, hi: hand.filter(n => n >= 5).length };
     if (by('5A')) ex.sum = hand.reduce((a, b) => a + b, 0);
     if (by('3A')) { const d = state[who + 'Deck']; ex.deckTop = d.length ? d[d.length - 1] : null; }
     if (by('2A')) ex.boostIntel = true;
+    // 色の役（相手の捨て札に同色2枚以上）：相手に見える情報
+    // 2枚でLv2、3枚でLv3（roleLevel は 1 / 2）
+    const lv = (color) => (blocked ? 0 : roleLevel(getColorCounts(other)[color] || 0));
+    if (lv('blue') >= 1) ex.roleHilo = { lo: hand.filter(n => n <= 4).length, hi: hand.filter(n => n >= 5).length };
+    if (lv('blue') >= 2 && hand.length) ex.roleMax = Math.max(...hand);
+    if (lv('pink') >= 1) ex.roleParity = { even: hand.filter(n => n % 2 === 0).length, odd: hand.filter(n => n % 2 === 1).length };
+    if (lv('pink') >= 2 && hand.length) ex.roleMin = Math.min(...hand);
+    if (lv('green') >= 1) ex.roleSum = hand.reduce((a, b) => a + b, 0);
+    // 緑Lv3：相手の手札とちょうど1差になる数字の候補（見る側が自分の手札と照らし合わせる）
+    if (lv('green') >= 2) ex.roleAdj = [...new Set(hand.flatMap(n => [n - 1, n + 1]).filter(n => n >= 1 && n <= 8))].sort((a, b) => a - b);
+    if (lv('yellow') >= 1) { const d = state[who + 'Deck']; ex.roleDeckBottom = d.length ? d[0] : null; }
+    if (lv('yellow') >= 2) { const d = state[who + 'Deck']; ex.roleDeckTop = d.length ? d[d.length - 1] : null; }
+    // 赤（勝算）：見る側が自分の手札と比べるため、手札の数字を渡す（Lv3は引き分けも数える）
+    if (lv('red') >= 1) ex.roleOdds = hand.slice();
+    if (lv('red') >= 2) ex.roleOddsTie = true;
     const hid = pv.hidden ? pv.hidden[who] : null;
     if (hid != null && hand.includes(hid)) {
       if (by('5B') && pv.winner === other) ex.reveal = [{ n: hid, src: '記録' }];
@@ -4288,23 +5363,74 @@
     }
   }
 
+  // リザルト画面：勝敗・最終チップ数・チップの推移（折れ線）を表示
   function showGameOver() {
     const overlay = document.getElementById('overlay');
-    const title = document.getElementById('overlayTitle');
-    const text = document.getElementById('overlayText');
     const w = gameWinner(state.myChips, state.opChips);
-    if (w === 'my') {
-      title.textContent = '🎉 あなたの勝ち！（相手のチップが0枚）';
-    } else if (w === 'op') {
-      title.textContent = '😢 相手の勝ち…（あなたのチップが0枚）';
-    } else if (w === 'draw') {
-      title.textContent = '引き分け（お互いのチップが0枚）';
-    } else {
-      title.textContent = '終了';
-    }
-    text.textContent = `所持チップ：あなた ${state.myChips}🪙 - 相手 ${state.opChips}🪙`;
+    const outcome = document.getElementById('rsOutcome');
+    outcome.textContent = w === 'my' ? 'WIN' : w === 'op' ? 'LOSE' : w === 'draw' ? 'DRAW' : 'END';
+    outcome.className = 'rs-outcome' + (w === 'op' ? ' lose' : w === 'draw' ? ' draw' : '');
+    const log = state.roundLog || [];
+    document.getElementById('rsSub').textContent = log.length ? `${log.length}ラウンドで決着` : '';
+    const opName = net.active ? (net.oppName || '相手') : 'CPU';
+    document.getElementById('rsOpName').textContent = opName;
+    document.getElementById('rsLegendOp').textContent = opName;
+    document.getElementById('rsMyChips').textContent = state.myChips;
+    document.getElementById('rsOpChips').textContent = state.opChips;
+    document.getElementById('rsMe').classList.toggle('out', state.myChips <= 0);
+    document.getElementById('rsOp').classList.toggle('out', state.opChips <= 0);
+    renderResultChart(log);
     if (net.active) stopTurnTimer();
     overlay.classList.add('show');
+    startBgm('result');
+    if (window.ReelFX) ReelFX.result({ outcome: w, my: state.myChips, op: state.opChips, rounds: log.length });
+  }
+
+  function renderResultChart(log) {
+    const svg = document.getElementById('rsChart');
+    // 開始時点（1ラウンド目の前）＋各ラウンド終了時点のチップ数
+    const first = log[0];
+    const me = [first ? first.my - first.dMy : state.myChips];
+    const op = [first ? first.op - first.dOp : state.opChips];
+    log.forEach(r => { me.push(r.my); op.push(r.op); });
+    const n = me.length;
+    const W = 340, L = 26, R = 12, T = 14, B = 196;
+    const max = Math.max(30, Math.ceil(Math.max(...me, ...op) / 10) * 10);
+    const X = i => L + (n > 1 ? i * (W - L - R) / (n - 1) : (W - L - R) / 2);
+    const Y = v => B - Math.max(0, v) * (B - T) / max;
+    // 配色はリザルト画面（紺の背景）に合わせる：自分＝青紫、相手＝ピンク
+    const C_ME = '#7f9cff', C_OP = '#ff7aa2', C_INK = '#3b4a7a', C_DIM = '#8592b8';
+    let s = `<defs><linearGradient id="rsFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${C_ME}" stop-opacity=".28"/><stop offset="1" stop-color="${C_ME}" stop-opacity="0"/></linearGradient></defs>`;
+    for (let v = 0; v <= max; v += 10) {
+      const y = Y(v);
+      s += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="${v ? 'rgba(127,156,255,.14)' : C_INK}"${v ? ' stroke-dasharray="2 4"' : ''}/>`;
+      s += `<text x="${L - 6}" y="${y + 3.5}" fill="${C_DIM}" font-size="9" text-anchor="end">${v}</text>`;
+    }
+    // 負けた時の支払いが増える区間（LATE_ROUND を超えたラウンド）
+    if (n - 1 > LATE_ROUND) {
+      const x0 = X(LATE_ROUND);
+      s += `<rect x="${x0}" y="${T}" width="${X(n - 1) - x0}" height="${B - T}" fill="rgba(255,122,162,.08)"/>`;
+      s += `<text x="${x0 + 4}" y="${T + 10}" fill="${C_OP}" font-size="8.5" font-weight="700">SPIKE</text>`;
+    }
+    const path = a => a.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
+    if (n > 1) s += `<path class="rs-area" d="${path(me)} L${X(n - 1)},${B} L${X(0)},${B} Z" fill="url(#rsFill)"/>`;
+    s += `<path class="rs-line" pathLength="1" d="${path(op)}" fill="none" stroke="${C_OP}" stroke-width="2" stroke-linejoin="round"/>`;
+    s += `<path class="rs-line" pathLength="1" d="${path(me)}" fill="none" stroke="${C_ME}" stroke-width="2.6" stroke-linejoin="round"/>`;
+    // 点はラウンド数が多いと潰れるので少ない時だけ
+    if (n <= 21) {
+      op.forEach((v, i) => { s += `<circle class="rs-dot" style="--i:${i}" cx="${X(i)}" cy="${Y(v)}" r="2.3" fill="#070c1e" stroke="${C_OP}" stroke-width="1.6"/>`; });
+      me.forEach((v, i) => { s += `<circle class="rs-dot" style="--i:${i}" cx="${X(i)}" cy="${Y(v)}" r="2.8" fill="#070c1e" stroke="${C_ME}" stroke-width="1.8"/>`; });
+    }
+    // 最後の点：線の先端で光る
+    if (n > 1) s += `<circle class="rs-tip" cx="${X(n - 1)}" cy="${Y(me[n - 1])}" r="4.5" fill="${C_ME}"/>`;
+    // 横軸ラベル：最大でおよそ13個まで間引く（最終ラウンドは必ず表示）
+    const step = Math.max(1, Math.ceil((n - 1) / 12));
+    for (let i = 0; i < n; i++) {
+      if (i % step && i !== n - 1) continue;
+      if (i !== n - 1 && n - 1 - i < step) continue; // 最終ラベルと重なるものは省く
+      s += `<text x="${X(i)}" y="${B + 20}" fill="#8a8578" font-size="8.5" text-anchor="middle">${i ? 'R' + i : '開始'}</text>`;
+    }
+    svg.innerHTML = s;
   }
 
   function render(fieldOnly) {
@@ -4386,8 +5512,23 @@
     if (r && r.noBoost) return 0;
     return state.myChips + (r && r.free ? 1 : 0);
   }
+  // ハッキングの表示（ボタン・残り枚数）
+  function updateHackUI() {
+    if (!state || !state.hacks) return;
+    const btn = document.getElementById('hackBtn');
+    if (btn) {
+      if (state.hacks.my <= 0) state.hackSelect = false;
+      btn.textContent = `HACK ×${state.hacks.my}`;
+      btn.classList.toggle('on', !!state.hackSelect);
+      btn.setAttribute('aria-pressed', state.hackSelect ? 'true' : 'false');
+      btn.disabled = state.locked || state.over || state.hacks.my <= 0;
+    }
+    const oc = document.getElementById('opHackCount');
+    if (oc) oc.textContent = `HACK ×${state.hacks.op}`;
+  }
   function updateChipSelectorUI() {
-    const maxB = maxBoostNow();
+    updateHackUI();
+    const maxB = state.hackSelect ? 0 : maxBoostNow();
     if (state.chipSelect > maxB) state.chipSelect = maxB;
     document.getElementById('chipSelectedVal').textContent = state.chipSelect;
     const disabled = state.locked || state.over;
@@ -4402,52 +5543,127 @@
   const RETURN_STAGGER_MS = 40;   // 1枚ごとのずらし幅（約2〜3フレーム）
   const RETURN_DURATION_MS = 260; // 1枚がフェードアウトする時間
 
-  // 役が新しく成立した瞬間の「パワーアップ」音：上昇アルペジオ＋きらめき
+  // 役が新しく成立した時の「ロックオン」音：
+  // 「ピッ…ピッ.ピピピ」と間隔が詰まる電子音のあと、澄んだ2音のロック音（細かく揺らす）。デジタルエコー付き
+  const ROLE_LOCK_GAPS = [0, 0.09, 0.07, 0.055, 0.045, 0.037, 0.032];
   function playRoleUpSound() {
     if (!soundOn) return;
     const ctx = ensureAudio();
     if (!ctx) return;
-    const t0 = ctx.currentTime;
+    const out = getTickEcho(ctx);
+    const env = (g, t, peak, attack, decay) => {
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + attack);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+    };
 
-    // 上昇する3音のアルペジオ（ド→ミ→ソ→高ド）
-    const notes = [523.25, 659.25, 783.99, 1046.5];
-    notes.forEach((freq, i) => {
-      const t = t0 + i * 0.06;
+    // 捕捉中のビープ：1音ごとに少しずつ高く
+    let t = ctx.currentTime;
+    ROLE_LOCK_GAPS.forEach((gap, i) => {
+      t += gap;
       const o = ctx.createOscillator();
       const g = ctx.createGain();
-      o.type = 'triangle';
-      o.frequency.setValueAtTime(freq, t);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.3, t + 0.012);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      o.type = 'square';
+      o.frequency.setValueAtTime(1320 + i * 40, t);
+      env(g, t, 0.09, 0.001, 0.025);
       o.connect(g); g.connect(masterGain);
-      o.start(t); o.stop(t + 0.24);
+      o.start(t); o.stop(t + 0.04);
     });
 
-    // 下から吹き上がる「きらめき」のスイープ
-    const sweep = ctx.createOscillator();
-    const sg = ctx.createGain();
-    sweep.type = 'sawtooth';
-    sweep.frequency.setValueAtTime(300, t0);
-    sweep.frequency.exponentialRampToValueAtTime(2600, t0 + 0.3);
-    const hp = ctx.createBiquadFilter();
-    hp.type = 'highpass';
-    hp.frequency.value = 800;
-    sg.gain.setValueAtTime(0.0001, t0);
-    sg.gain.exponentialRampToValueAtTime(0.1, t0 + 0.1);
-    sg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.32);
-    sweep.connect(hp); hp.connect(sg); sg.connect(masterGain);
-    sweep.start(t0); sweep.stop(t0 + 0.34);
+    // ロック音：2音を同時に鳴らし、28Hzで音量を細かく揺らす
+    const tl = t + 0.05;
+    [440 * Math.pow(2, 23 / 12), 440 * Math.pow(2, 30 / 12)].forEach(freq => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      const am = ctx.createOscillator();
+      const amg = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = freq;
+      am.type = 'square';
+      am.frequency.value = 28;
+      amg.gain.value = 0.05;
+      env(g, tl, 0.14, 0.004, 0.32);
+      am.connect(amg); amg.connect(g.gain);
+      o.connect(g); g.connect(out);
+      o.start(tl); am.start(tl); o.stop(tl + 0.36); am.stop(tl + 0.36);
+    });
+    const low = ctx.createOscillator();
+    const lg = ctx.createGain();
+    low.type = 'square';
+    low.frequency.value = 440 * Math.pow(2, 11 / 12);
+    env(lg, tl, 0.06, 0.003, 0.2);
+    low.connect(lg); lg.connect(masterGain);
+    low.start(tl); low.stop(tl + 0.22);
   }
 
-  // デッキの底（ピンクの役で見えるカード）。オンラインの相手分は、相手が公開した値を使う
-  function getDeckBottom(who) {
-    if (net.active && who === 'op') {
-      const op = oppSeatC();
-      return (op && typeof op.deckBottom === 'number') ? op.deckBottom : null;
+  // 役の成立表示（捨て札の光り・成立音）は、次ラウンドの手札選択に入った時にまとめて反映する。
+  // 新しく成立した役があれば成立音を鳴らす（sound=false なら鳴らさない）。fxDelay(ms) があれば成立音・カットインをその分遅らせる
+  function commitRoleGlow(whos, sound, fxDelay) {
+    const cutins = []; // 新しく発動した役（カットイン用）
+    whos.forEach(who => {
+      const prevLv = state.roleShown[who].levels || {};
+      const roles = getActiveRoles(who);
+      const colors = new Set(roles.map(r => r.color));
+      const levels = {};
+      roles.forEach(r => {
+        levels[r.color] = roleLevel(r.count);
+        // 演出（効果音・カットイン）は初めて発動した時（Lv2）だけ。Lv3・Lv4への昇格は演出なし
+        if (!prevLv[r.color]) cutins.push({ who, color: r.color, lv: levels[r.color] });
+      });
+      const map = state[who + 'CardColors'];
+      state.roleShown[who] = {
+        colors,
+        levels,
+        cards: new Set(state[who + 'Discard'].filter(n => colors.has(map[n])))
+      };
+    });
+    if (cutins.length && sound) {
+      const fx = () => { playRoleUpSound(); playRoleCutins(cutins); };
+      if (fxDelay) {
+        const myToken = gameToken;
+        setTimeout(() => { if (myToken === gameToken) fx(); }, fxDelay);
+      } else {
+        fx();
+      }
+      // 演出が終わるまでの時間（同じ側で複数ある時は 700ms ずつずれて流れる）
+      const perSide = Math.max(...['my', 'op'].map(w => cutins.filter(c => c.who === w).length));
+      return (fxDelay || 0) + ROLE_CUTIN_MS + 700 * (perSide - 1);
     }
-    const d = state[who + 'Deck'];
-    return (d && d.length) ? d[0] : null;
+    return 0;
+  }
+  const ROLE_CUTIN_MS = 1400; // 役のカットイン1本の長さ
+
+  // 役の発動カットイン：その色のキャラ画像の帯が、相手は左から右へ（反転）、自分は右から左へ流れる
+  function playRoleCutins(list) {
+    const board = document.getElementById('board');
+    if (!board || !list.length) return;
+    // 自分側と相手側は同時に再生し、同じ側で複数発動した時だけ順番に流す
+    const delays = { my: 0, op: 0 };
+    // 片方のプレイヤーだけ発動した時は、2本の帯の中間に少し太い帯を1本流す
+    const solo = new Set(list.map(c => c.who)).size === 1;
+    list.forEach(c => {
+      const delay = delays[c.who];
+      setTimeout(() => {
+        const wrap = document.createElement('div');
+        wrap.className = `role-cutin ${c.color} ${c.who}${solo ? ' solo' : ''}`;
+        // 帯の端に「PLAYER · R code : 勝算 Lv2」の札を付ける（FX-09）
+        const info = ROLE_LIST.find(r => r.color === c.color) || { name: '' };
+        const lbl = `${c.who === 'my' ? 'PLAYER' : 'ENEMY'} · ${COLOR_EN[c.color]} : ${info.name} Lv${(c.lv || 1) + 1}`;
+        wrap.innerHTML = `<div class="rc-band"><span class="rc-lbl">${lbl}</span></div>`;
+        const br = board.getBoundingClientRect();
+        Object.assign(wrap.style, { left: br.left + 'px', top: br.top + 'px', width: br.width + 'px', height: br.height + 'px' });
+        // 手札の上側（効果情報の位置）に表示：自分は手札のすぐ上、相手はその上
+        const hand = document.getElementById('myHand');
+        const hr = hand && hand.getBoundingClientRect();
+        const handTop = hr && hr.height ? hr.top - br.top : br.height * 0.55;
+        const pairMid = handTop - 8 - 44 - 2; // 2本並ぶ時の帯の境目
+        const bandTop = solo ? pairMid - 30 : c.who === 'my' ? handTop - 44 - 8 : handTop - 44 * 2 - 8 - 4;
+        wrap.firstChild.style.top = Math.max(0, bandTop) + 'px';
+        document.body.appendChild(wrap);
+        setTimeout(() => wrap.remove(), ROLE_CUTIN_MS);
+      }, delay);
+      delays[c.who] += 700;
+    });
   }
 
   // 山札へ戻る捨て札に含まれない数字＝その時点で手札に残っていたカード（両者に分かる確定情報）
@@ -4464,11 +5680,6 @@
     // 公開済みの場のカードは捨て札に入っているので、手札は1枚。裏向きの場のカードは手札に含めて数える
     const handCount = state.fieldRevealed ? 1 : 2;
     const inDeck = new Set((state.revealedDeck && state.revealedDeck[who]) || []);
-    // ピンクの役で相手に見えているデッキの底
-    if (hasColorTriple(otherOf(who), 'pink') && !(state.prev && state.prev[who].key === '1B')) {
-      const b = getDeckBottom(who);
-      if (b != null) inDeck.add(b);
-    }
     const rest = [];
     for (let n = 1; n <= 8; n++) if (!disc.includes(n) && !inDeck.has(n)) rest.push(n);
     return rest.length === handCount ? rest : [];
@@ -4514,28 +5725,10 @@
     }
 
     grid.innerHTML = '';
-    const activeRoles = getActiveRoles(who);
-    const glowColors = new Set(activeRoles.map(r => r.color));
-
-    // 前回の描画になかった役が新たに成立していたら、パワーアップ音を鳴らす
-    const roleKeys = new Set(activeRoles.map(r => r.name));
-    const seen = state.roleSeen[who];
-    let newlyActivated = false;
-    const blueRoleKey = `色トリプル(${COLOR_LABEL.blue})`;
-    roleKeys.forEach(k => {
-      if (!seen.has(k)) {
-        newlyActivated = true;
-        if (k === blueRoleKey) state.blueChargeUsed[who] = false; // 再成立で1回分を回復（ストックはしない）
-      }
-    });
-    state.roleSeen[who] = roleKeys;
-    if (newlyActivated) playRoleUpSound();
-
-    // ピンクトリプル発動中：相手のデッキの底（次に引かれる最後のカード）の枠に目のアイコンを表示
-    // activeViewer基準：今画面を見ている側がピンクを持っていれば、相手側の捨て札グリッド(who === otherOf(activeViewer))に表示する
-    const peekTarget = (who === otherOf(activeViewer) && hasColorTriple(activeViewer, 'pink') && !(state.prev && state.prev[who].key === '1B'))
-      ? getDeckBottom(who)
-      : null;
+    // 光らせるのは、手札選択に入った時点で反映済みの役の捨て札だけ（山札へ戻って不成立になった色はすぐ消す）
+    const activeColors = new Set(getActiveRoles(who).map(r => r.color));
+    const shown = state.roleShown[who];
+    shown.colors.forEach(c => { if (!activeColors.has(c)) shown.colors.delete(c); });
 
     const deduced = deducedHeld(who);
     for (let n = 1; n <= 8; n++) {
@@ -4544,7 +5737,7 @@
       let cls = 'discard-slot' + (isFilled ? ' filled' : '');
       if (isFilled && colorMap[n]) {
         cls += ' ' + colorMap[n];
-        if (glowColors.has(colorMap[n])) cls += ' glow';
+        if (shown.colors.has(colorMap[n]) && shown.cards.has(n)) cls += ' glow';
       }
       // 確定情報の数字：まだ出されていなければ「！」を重ねる
       const isKnown = !isFilled && (((state.knownHeld && state.knownHeld[who]) || []).includes(n) || deduced.includes(n));
@@ -4557,14 +5750,6 @@
         mark.textContent = '!';
         slot.title = who === 'op' ? '確定情報：この数字は相手の手札にある' : '確定情報：この数字が手札にあることは相手にも分かっている';
         slot.appendChild(mark);
-      }
-      if (peekTarget === n) {
-        slot.classList.add('peek');
-        slot.title = '相手のデッキの底（最後に引かれるカード）';
-        const eye = document.createElement('span');
-        eye.className = 'peek-eye';
-        eye.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 5C5 5 1 12 1 12s4 7 11 7 11-7 11-7-4-7-11-7zm0 11a4 4 0 110-8 4 4 0 010 8zm0-2a2 2 0 100-4 2 2 0 000 4z"/></svg>';
-        slot.appendChild(eye);
       }
       grid.appendChild(slot);
     }
@@ -4607,8 +5792,14 @@
       updateChipSelectorUI();
     }
   });
+  document.getElementById('hackBtn').addEventListener('click', () => {
+    if (!state || state.locked || state.over || state.hacks.my <= 0) return;
+    state.hackSelect = !state.hackSelect;
+    if (state.hackSelect) state.chipSelect = 0; // ブーストとは併用できない
+    updateChipSelectorUI();
+  });
   document.getElementById('chipPlus').addEventListener('click', () => {
-    if (state.locked || state.over) return;
+    if (state.locked || state.over || state.hackSelect) return;
     if (state.chipSelect < maxBoostNow()) {
       state.chipSelect += 1;
       updateChipSelectorUI();
@@ -4620,10 +5811,15 @@
   });
 
   function updateDebugBtn() {
-    document.getElementById('debugModeBtn').textContent = debugMode
-      ? 'デバッグモード: ON（準備フェイズ全色選択・決着なし）'
-      : 'デバッグモード: OFF';
-    document.getElementById('debugPanel').classList.toggle('hidden', !debugMode);
+    const btn = document.getElementById('debugModeBtn');
+    const label = debugMode ? 'デバッグモード: ON（準備フェイズ全色選択・カード効果あり・決着なし）' : 'デバッグモード: OFF';
+    btn.classList.toggle('on', debugMode);
+    btn.setAttribute('aria-pressed', debugMode ? 'true' : 'false');
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
+    document.getElementById('debugState').textContent = debugMode ? 'DEBUG ON' : '';
+    document.getElementById('dbgFxBtn').classList.toggle('hidden', !debugMode);
+    if (!debugMode) setDbgFx(false);
   }
   document.getElementById('debugModeBtn').addEventListener('click', () => {
     debugMode = !debugMode;
@@ -4650,32 +5846,91 @@
     stopBgm();
   });
 
-  // デバッグ：実際のチップ・ポッドを動かさずに、勝敗演出（THROUGH/LOSE/JACKPOT）だけを単独再生する
-  document.getElementById('dbgThroughBtn').addEventListener('click', () => {
-    updatePodDisplay('through');
-    playSe('win');
-  });
-  document.getElementById('dbgLoseBtn').addEventListener('click', () => {
-    updatePodDisplay('grow');
-    playSe('lose');
-    flashNum('myHP', 'pay-flash');
-  });
-  document.getElementById('dbgJackpotBtn').addEventListener('click', () => {
-    updatePodDisplay('jackpot');
-    playSe('jackpot');
-    flashNum('myHP', 'gain-flash');
+  // デバッグ：実際のチップ・ポッドを動かさずに、演出だけを単独再生する（盤面左のボタン→中央のパネルから選ぶ）
+  const DEBUG_FX = {
+    win: () => { updatePodDisplay('through'); playSe('win'); if (window.ReelFX) ReelFX.stamp('win', { diff: 3, pod: state.pod }); },
+    lose: () => { updatePodDisplay('grow'); playSe('lose'); flashNum('myHP', 'pay-flash'); if (window.ReelFX) ReelFX.stamp('lose', { diff: 3, pod: state.pod }); },
+    jackpot: () => { updatePodDisplay('jackpot'); playSe('jackpot'); flashNum('myHP', 'gain-flash'); if (window.ReelFX) ReelFX.stamp('jackpot', { diff: 1, pod: state.pod, take: 6 }); },
+    jackpotOp: () => { playSe('jackpot'); flashNum('opHP', 'gain-flash'); if (window.ReelFX) ReelFX.stamp('jackpot-op', { diff: 1, pod: state.pod, take: 6 }); },
+    round: () => { if (window.ReelFX) ReelFX.round(currentRoundNo()); },
+    reveal: () => { playFlipSound(0); if (window.ReelFX) ReelFX.reveal(); },
+    victory: () => { if (window.ReelFX && ReelFX.lockup) ReelFX.lockup({ outcome: 'my', rounds: currentRoundNo() }); },
+    draw: () => { if (window.ReelFX) ReelFX.stamp('draw', { diff: 0, pod: state.pod }); },
+    countdown: () => { if (window.ReelFX) ReelFX.countdown(playTickSound); },
+    spike: () => playSpikeAlert(),
+    hack: () => playHackGlitch('HACK!!', gameToken),
+    cutin: () => { playRoleUpSound(); playRoleCutins([{ who: 'my', color: 'red', lv: 1 }]); },
+    double: () => { playRoleUpSound(); playRoleCutins([{ who: 'op', color: 'red', lv: 1 }, { who: 'my', color: 'red', lv: 1 }]); }
+  };
+  // デバッグ：ラウンド数の操作（CPU戦のみ。オンライン対戦は相手と番号を揃えているため変えない）
+  function updateDbgRound() {
+    const ok = !!state && !net.active;
+    document.getElementById('dbgRoundNow').textContent = state ? `ROUND ${currentRoundNo()}` : '—';
+    document.querySelectorAll('[data-round]').forEach(b => { b.disabled = !ok; });
+    document.getElementById('dbgRoundNote').textContent = net.active
+      ? 'オンライン対戦中はラウンド数を変更できません'
+      : '今のラウンドの番号を変えます（負けた時の支払いはこの番号で判定）';
+  }
+  function setDebugRound(v) {
+    if (!state || net.active) return;
+    const cur = currentRoundNo();
+    const next = Math.max(1, /^[+-]/.test(v) ? cur + Number(v) : Number(v));
+    state.roundOffset = (state.roundOffset || 0) + (next - cur);
+    if (next <= LATE_ROUND) state.spikeShownRound = null; // 21ラウンド目に入り直した時にSPIKE演出をもう一度見られるように
+    updateDbgRound();
+  }
+  // デバッグ：強制勝利・強制敗北（CPU戦のみ。オンライン対戦は相手と結果を揃えられないため使えない）
+  function updateDbgEnd() {
+    const ok = !!state && !net.active && !state.over;
+    document.querySelectorAll('[data-end]').forEach(b => { b.disabled = !ok; });
+    document.getElementById('dbgEndNote').textContent = net.active
+      ? 'オンライン対戦中は使えません'
+      : '相手（または自分）のチップを0枚にして、すぐにリザルト画面を出します';
+  }
+  function forceGameEnd(kind) {
+    if (!state || net.active || state.over) return;
+    gameToken++; // 進行中のラウンドの演出・CPUの手番を止める
+    if (kind === 'win') state.opChips = 0;
+    else state.myChips = 0;
+    state.over = true;
+    document.getElementById('myHP').textContent = state.myChips;
+    document.getElementById('opHP').textContent = state.opChips;
+    showGameOver();
+  }
+  function setDbgFx(open) {
+    if (open) updateDbgEnd();
+    if (open) updateDbgRound();
+    const ov = document.getElementById('dbgFxOv');
+    ov.classList.toggle('show', open);
+    ov.setAttribute('aria-hidden', open ? 'false' : 'true');
+  }
+  document.getElementById('dbgFxBtn').addEventListener('click', () => setDbgFx(true));
+  document.getElementById('dbgFxClose').addEventListener('click', () => setDbgFx(false));
+  document.getElementById('dbgFxOv').addEventListener('click', (e) => {
+    if (e.target.id === 'dbgFxOv') { setDbgFx(false); return; }
+    const rb = e.target.closest('[data-round]');
+    if (rb) { setDebugRound(rb.dataset.round); return; }
+    const eb = e.target.closest('[data-end]');
+    if (eb) { setDbgFx(false); forceGameEnd(eb.dataset.end); return; }
+    const btn = e.target.closest('[data-fx]');
+    if (!btn) return;
+    setDbgFx(false);
+    // パネルが消えてから再生（盤面の位置を測る演出があるため）
+    requestAnimationFrame(() => DEBUG_FX[btn.dataset.fx]());
   });
 
-  // デバッグ：自分の手札（選ぶカードの列）だけを一時的に隠す。盤面だけを見たい時や撮影用
-  document.getElementById('dbgHideHandBtn').addEventListener('click', () => {
-    const board = document.getElementById('board');
-    const hidden = board.classList.toggle('hide-hand');
-    document.getElementById('dbgHideHandBtn').textContent = hidden ? '👁 手札を表示' : '🙈 手札を隠す';
-  });
-
+  // サウンドのON/OFF：左下のアイコン（全画面共通）の見た目を状態に合わせる
+  function refreshSoundButtons() {
+    const b = document.getElementById('soundBtn');
+    const label = `サウンド: ${soundOn ? 'ON' : 'OFF'}`;
+    b.classList.toggle('off', !soundOn);
+    b.setAttribute('aria-pressed', soundOn ? 'true' : 'false');
+    b.setAttribute('aria-label', label);
+    b.title = label;
+  }
   document.getElementById('soundBtn').addEventListener('click', () => {
     soundOn = !soundOn;
-    document.getElementById('soundBtn').textContent = soundOn ? '🔊 サウンド ON' : '🔇 サウンド OFF';
+    refreshSoundButtons();
     syncBgmToSoundToggle();
   });
 
@@ -4691,49 +5946,137 @@
 </script>
 
 <style>
-  #logBtn { position: fixed; right: 10px; bottom: 10px; z-index: 900; padding: 8px 12px; font-size: 0.85rem; border-radius: 20px; border: 1px solid #19d3ff; background: rgba(11, 16, 32, 0.9); color: #19d3ff; cursor: pointer; opacity: 0.9; }
-  #logPanel { position: fixed; left: 0; right: 0; bottom: 0; max-height: 65vh; overflow-y: auto; z-index: 950; background: #0b1020; color: #eef3ff; border-top: 2px solid #19d3ff; box-shadow: 0 -4px 16px rgba(0,0,0,0.3); padding: 10px 12px 16px; display: none; font-size: 0.8rem; }
-  #logPanel.show { display: block; }
-  #logPanel .lp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: bold; }
-  #logPanel .lp-head button { border: 1px solid #19d3ff; background: transparent; color: #19d3ff; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
-  #logPanel .lp-round { border-top: 1px solid #1f2a44; padding: 6px 0; line-height: 1.5; }
-  #logPanel .lp-kind { font-weight: bold; }
-  #logPanel .pos { color: #4ee08a; font-weight: bold; }
-  #logPanel .neg { color: #ff6b7a; font-weight: bold; }
-  #logPanel .zero { color: #8fa0c4; }
-  #logPanel .lp-notes { color: #8fa0c4; }
+  #logBtn { position: fixed; right: 10px; bottom: 10px; z-index: 900; padding: 8px 14px; font-family: var(--f-num); font-size: 0.72rem; font-weight: 900; letter-spacing: 0.1em; border-radius: 20px; border: 1px solid #19d3ff; background: rgba(11, 16, 32, 0.9); color: #19d3ff; cursor: pointer; opacity: 0.9; }
+  #logPanel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 950; background: #0b1020; color: #eef3ff; border-top: 2px solid #19d3ff; box-shadow: 0 -4px 16px rgba(0,0,0,0.3); display: none; }
+  #logPanel.show { display: block; animation: panelIn 0.18s ease; }
+  .lp-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px 10px; border-bottom: 1px solid rgba(25, 211, 255, 0.25); }
+  .lp-head .t { font-family: var(--f-num); font-weight: 900; letter-spacing: 0.14em; font-size: 0.8rem; color: var(--cy-cyan); }
+  .lp-head button { font: inherit; font-size: 1rem; line-height: 1; color: var(--text-dim); background: none; border: none; cursor: pointer; padding: 4px; }
+  /* 縦幅は2ラウンド分まで。上下にスクロールして遡る */
+  #logBody { padding: 8px 12px 12px; display: grid; gap: 8px; overflow-y: auto; overscroll-behavior: contain; scroll-snap-type: y proximity; max-height: 60vh; }
+  .lp-empty { color: var(--text-dim); font-size: 0.8rem; padding: 12px 2px; }
+  .mlp { scroll-snap-align: start; border: 1px solid #1f2a44; border-radius: 12px; padding: 10px 12px; background: rgba(255, 255, 255, 0.02); }
+  .mlp.win { border-color: rgba(255, 43, 79, 0.55); }
+  .mlp.lose { border-color: rgba(30, 139, 255, 0.55); }
+  .mlp.jp { border-color: var(--gold); box-shadow: 0 0 10px rgba(255, 218, 77, 0.3); }
+  .mlp-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .mlp-r { font-family: var(--f-num); font-weight: 900; font-size: 0.72rem; letter-spacing: 0.1em; color: var(--text-dim); }
+  .mlp-kind { font-family: var(--f-num); font-size: 0.58rem; font-weight: 900; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 999px; background: #1f2a44; color: var(--text-dim); }
+  .mlp-kind.jp { background: var(--gold); color: #2a1f00; }
+  .mlp-kind.sd { background: linear-gradient(90deg, #ff2b4f, #7a3cff, #1e8bff); color: #fff; }
+  .mlp-vs { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+  .mlp-side { display: flex; align-items: center; gap: 8px; }
+  .mlp-side.op { justify-content: flex-end; }
+  .mlp-res { font-family: var(--f-num); font-weight: 900; font-size: 0.72rem; letter-spacing: 0.06em; }
+  .mlp-res.w { color: var(--win); } .mlp-res.l { color: var(--lose); } .mlp-res.d { color: var(--text-dim); }
+  .mlp-c { --hc: var(--card-border); position: relative; width: 34px; height: 46px; border-radius: 6px; border: 2px solid var(--hc); display: flex; align-items: center; justify-content: center; font-family: var(--f-num); font-weight: 900; font-size: 1.05rem; color: #fff; background: #0e1530; }
+  .mlp-c.red { --hc: var(--color-red); } .mlp-c.blue { --hc: var(--color-blue); } .mlp-c.yellow { --hc: var(--color-yellow); } .mlp-c.green { --hc: var(--color-green); } .mlp-c.pink { --hc: var(--color-pink); }
+  .mlp-c .bst { position: absolute; top: -7px; right: -9px; font-size: 0.52rem; font-weight: 900; padding: 1px 4px; border-radius: 6px; background: var(--cy-cyan); color: #0b1020; }
+  .mlp-vsx { font-family: var(--f-num); font-weight: 900; font-size: 0.7rem; color: var(--text-dim); }
+  .mlp-chips { display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 10px; border-top: 1px solid #1f2a44; padding-top: 8px; text-align: center; }
+  .mlp-chips > div + div { border-left: 1px solid #1f2a44; }
+  .mlp-chips .lb { font-size: 0.52rem; font-weight: 800; letter-spacing: 0.08em; color: var(--text-dim); font-family: var(--f-num); }
+  .mlp-chips .v { font-family: var(--f-num); font-weight: 900; font-size: 0.95rem; color: var(--text); }
+  .mlp-chips .me .v { color: var(--cy-red); } .mlp-chips .opp .v { color: var(--cy-blue); }
+  .mlp-chips .d { font-size: 0.68rem; font-weight: 800; margin-left: 2px; }
+  .mlp-chips .p { color: var(--win); } .mlp-chips .n { color: var(--lose); } .mlp-chips .z { color: var(--text-dim); }
+  .mlp-eff { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .mlp-eff span { font-size: 0.6rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; border: 1px solid; }
+  .mlp-eff .me { color: #ff8095; border-color: rgba(255, 43, 79, 0.5); background: rgba(255, 43, 79, 0.08); }
+  .mlp-eff .op { color: #7ab8ff; border-color: rgba(30, 139, 255, 0.5); background: rgba(30, 139, 255, 0.08); }
+  .mlp-eff .both { color: #d9c2ff; border-color: rgba(122, 60, 255, 0.5); background: rgba(122, 60, 255, 0.1); }
 </style>
-<button id="logBtn">📋 ログ</button>
-<div id="logPanel">
-  <div class="lp-head"><span>ラウンドログ</span><span><button id="logCopyBtn">コピー</button> <button id="logCloseBtn">閉じる</button></span></div>
+<button id="logBtn">LOG</button>
+<div id="logPanel" aria-label="バトルログ">
+  <div class="lp-head"><span class="t">BATTLE LOG</span><button type="button" id="logCloseBtn" aria-label="閉じる">✕</button></div>
   <div id="logBody"></div>
 </div>
 <script>
   (function () {
-    const fmt = n => n > 0 ? `<span class="pos">+${n}</span>` : (n < 0 ? `<span class="neg">${n}</span>` : `<span class="zero">±0</span>`);
-    const plain = n => n > 0 ? `+${n}` : (n < 0 ? `${n}` : '±0');
+    const esc = (t) => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const sgn = (d) => d > 0 ? `<span class="d p">(+${d})</span>` : (d < 0 ? `<span class="d n">(−${-d})</span>` : '<span class="d z">(±0)</span>');
+    const card = (c) => `<div class="mlp-c ${c.c || ''}">${c.n}${c.b > 0 ? `<span class="bst">+${c.b}</span>` : ''}</div>`;
+    const res = (o, side) => o === 'tie' ? '<span class="mlp-res d">DRAW</span>'
+      : ((o === 'me') === (side === 'me') ? '<span class="mlp-res w">WIN</span>' : '<span class="mlp-res l">LOSE</span>');
+    function entry(r) {
+      const v = r.v;
+      if (!v) return `<div class="mlp"><div class="mlp-top"><span class="mlp-r">ROUND ${r.no}</span></div><div class="lp-empty">${esc(r.cards)}</div></div>`;
+      const cls = v.jackpot ? 'jp' : (v.outcome === 'me' ? 'win' : (v.outcome === 'op' ? 'lose' : ''));
+      const badge = v.jackpot ? '<span class="mlp-kind jp">JACKPOT</span>' : (v.sd ? '<span class="mlp-kind sd">SUDDEN DEATH</span>' : (v.outcome === 'tie' ? '<span class="mlp-kind">DRAW</span>' : ''));
+      return `<div class="mlp ${cls}">
+        <div class="mlp-top"><span class="mlp-r">ROUND ${r.no}</span>${badge}</div>
+        <div class="mlp-vs"><div class="mlp-side">${res(v.outcome, 'me')}${card(v.my)}</div><span class="mlp-vsx">VS</span><div class="mlp-side op">${card(v.op)}${res(v.outcome, 'op')}</div></div>
+        <div class="mlp-chips"><div class="me"><div class="lb">YOU</div><span class="v">${r.my}</span>${sgn(r.dMy)}</div><div class="opp"><div class="lb">ENEMY</div><span class="v">${r.op}</span>${sgn(r.dOp)}</div><div><div class="lb">POT</div><span class="v">${r.pod}</span>${sgn(r.dPod)}</div></div>
+        ${v.eff && v.eff.length ? `<div class="mlp-eff">${v.eff.map(e => `<span class="${e.side}">${esc(e.t)}</span>`).join('')}</div>` : ''}
+      </div>`;
+    }
+    // 2ラウンド分の高さを上限にする
+    function fitHeight() {
+      const body = document.getElementById('logBody');
+      const items = body.querySelectorAll('.mlp');
+      if (items.length < 2) { body.style.maxHeight = ''; return; }
+      const cs = getComputedStyle(body);
+      const h = items[0].offsetHeight + items[1].offsetHeight + parseFloat(cs.rowGap || 8) + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+      body.style.maxHeight = Math.min(h, window.innerHeight * 0.7) + 'px';
+    }
     window.renderRoundLog = function () {
       const body = document.getElementById('logBody');
       if (!body) return;
       const log = window.__getRoundLog ? window.__getRoundLog() : [];
-      if (!log.length) { body.innerHTML = '<div class="zero">まだログはありません</div>'; return; }
-      body.innerHTML = log.slice().reverse().map(r =>
-        `<div class="lp-round"><div><span class="lp-kind">R${r.no}｜${r.result}｜${r.kind}</span></div>` +
-        `<div>${r.cards}</div>` +
-        `<div>あなた ${fmt(r.dMy)}（→${r.my}） / 相手 ${fmt(r.dOp)}（→${r.op}） / ポッド ${fmt(r.dPod)}（→${r.pod}）</div>` +
-        (r.notes ? `<div class="lp-notes">${r.notes}</div>` : '') + `</div>`
-      ).join('');
+      body.innerHTML = log.length ? log.slice().reverse().map(entry).join('') : '<div class="lp-empty">まだログはありません</div>';
+      if (document.getElementById('logPanel').classList.contains('show')) fitHeight();
     };
-    document.getElementById('logBtn').addEventListener('click', () => { renderRoundLog(); document.getElementById('logPanel').classList.toggle('show'); });
-    document.getElementById('logCloseBtn').addEventListener('click', () => document.getElementById('logPanel').classList.remove('show'));
-    document.getElementById('logCopyBtn').addEventListener('click', () => {
-      const log = window.__getRoundLog ? window.__getRoundLog() : [];
-      const text = log.map(r => `R${r.no} ${r.result} ${r.kind} | ${r.cards} | あなた${plain(r.dMy)}(${r.my}) 相手${plain(r.dOp)}(${r.op}) ポッド${plain(r.dPod)}(${r.pod}) | ${r.notes}`).join('\n');
-      const btn = document.getElementById('logCopyBtn');
-      const done = () => { btn.textContent = 'コピー済み'; setTimeout(() => btn.textContent = 'コピー', 1200); };
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(() => {});
-      else done();
+    document.getElementById('logBtn').addEventListener('click', () => {
+      const panel = document.getElementById('logPanel');
+      const open = !panel.classList.contains('show');
+      panel.classList.toggle('show', open);
+      if (open) { renderRoundLog(); document.getElementById('logBody').scrollTop = 0; }
     });
+    document.getElementById('logCloseBtn').addEventListener('click', () => document.getElementById('logPanel').classList.remove('show'));
+  })();
+
+  // サウンド（左）・LOG（右）ボタンを、表示中のパネルのすぐ下に置く（パネルと重ならないように）
+  (function () {
+    const snd = document.getElementById('soundBtn');
+    const log = document.getElementById('logBtn');
+    const GAP = 10;
+    const panelNow = () => {
+      const vis = (id) => { const el = document.getElementById(id); return el && !el.classList.contains('hidden') ? el : null; };
+      if (vis('gameScreen')) return document.getElementById('board');
+      if (vis('prepScreen')) return document.getElementById('prepPanel');
+      const scr = vis('onlineScreen') || vis('startScreen');
+      if (scr) { const ps = scr.querySelectorAll('.start-panel'); return ps[ps.length - 1] || null; }
+      return null;
+    };
+    function place() {
+      const pn = panelNow();
+      if (!pn || !pn.offsetParent) {
+        // 対象のパネルがない時は画面の下端に固定
+        [snd, log].forEach(b => { b.style.position = 'fixed'; b.style.top = 'auto'; b.style.bottom = '10px'; });
+        snd.style.left = '10px'; log.style.left = 'auto'; log.style.right = '10px';
+        return;
+      }
+      const r = pn.getBoundingClientRect();
+      [snd, log].forEach(b => { b.style.position = 'absolute'; b.style.bottom = 'auto'; b.style.right = 'auto'; });
+      const hs = snd.offsetHeight, hl = log.offsetHeight, h = Math.max(hs, hl);
+      // バトル画面は盤面下の「最初からやり直す」と高さを揃えて横一列に並べる
+      const reset = pn.id === 'board' ? document.getElementById('resetBtn') : null;
+      const rr = reset && reset.offsetParent ? reset.getBoundingClientRect() : null;
+      const top = rr ? rr.top + window.scrollY + (rr.height - h) / 2 : r.bottom + window.scrollY + GAP;
+      snd.style.top = (top + (h - hs) / 2) + 'px';
+      log.style.top = (top + (h - hl) / 2) + 'px';
+      snd.style.left = (r.left + window.scrollX) + 'px';
+      log.style.left = (r.right + window.scrollX - log.offsetWidth) + 'px';
+    }
+    let queued = false;
+    const schedule = () => { if (queued) return; queued = true; requestAnimationFrame(() => { queued = false; place(); }); };
+    window.addEventListener('resize', schedule);
+    new MutationObserver(schedule).observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true, childList: true });
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(schedule);
+      ['board', 'prepPanel', 'startScreen', 'onlineScreen'].forEach(id => { const el = document.getElementById(id); if (el) ro.observe(el); });
+    }
+    place();
   })();
 </script>
 </body>
