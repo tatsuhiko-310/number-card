@@ -414,6 +414,7 @@ body .mlp-eff .op { color: var(--pink-hi); border-color: rgba(255, 122, 162, 0.5
 .wfx-ghost { position: absolute; font: 900 min(70vw, 300px)/0.8 var(--f-num); color: rgba(160, 182, 255, 0.08); letter-spacing: -0.05em; white-space: nowrap; }
 .wfx-band { position: absolute; left: 0; right: 0; transform-origin: 0 50%; background: linear-gradient(90deg, rgba(91, 124, 240, 0.04), rgba(91, 124, 240, 0.5) 32%, rgba(91, 124, 240, 0.16)); }
 .wfx-band.grey { background: linear-gradient(90deg, rgba(160, 170, 200, 0.03), rgba(160, 170, 200, 0.3) 40%, rgba(160, 170, 200, 0.08)); }
+.wfx-dim { position: absolute; inset: 0; background: radial-gradient(ellipse 120% 60% at 50% 45%, rgba(2, 4, 12, 0.9) 0%, rgba(2, 4, 12, 0.78) 60%, rgba(2, 4, 12, 0.6) 100%); }
 .wfx-gl { position: relative; display: inline-block; }
 .wfx-gl > span { display: block; }
 .wfx-gl .gx { position: absolute; inset: 0; }

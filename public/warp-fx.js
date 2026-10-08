@@ -88,6 +88,8 @@
     return L;
   }
   // 盤面の上を一時的に暗くして文字を読みやすくする
+  // 盤面の上を暗くする（JACKPOT だけで使う）。P の配分で、文字と同じタイミングで暗くなり、同時にサッと戻る
+  const dimIn = (L, life, peak, P) => { const d = h('<div class="wfx-dim"></div>'); L.insertBefore(d, L.firstChild); A(d, [{ opacity: 0 }, { opacity: peak, offset: Math.min(P.a, 0.15) }, { opacity: peak, offset: P.b }, { opacity: 0 }], life, 0, 'linear'); return d; };
   const flash = (L, delay, peak = 0.9, dur = 500) => { const f = L.querySelector('.wfx-flash'); if (f) A(f, [{ opacity: 0 }, { opacity: peak, offset: 0.12 }, { opacity: 0 }], dur, delay, 'ease-out'); };
   const shake = (el, delay, dur = 360, amp = 6) => AT(el, Array.from({ length: 8 }, (_, i) => ({ transform: i === 7 ? 'none' : `translate(${rnd(-amp, amp)}px, ${rnd(-amp, amp) * 0.5}px)` })), dur, delay, 'linear');
   // グリッチ文字：白＋ピンク・水色のずれ＋横スライス
@@ -286,6 +288,7 @@
     const BURST = IN_MS; // 破裂して文字がそろうまで
     const P = phase(BURST, HOLD_MS, OUT_MS);
     const L = layerOver(b, P.T + 50); L.classList.add('stamp');
+    dimIn(L, P.T, 0.8, P);
     const cy = boardMidY(L);
     const hue = rival ? ['rgba(255,193,211,.95)', 'rgba(255,122,162,.85)', 'rgba(127,156,255,.7)'] : ['rgba(255,255,255,.95)', 'rgba(127,216,255,.85)', 'rgba(255,122,162,.8)'];
     flash(L, 0, rival ? 0.55 : 0.85, 380);
