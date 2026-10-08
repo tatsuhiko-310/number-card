@@ -404,14 +404,16 @@ body .mlp-eff .op { color: var(--pink-hi); border-color: rgba(255, 122, 162, 0.5
 .wfx-layer.block { pointer-events: auto; }
 .wfx-flash { position: absolute; inset: 0; background: #eef2ff; opacity: 0; }
 .wfx-mid { position: absolute; left: 0; right: 0; text-align: center; }
-.wfx-big { font-size: clamp(3rem, 17vw, 5.6rem); line-height: 1; color: #fff; white-space: nowrap; }
+.wfx-big { font-size: clamp(3rem, 17vw, 5.6rem); line-height: 1; color: #fff; white-space: nowrap; text-shadow: 0 2px 18px rgba(2, 4, 12, 0.95), 0 0 2px rgba(2, 4, 12, 0.9); }
+/* 画面を暗くしないので、文字の周りだけ影でカードから浮かせる */
+.wfx-layer .wfx-cap { text-shadow: 0 1px 8px rgba(2, 4, 12, 1), 0 0 2px rgba(2, 4, 12, 1); }
+.wfx-layer .wt-word, .wfx-layer .wt-sub { text-shadow: 0 2px 18px rgba(2, 4, 12, 0.95); }
 .wfx-big .p { color: var(--peri); }
 .wfx-cap { font: 700 clamp(0.55rem, 2.8vw, 0.72rem)/1.2 var(--f-mono); letter-spacing: 0.34em; color: #a9b8ea; white-space: nowrap; }
 .wfx-cap .v { color: #fff; font-size: 1.6em; letter-spacing: 0.05em; font-family: var(--f-num); font-weight: 900; }
 .wfx-ghost { position: absolute; font: 900 min(70vw, 300px)/0.8 var(--f-num); color: rgba(160, 182, 255, 0.08); letter-spacing: -0.05em; white-space: nowrap; }
 .wfx-band { position: absolute; left: 0; right: 0; transform-origin: 0 50%; background: linear-gradient(90deg, rgba(91, 124, 240, 0.04), rgba(91, 124, 240, 0.5) 32%, rgba(91, 124, 240, 0.16)); }
 .wfx-band.grey { background: linear-gradient(90deg, rgba(160, 170, 200, 0.03), rgba(160, 170, 200, 0.3) 40%, rgba(160, 170, 200, 0.08)); }
-.wfx-dim { position: absolute; inset: 0; background: radial-gradient(ellipse 120% 60% at 50% 45%, rgba(2, 4, 12, 0.9) 0%, rgba(2, 4, 12, 0.78) 60%, rgba(2, 4, 12, 0.6) 100%); }
 .wfx-gl { position: relative; display: inline-block; }
 .wfx-gl > span { display: block; }
 .wfx-gl .gx { position: absolute; inset: 0; }

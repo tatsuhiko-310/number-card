@@ -88,8 +88,6 @@
     return L;
   }
   // 盤面の上を一時的に暗くして文字を読みやすくする
-  // P（出る→キープ→消える の配分）を渡すと、文字と同じタイミングで暗くなり、同時にサッと明るく戻る
-  const dimIn = (L, life, peak = 1, P) => { const d = h('<div class="wfx-dim"></div>'); L.insertBefore(d, L.firstChild); A(d, [{ opacity: 0 }, { opacity: peak, offset: P ? Math.min(P.a, 0.15) : 0.12 }, { opacity: peak, offset: P ? P.b : 0.8 }, { opacity: 0 }], life, 0, 'linear'); return d; };
   const flash = (L, delay, peak = 0.9, dur = 500) => { const f = L.querySelector('.wfx-flash'); if (f) A(f, [{ opacity: 0 }, { opacity: peak, offset: 0.12 }, { opacity: 0 }], dur, delay, 'ease-out'); };
   const shake = (el, delay, dur = 360, amp = 6) => AT(el, Array.from({ length: 8 }, (_, i) => ({ transform: i === 7 ? 'none' : `translate(${rnd(-amp, amp)}px, ${rnd(-amp, amp) * 0.5}px)` })), dur, delay, 'linear');
   // グリッチ文字：白＋ピンク・水色のずれ＋横スライス
@@ -205,8 +203,7 @@
     const P = phase();
     document.querySelectorAll('.wfx-layer.stamp').forEach(x => x.remove());
     const L = layerOver(full ? null : board(), P.T + 50, { block: full });
-    if (full) { L.style.background = 'rgba(2,4,12,.82)'; L.addEventListener('pointerdown', () => L.remove()); }
-    else dimIn(L, P.T, 0.8, P);
+    if (full) L.addEventListener('pointerdown', () => L.remove());
     const H = L.clientHeight || window.innerHeight;
     const cy = full ? H * 0.44 : boardMidY(L);
     const band = h(`<div class="wfx-band" style="top:${cy - 52}px;height:104px"></div>`);
@@ -249,7 +246,6 @@
     if (kind === 'jackpot' || kind === 'jackpot-op') return jackpot(kind === 'jackpot-op', info);
     const P = phase();
     const L = layerOver(b, P.T + 50); L.classList.add('stamp');
-    dimIn(L, P.T, 0.85, P);
     const cy = boardMidY(L);
     const word = { win: 'W<span class="p">I</span>N', lose: 'LOSE', draw: 'DRAW' }[kind] || '';
     const cap = kind === 'win' ? `ROUND TAKEN · Δ ${info.diff != null ? info.diff : ''}`
@@ -290,7 +286,6 @@
     const BURST = IN_MS; // 破裂して文字がそろうまで
     const P = phase(BURST, HOLD_MS, OUT_MS);
     const L = layerOver(b, P.T + 50); L.classList.add('stamp');
-    dimIn(L, P.T, 0.8, P);
     const cy = boardMidY(L);
     const hue = rival ? ['rgba(255,193,211,.95)', 'rgba(255,122,162,.85)', 'rgba(127,156,255,.7)'] : ['rgba(255,255,255,.95)', 'rgba(127,216,255,.85)', 'rgba(255,122,162,.8)'];
     flash(L, 0, rival ? 0.55 : 0.85, 380);
@@ -336,7 +331,6 @@
       const P = phase(); // ノイズが収まって文字がそろってから 0.6 秒キープ
       const L = layerOver(b, P.T + 50);
       const H = L.clientHeight;
-      dimIn(L, P.T, 0.9, P);
       for (let i = 0; i < 7; i++) {
         const y = rnd(0, 90), hh = rnd(3, 11);
         const sl = h(`<div style="position:absolute;inset:0;clip-path:inset(${y}% 0 ${100 - y - hh}% 0);background:linear-gradient(90deg,rgba(255,110,165,.4),rgba(110,185,255,.4));mix-blend-mode:screen"></div>`);
@@ -362,7 +356,6 @@
     if (!b || !b.offsetParent) return false;
     if (reduceMotion) return true;
     const L = layerOver(b, 2300);
-    dimIn(L, 2250, 0.8, { a: 0.1, b: 0.95 });
     const H = L.clientHeight;
     const sv = h(`<svg viewBox="0 0 100 40" preserveAspectRatio="none" style="position:absolute;left:6%;width:88%;top:${H * 0.56}px;height:${H * 0.13}px;overflow:visible"><polyline class="c" fill="none" stroke="#7fd8ff" stroke-width=".7" vector-effect="non-scaling-stroke" points="0,24 8,22 14,25 20,21 26,24 32,22 38,25 44,23 50,24"/><polyline class="p" fill="none" stroke="#ff7aa2" stroke-width="2" vector-effect="non-scaling-stroke" points="50,24 53,-8 56,38 59,4 62,34 66,8 70,32 74,12 78,30 83,10 88,28 94,14 100,24"/></svg>`);
     const fr = h('<div class="wfx-alert"></div>');
@@ -408,7 +401,6 @@
     if (reduceMotion) return 0;
     const word = o.outcome === 'my' ? 'VICTORY' : o.outcome === 'op' ? 'DEFEAT' : 'DRAW';
     const L = layerOver(null, 2000, { block: true });
-    L.style.background = 'rgba(2,4,12,.82)';
     L.addEventListener('pointerdown', () => L.remove());
     const m = h(`<div class="wfx-mid" style="top:34%"></div>`);
     const lock = h(`<div class="wfx-lock"><div class="wt-mark" style="width:64px;margin-bottom:16px"><i class="l"></i><i class="r"></i><b>${o.outcome === 'my' ? '★' : o.outcome === 'op' ? '×' : '='}</b></div></div>`);
