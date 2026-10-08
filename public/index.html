@@ -5135,7 +5135,7 @@
       setTimeout(() => {
         if (myToken !== gameToken) return;
         showGameOver();
-      }, 1100);
+      }, RESULT_HOLD_MS);
       return;
     }
 
@@ -5159,8 +5159,10 @@
       state.locked = false;
       startRound();
       });
-    }, 1100);
+    }, RESULT_HOLD_MS);
   }
+  // 勝敗の演出（WIN・LOSE・DRAW・JACKPOT）を見せてから次へ進むまでの時間
+  const RESULT_HOLD_MS = window.ReelFX ? 2000 : 1100;
 
   // 決着後・ドロー前の効果：仕込み（3B）→ 掘削（6B）→ 回収（1A）
   function postRoundEffects(myToken) {

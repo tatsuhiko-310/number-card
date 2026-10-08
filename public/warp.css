@@ -502,3 +502,6 @@ body .mlp-eff .op { color: var(--pink-hi); border-color: rgba(255, 122, 162, 0.5
   .rs-chart .rs-line { stroke-dashoffset: 0; }
   .rs-chart .rs-area, .rs-chart .rs-dot, .rs-chart .rs-tip { opacity: 1; }
 }
+
+/* デバッグ：演出の再生パネルのボタンは小さめ（折り返さないように） */
+.dbg-fx-list .btn { font-size: 0.74rem !important; letter-spacing: 0.04em !important; padding: 10px 4px !important; }

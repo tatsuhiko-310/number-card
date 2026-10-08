@@ -13,6 +13,8 @@
   const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
   const E = 'cubic-bezier(.2,.8,.2,1)';
   const A = (el, kf, dur, delay = 0, easing = E) => el.animate(kf, { duration: dur, delay, easing, fill: 'both' });
+  // 画面上の要素（盤面・画面）を動かす時は、終わったら効果を残さない（transform が残ると fixed の子の基準がずれるため）
+  const AT = (el, kf, dur, delay = 0, easing = E) => el.animate(kf, { duration: dur, delay, easing, fill: 'backwards' });
 
   // ---------- 背景：ワープの光線 ----------
   const warp = {
@@ -88,7 +90,7 @@
   // 盤面の上を一時的に暗くして文字を読みやすくする
   const dimIn = (L, life, peak = 1) => { const d = h('<div class="wfx-dim"></div>'); L.insertBefore(d, L.firstChild); A(d, [{ opacity: 0 }, { opacity: peak, offset: 0.12 }, { opacity: peak, offset: 0.8 }, { opacity: 0 }], life, 0, 'linear'); return d; };
   const flash = (L, delay, peak = 0.9, dur = 500) => { const f = L.querySelector('.wfx-flash'); if (f) A(f, [{ opacity: 0 }, { opacity: peak, offset: 0.12 }, { opacity: 0 }], dur, delay, 'ease-out'); };
-  const shake = (el, delay, dur = 360, amp = 6) => A(el, Array.from({ length: 8 }, (_, i) => ({ transform: i === 7 ? 'none' : `translate(${rnd(-amp, amp)}px, ${rnd(-amp, amp) * 0.5}px)` })), dur, delay, 'linear');
+  const shake = (el, delay, dur = 360, amp = 6) => AT(el, Array.from({ length: 8 }, (_, i) => ({ transform: i === 7 ? 'none' : `translate(${rnd(-amp, amp)}px, ${rnd(-amp, amp) * 0.5}px)` })), dur, delay, 'linear');
   // グリッチ文字：白＋ピンク・水色のずれ＋横スライス
   const glitchEl = (html, cls) => h(`<span class="wfx-gl ${cls || 'wfx-big'}"><span class="gs">${html}</span><span class="gx ga" aria-hidden="true">${html}</span><span class="gx gb" aria-hidden="true">${html}</span><span class="gx gs s1" aria-hidden="true">${html}</span><span class="gx gs s2" aria-hidden="true">${html}</span></span>`);
   function glitchIn(g, dur, delay, amp) {
@@ -178,7 +180,7 @@
         flash(L, 0, 0.55, 420);
         warp.boost(2.2, 500);
         const target = document.getElementById(SCREEN_IDS[name]);
-        if (target) A(target, [{ opacity: 0, transform: 'scale(1.02)', filter: 'blur(4px)' }, { opacity: 1, transform: 'none', filter: 'none' }], 520, 80);
+        if (target) AT(target, [{ opacity: 0, transform: 'scale(1.02)', filter: 'blur(4px)' }, { opacity: 1, transform: 'none', filter: 'none' }], 520, 80);
       }
       if (name === 'start') bootTitle();
     }
@@ -192,12 +194,13 @@
     opts = opts || {};
     if (reduceMotion) return;
     const full = !!opts.full;
-    const L = layerOver(full ? null : board(), full ? 1900 : 1500, { block: full });
+    const T = full ? 2400 : 2200; // 表示の長さ（読める速さ）
+    document.querySelectorAll('.wfx-layer.stamp').forEach(x => x.remove());
+    const L = layerOver(full ? null : board(), T + 100, { block: full });
     if (full) { L.style.background = 'rgba(2,4,12,.82)'; L.addEventListener('pointerdown', () => L.remove()); }
-    else dimIn(L, 1450, 0.8);
+    else dimIn(L, T, 0.8);
     const H = L.clientHeight || window.innerHeight;
     const cy = full ? H * 0.44 : boardMidY(L);
-    const gh = h(`<div class="wfx-ghost" style="left:6%;top:${cy - (full ? 150 : 120)}px">${pad(n)}</div>`);
     const band = h(`<div class="wfx-band" style="top:${cy - 52}px;height:104px"></div>`);
     const m = h(`<div class="wfx-mid" style="top:${cy - 46}px"></div>`);
     const k = h(`<div class="wfx-cap">${full ? '&gt; match_start' : 'ROUND'}</div>`);
@@ -205,15 +208,15 @@
     g.style.display = 'block'; g.style.fontSize = 'clamp(2.4rem, 13vw, 4.2rem)';
     const c = h('<div class="wfx-cap" style="margin-top:8px;font-weight:400">SELECT YOUR CARD</div>');
     m.append(k, g, c);
-    L.append(gh, band, m);
-    warp.boost(2.2, 500);
+    L.append(band, m);
+    warp.boost(2.2, 600);
     if (full) flash(L, 0, 0.6, 400);
-    A(gh, [{ opacity: 0, transform: 'translateX(60px)' }, { opacity: 1, transform: 'none', offset: 0.5 }, { opacity: 0 }], full ? 1800 : 1400, 0);
-    A(band, [{ transform: 'scaleX(0)', opacity: 0.4 }, { transform: 'scaleX(1)', opacity: 1, offset: 0.3 }, { transform: 'scaleX(1)', opacity: 1, offset: 0.75 }, { transform: 'scaleX(1)', opacity: 0 }], full ? 1800 : 1400, 60);
-    A(g, [{ opacity: 0, transform: 'translateX(-40px)' }, { opacity: 1, transform: 'none', offset: 0.25 }, { opacity: 1, offset: 0.78 }, { opacity: 0, transform: 'translateX(30px)' }], full ? 1800 : 1400, 150);
-    glitchIn(g, 520, 150, 16);
-    A(k, [{ opacity: 0 }, { opacity: 1, offset: 0.3 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], full ? 1700 : 1300, 300);
-    A(c, [{ opacity: 0, letterSpacing: '.8em' }, { opacity: 1, letterSpacing: '.34em', offset: 0.35 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], full ? 1600 : 1200, 450);
+    const out = [{ opacity: 1, offset: 0.82 }, { opacity: 0 }];
+    A(band, [{ transform: 'scaleX(0)', opacity: 0.4 }, { transform: 'scaleX(1)', opacity: 1, offset: 0.2 }, ...out], T, 0);
+    A(g, [{ opacity: 0, transform: 'translateX(-40px)' }, { opacity: 1, transform: 'none', offset: 0.16 }, { opacity: 1, offset: 0.82 }, { opacity: 0, transform: 'translateX(30px)' }], T, 100);
+    glitchIn(g, 600, 100, 16);
+    A(k, [{ opacity: 0 }, { opacity: 1, offset: 0.18 }, ...out], T - 100, 200);
+    A(c, [{ opacity: 0, letterSpacing: '.8em' }, { opacity: 1, letterSpacing: '.34em', offset: 0.25 }, ...out], T - 200, 300);
     if (opts.tick) { try { opts.tick(0); setTimeout(() => opts.tick(7), 200); } catch (e) { /* 音がなくても続ける */ } }
   }
   // 対戦開始（従来の 3・2・1 の呼び出し口）
@@ -238,8 +241,9 @@
     if (reduceMotion) return;
     document.querySelectorAll('.wfx-layer.stamp').forEach(n => n.remove());
     if (kind === 'jackpot' || kind === 'jackpot-op') { jackpot(kind === 'jackpot-op', info); return; }
-    const L = layerOver(b, 1500); L.classList.add('stamp');
-    dimIn(L, 1450, 0.85);
+    const T = 2200; // 表示の長さ（読める速さ）
+    const L = layerOver(b, T + 100); L.classList.add('stamp');
+    dimIn(L, T, 0.85);
     const cy = boardMidY(L);
     const word = { win: 'W<span class="p">I</span>N', lose: 'LOSE', draw: 'DRAW' }[kind] || '';
     const cap = kind === 'win' ? `ROUND TAKEN · Δ ${info.diff != null ? info.diff : ''}`
@@ -248,13 +252,13 @@
     const band = h(`<div class="wfx-band${kind === 'win' ? '' : ' grey'}" style="top:${cy - 56}px;height:112px"></div>`);
     const m = h(`<div class="wfx-mid" style="top:${cy - 50}px"></div>`);
     const sub = h(`<div class="wfx-cap" style="margin-top:6px">${(info.hack ? 'HACKED · ' : '') + cap}</div>`);
-    const out = [{ opacity: 1, offset: 0.78 }, { opacity: 0 }];
+    const out = [{ opacity: 1, offset: 0.84 }, { opacity: 0 }];
     if (kind === 'draw') {
       const top = h('<div class="wfx-big" style="clip-path:inset(0 0 50% 0)">DRAW</div>');
       const bot = h('<div class="wfx-big" style="clip-path:inset(50% 0 0 0);position:absolute;left:0;right:0;top:0;color:var(--peri)">DRAW</div>');
       m.append(top, bot, sub); L.append(band, m);
-      A(top, [{ transform: 'translateX(-40%)', opacity: 0 }, { transform: 'none', opacity: 1, offset: 0.35 }, ...out], 1400, 0);
-      A(bot, [{ transform: 'translateX(40%)', opacity: 0 }, { transform: 'none', opacity: 1, offset: 0.35 }, ...out], 1400, 0);
+      A(top, [{ transform: 'translateX(-40%)', opacity: 0 }, { transform: 'none', opacity: 1, offset: 0.22 }, ...out], T, 0);
+      A(bot, [{ transform: 'translateX(40%)', opacity: 0 }, { transform: 'none', opacity: 1, offset: 0.22 }, ...out], T, 0);
     } else {
       const g = glitchEl(word, 'wfx-big');
       g.style.display = 'block';
@@ -262,17 +266,17 @@
       m.append(g, sub); L.append(band, m);
       if (kind === 'win') {
         warp.boost(3, 700);
-        A(g, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'none', offset: 0.25 }, ...out], 1400, 60);
-        glitchIn(g, 500, 60, 14);
+        A(g, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'none', offset: 0.16 }, ...out], T, 60);
+        glitchIn(g, 600, 60, 14);
       } else {
-        warp.boost(0.04, 1200);
+        warp.boost(0.04, 1800);
         shake(b, 80, 380, 6);
-        A(g, [{ opacity: 0, transform: 'translateY(-24px)' }, { opacity: 1, transform: 'none', offset: 0.3 }, { opacity: 1, transform: 'translateY(6px)', offset: 0.78 }, { opacity: 0, transform: 'translateY(10px)' }], 1400, 60, 'ease-out');
-        glitchIn(g, 800, 60, 10);
+        A(g, [{ opacity: 0, transform: 'translateY(-24px)' }, { opacity: 1, transform: 'none', offset: 0.2 }, { opacity: 1, transform: 'translateY(6px)', offset: 0.84 }, { opacity: 0, transform: 'translateY(10px)' }], T, 60, 'ease-out');
+        glitchIn(g, 900, 60, 10);
       }
     }
-    A(band, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)', offset: 0.3 }, ...out], 1400, 0);
-    A(sub, [{ opacity: 0 }, { opacity: 1, offset: 0.4 }, ...out], 1300, 100);
+    A(band, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)', offset: 0.2 }, ...out], T, 0);
+    A(sub, [{ opacity: 0 }, { opacity: 1, offset: 0.25 }, ...out], T - 100, 100);
   }
 
   // FX-07 JACKPOT：破裂（白フラッシュ・三重の衝撃波・光条・大きな揺れ・行き過ぎて戻る文字）
