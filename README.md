@@ -48,8 +48,10 @@ python3 -m http.server 8080
 ```
 public/index.html          ゲーム本体（画面・ルール・CPU・オンライン進行）
 public/net-shim.js         オンライン対戦の通信レイヤー（WebRTC / PeerJS）
+public/reel.css            画面デザイン（モーションリール風テーマ）
+public/reel-fx.js          演出（HUD・背景ドット・ワイプ・カウントダウン・勝敗スタンプ・紙吹雪・リザルト）
 public/vendor/peerjs.min.js PeerJS 1.5.5（MIT License）
-public/assets/             カード画像・BGM
+public/assets/             カード画像・BGM・フォント（Archivo / JetBrains Mono、OFL）
 .github/workflows/pages.yml GitHub Pages への公開
 ```
 

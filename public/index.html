@@ -5,10 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>NUMBER WAR</title>
 <meta name="description" content="1〜8のカードとチップで駆け引きする2人対戦カードゲーム">
-<meta name="theme-color" content="#05070f">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap">
+<meta name="theme-color" content="#0c0c11">
+<link rel="preload" href="assets/fonts/archivo-variable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="assets/icon-pink.png">
 <style>
   /* 配色：ダークモード固定 */
@@ -327,7 +325,7 @@
   }
   /* 手札の上に出す英語の見出し（「手札を選択」） */
   .select-label {
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif;
+    font-family: var(--f-num);
     font-weight: 900;
     font-size: 0.72rem;
     letter-spacing: 0.18em;
@@ -879,10 +877,10 @@
     padding: 48px 16px 28px; box-sizing: border-box;
     display: flex; flex-direction: column; align-items: center; text-align: center;
   }
-  .rs-label { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; letter-spacing: 0.3em; font-size: 0.72rem; color: var(--text-dim); }
+  .rs-label { font-family: var(--f-num); font-weight: 900; letter-spacing: 0.3em; font-size: 0.72rem; color: var(--text-dim); }
   .rs-outcome {
     --c1: var(--cy-cyan); --c2: var(--win); --c3: var(--gold); --glow-c: rgba(78, 224, 138, 0.55);
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 4.6rem; line-height: 1.05;
+    font-family: var(--f-num); font-weight: 900; font-size: 4.6rem; line-height: 1.05;
     letter-spacing: 0.06em; margin: 8px 0 4px;
     background: linear-gradient(100deg, var(--c1), var(--c2) 60%, var(--c3));
     -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -893,21 +891,21 @@
   .rs-sub { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 24px; min-height: 1.2em; }
   .rs-score { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 26px; }
   .rs-side { width: 110px; }
-  .rs-who { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.1em; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .rs-num { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 3.2rem; line-height: 1; }
+  .rs-who { font-family: var(--f-num); font-size: 0.72rem; font-weight: 900; letter-spacing: 0.1em; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rs-num { font-family: var(--f-num); font-weight: 900; font-size: 3.2rem; line-height: 1; }
   .rs-side.me .rs-who { color: var(--cy-blue); }
   .rs-side.op .rs-who { color: var(--cy-red); }
   .rs-side.me .rs-num { color: var(--cy-blue); text-shadow: 0 0 16px rgba(30, 139, 255, 0.7); }
   .rs-side.op .rs-num { color: var(--cy-red); text-shadow: 0 0 16px rgba(255, 43, 79, 0.7); }
   .rs-side.out .rs-num { color: #5a637a; text-shadow: none; } /* チップ0枚の側は暗く */
-  .rs-vs { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; color: var(--text-dim); }
+  .rs-vs { font-family: var(--f-num); font-weight: 900; color: var(--text-dim); }
   .rs-panel {
     width: 100%; box-sizing: border-box; padding: 14px 12px 8px; border-radius: 12px;
     background: rgba(11, 16, 32, 0.9); border: 1px solid rgba(25, 211, 255, 0.35);
     box-shadow: 0 0 18px rgba(25, 211, 255, 0.12);
   }
   .rs-ptitle { display: flex; justify-content: space-between; align-items: center; font-weight: 900; color: var(--cy-cyan); font-size: 0.85rem; margin-bottom: 6px; }
-  .rs-legend { display: flex; gap: 10px; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.62rem; color: var(--text-dim); }
+  .rs-legend { display: flex; gap: 10px; font-family: var(--f-num); font-size: 0.62rem; color: var(--text-dim); }
   .rs-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
   .rs-legend i.me { background: var(--cy-blue); }
   .rs-legend i.op { background: var(--cy-red); }
@@ -1207,7 +1205,7 @@
     border-radius: 10px;
     background: linear-gradient(100deg, var(--cy-red), var(--cy-blue));
     color: #fff;
-    font-family: 'Rajdhani', "Hiragino Sans", "Yu Gothic", sans-serif;
+    font-family: var(--f-display);
     font-size: 1rem;
     letter-spacing: 0.06em;
     box-shadow: 0 0 12px rgba(255, 43, 79, 0.55), 0 0 18px rgba(30, 139, 255, 0.45);
@@ -1226,12 +1224,12 @@
     border: 1px solid var(--cy-cyan);
     color: #fff;
     box-shadow: inset 0 0 10px rgba(25, 211, 255, 0.2);
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif;
+    font-family: var(--f-num);
   }
   .room-input::placeholder { color: var(--text-dim); }
   .dev-section { border-top: 1px solid rgba(25, 211, 255, 0.3); }
   /* 大きな数字はデジタル書体で、自分＝赤・相手＝青に光らせる */
-  .num, #podValue, .room-code { font-family: 'Orbitron', "Hiragino Sans", sans-serif; }
+  .num, #podValue, .room-code { font-family: var(--f-num); }
   .zone-side.me .num { color: var(--cy-red); text-shadow: 0 0 14px rgba(255, 43, 79, 0.9); }
   .zone-side.op .num { color: var(--cy-blue); text-shadow: 0 0 14px rgba(30, 139, 255, 0.9); }
   .zone-side.op { border-bottom: 1px solid rgba(30, 139, 255, 0.5); }
@@ -1255,7 +1253,7 @@
     background: linear-gradient(90deg, rgba(255, 43, 79, 0.95), rgba(122, 60, 255, 0.95), rgba(30, 139, 255, 0.95));
     box-shadow: 0 0 22px rgba(255, 43, 79, 0.6), 0 0 30px rgba(30, 139, 255, 0.6);
     color: #fff;
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif;
+    font-family: var(--f-num);
     font-weight: 900; font-size: clamp(0.95rem, 5vw, 1.35rem); letter-spacing: 0.08em;
     text-shadow: 0 0 10px #fff;
     white-space: nowrap;
@@ -1351,7 +1349,7 @@
   .eff-board .pod-mini {
     align-self: center; background: none; border: none; box-shadow: none; border-radius: 0; padding: 0 0 1px;
   }
-  .eff-board .pod-label { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.7rem; letter-spacing: 0.12em; color: var(--text-dim); }
+  .eff-board .pod-label { font-family: var(--f-num); font-weight: 900; font-size: 0.7rem; letter-spacing: 0.12em; color: var(--text-dim); }
   .eff-row { display: flex; flex-direction: column; gap: 2px; font-size: 0.6rem; line-height: 1.35; text-align: left; }
   .eff-row:empty { display: none; }
   .eff-item { color: var(--text); padding-left: 6px; border-left: 3px solid; overflow-wrap: anywhere; }
@@ -1438,32 +1436,32 @@
   /* 3行の説明はページの下端にそろえる（図解の高さがページごとに違うため） */
   .howto-page { flex: 0 0 100%; min-width: 0; padding: 0 4px; box-sizing: border-box; text-align: center; display: flex; flex-direction: column; }
   .howto-page .howto-text { margin-top: auto; }
-  .howto-kicker { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.18em; color: var(--cy-cyan); }
+  .howto-kicker { font-family: var(--f-num); font-size: 0.6rem; font-weight: 900; letter-spacing: 0.18em; color: var(--cy-cyan); }
   .howto-title { margin: 8px 0 10px; font-size: 1rem; font-weight: 900; color: var(--text); text-shadow: 0 0 10px rgba(25, 211, 255, 0.5); }
   .howto-visual { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 10px; }
   .ht-side { display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .ht-card {
     width: 52px; height: 72px; border-radius: 9px; border: 3px solid var(--hc); background: linear-gradient(160deg, var(--card-bg), var(--bg2));
-    display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 1.6rem; font-weight: 900; color: #fff;
+    display: flex; align-items: center; justify-content: center; font-family: var(--f-num); font-size: 1.6rem; font-weight: 900; color: #fff;
     box-shadow: 0 0 12px var(--hc);
   }
   .ht-card.red { --hc: var(--color-red); } .ht-card.blue { --hc: var(--color-blue); } .ht-card.yellow { --hc: var(--color-yellow); } .ht-card.pink { --hc: var(--color-pink); }
-  .ht-vs { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; color: var(--text-dim); }
-  .ht-tag { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.66rem; font-weight: 900; letter-spacing: 0.08em; padding: 2px 10px; border-radius: 999px; }
+  .ht-vs { font-family: var(--f-num); font-weight: 900; color: var(--text-dim); }
+  .ht-tag { font-family: var(--f-num); font-size: 0.66rem; font-weight: 900; letter-spacing: 0.08em; padding: 2px 10px; border-radius: 999px; }
   .ht-tag.win { color: #0b1020; background: var(--win, #3ddc84); }
   .ht-tag.lose { color: #fff; background: var(--lose); }
   .ht-boost-demo { position: relative; gap: 22px; }
   .ht-chipcount {
     min-width: 72px; height: 56px; display: flex; align-items: center; justify-content: center;
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 2.6rem; font-weight: 900; line-height: 1;
+    font-family: var(--f-num); font-size: 2.6rem; font-weight: 900; line-height: 1;
     color: var(--cy-red); text-shadow: 0 0 12px rgba(255, 43, 79, 0.9);
   }
   /* CHIP の文字は数字の上に重ねて置き、数字の中心をカードの中心にそろえる */
   .ht-chipside { position: relative; }
   .ht-chipside .ht-chiplabel { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); margin-bottom: 2px; }
-  .ht-chiplabel { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.12em; color: var(--text-dim); }
-  .ht-arrow { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; color: var(--text-dim); }
-  .ht-boost-tag { min-height: 1.1em; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.66rem; font-weight: 900; color: var(--gold); }
+  .ht-chiplabel { font-family: var(--f-num); font-size: 0.6rem; font-weight: 900; letter-spacing: 0.12em; color: var(--text-dim); }
+  .ht-arrow { font-family: var(--f-num); font-weight: 900; color: var(--text-dim); }
+  .ht-boost-tag { min-height: 1.1em; font-family: var(--f-num); font-size: 0.66rem; font-weight: 900; color: var(--gold); }
   .ht-card.bump, .ht-chipcount.bump { animation: htBump 0.28s ease; }
   @keyframes htBump { 0% { transform: scale(1); } 45% { transform: scale(1.22); } 100% { transform: scale(1); } }
   .ht-card.boosted { --hc: var(--gold); }
@@ -1473,11 +1471,11 @@
     border: 2px solid #a01a30; box-shadow: 0 0 10px rgba(255, 43, 79, 0.7);
   }
   .ht-boost {
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.8rem; font-weight: 900; color: var(--gold);
+    font-family: var(--f-num); font-size: 0.8rem; font-weight: 900; color: var(--gold);
     padding: 3px 10px; border-radius: 999px; border: 2px solid var(--gold); box-shadow: 0 0 10px rgba(255, 200, 60, 0.5);
   }
   .ht-jackpot {
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 1.2rem; font-weight: 900; letter-spacing: 0.06em; color: var(--gold);
+    font-family: var(--f-num); font-size: 1.2rem; font-weight: 900; letter-spacing: 0.06em; color: var(--gold);
     text-shadow: 0 0 12px var(--gold), 0 0 24px rgba(255, 200, 60, 0.6); margin: 2px 0 8px; animation: htPulse 1.4s ease-in-out infinite;
   }
   @keyframes htPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
@@ -1515,7 +1513,7 @@
   .dbg-fx-list .wide { grid-column: 1 / -1; }
   .dbg-round { margin-top: 14px; padding-top: 10px; border-top: 1px dashed rgba(255, 176, 32, 0.4); }
   .dbg-round-head { display: flex; justify-content: space-between; align-items: baseline; color: #ffb020; font-weight: 800; font-size: 0.8rem; }
-  .dbg-round-now { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.95rem; }
+  .dbg-round-now { font-family: var(--f-num); font-size: 0.95rem; }
   .dbg-round-list { grid-template-columns: repeat(4, 1fr); }
   .dbg-round-note { margin-top: 6px; font-size: 0.68rem; opacity: 0.8; }
   .debug-bug.on { color: #ffb020; border-color: #ffb020; box-shadow: 0 0 10px rgba(255, 176, 32, 0.6); opacity: 1; }
@@ -1530,16 +1528,16 @@
   .sound-mini.off { color: var(--text-dim); border-color: var(--card-border); box-shadow: none; opacity: 0.7; }
   .sound-mini.off .snd-on { display: none; }
   .sound-mini.off .snd-off { display: inline; }
-  .debug-state { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.1em; color: #ffb020; }
+  .debug-state { font-family: var(--f-num); font-size: 0.6rem; font-weight: 900; letter-spacing: 0.1em; color: #ffb020; }
   /* ===== ハッキングチップ ===== */
   .hack-btn {
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.7rem; font-weight: 900; letter-spacing: 0.08em;
+    font-family: var(--f-num); font-size: 0.7rem; font-weight: 900; letter-spacing: 0.08em;
     padding: 7px 12px; border-radius: 999px; cursor: pointer;
     border: 1px solid #39ff9e; background: rgba(57, 255, 158, 0.06); color: #39ff9e; box-shadow: 0 0 8px rgba(57, 255, 158, 0.3);
   }
   .hack-btn.on { background: #39ff9e; color: #04130b; box-shadow: 0 0 14px rgba(57, 255, 158, 0.9); }
   .hack-btn:disabled { opacity: 0.3; cursor: default; box-shadow: none; }
-  .hack-count { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.56rem; font-weight: 900; letter-spacing: 0.06em; color: #39ff9e; }
+  .hack-count { font-family: var(--f-num); font-size: 0.56rem; font-weight: 900; letter-spacing: 0.06em; color: #39ff9e; }
   .hack-count:empty { display: none; }
   .sd-banner.hack { background: linear-gradient(90deg, rgba(4, 30, 18, 0.95), rgba(57, 255, 158, 0.95), rgba(4, 30, 18, 0.95)); color: #04130b; text-shadow: 0 0 8px #fff; box-shadow: 0 0 26px rgba(57, 255, 158, 0.8); }
   .battle-panel.hacked .flip-card { animation: hackGlitch 0.5s steps(2) 2; }
@@ -1549,7 +1547,7 @@
   .hack-glitch-bar { position: absolute; left: -30px; right: -30px; mix-blend-mode: screen; }
   .hack-glitch-title {
     position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); z-index: 1; text-align: center;
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: clamp(2rem, 11vw, 3rem); letter-spacing: 0.08em; color: #fff;
+    font-family: var(--f-num); font-weight: 900; font-size: clamp(2rem, 11vw, 3rem); letter-spacing: 0.08em; color: #fff;
     text-shadow: -4px 0 rgba(255, 0, 60, 0.9), 4px 0 rgba(0, 220, 255, 0.9), 0 0 18px rgba(57, 255, 158, 0.8);
     animation: hackTitle 0.14s steps(2) infinite;
   }
@@ -1575,12 +1573,12 @@
   .spike-frame { position: absolute; inset: 0; border-radius: 16px; box-shadow: inset 0 0 0 3px #ff2b4f, inset 0 0 50px rgba(255, 43, 79, 0.6); animation: spikeFrame 0.5s 0.66s both; }
   .spike-title {
     position: absolute; left: 0; right: 0; text-align: center;
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: clamp(2.6rem, 15vw, 4rem); letter-spacing: 0.14em; color: #fff;
+    font-family: var(--f-num); font-weight: 900; font-size: clamp(2.6rem, 15vw, 4rem); letter-spacing: 0.14em; color: #fff;
     text-shadow: 0 0 10px #ff2b4f, 0 0 26px #ff2b4f, 0 0 50px rgba(255, 43, 79, 0.7);
     animation: spikeUp 0.4s 0.7s cubic-bezier(.2, 1.4, .4, 1) both;
   }
   .spike-sub { position: absolute; left: 0; right: 0; text-align: center; font-size: 0.85rem; font-weight: 800; color: #ffcc00; text-shadow: 0 0 8px rgba(0, 0, 0, 0.9); animation: spikeFade 0.25s 1.05s both; }
-  .spike-lbl { position: absolute; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.15em; }
+  .spike-lbl { position: absolute; font-family: var(--f-num); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.15em; }
   .spike-lbl.before { left: 12px; color: #19d3ff; opacity: 0.85; animation: spikeFade 0.2s 0.15s both; }
   .spike-lbl.after { right: 12px; color: #ff6b7a; animation: spikeFade 0.2s 0.85s both; }
   @keyframes spikeDraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
@@ -1592,7 +1590,7 @@
   @keyframes spikeOut { to { opacity: 0; } }
   /* 遊び方：ハッキングのページ（HACKの文字がグリッチする） */
   .ht-hack {
-    font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.9rem; letter-spacing: 0.08em; color: #fff;
+    font-family: var(--f-num); font-weight: 900; font-size: 0.9rem; letter-spacing: 0.08em; color: #fff;
     text-shadow: -2px 0 rgba(255, 0, 60, 0.9), 2px 0 rgba(0, 220, 255, 0.9), 0 0 10px rgba(57, 255, 158, 0.8);
     animation: htHack 1.6s steps(1) infinite;
   }
@@ -1717,12 +1715,13 @@
     .bg-fx *, .bg-fx *::before { animation: none !important; }
   }
 </style>
+<link rel="stylesheet" href="reel.css">
 </head>
 <body>
   <!-- 背景アニメーション（装飾のみ） -->
   <div class="bg-fx" id="bgFx" aria-hidden="true">
-    <div class="bg-orb o1"></div><div class="bg-orb o2"></div><div class="bg-orb o3"></div>
-    <div class="bg-grid"></div>
+    <canvas class="reel-dots" id="reelDots"></canvas>
+    <div class="reel-vignette"></div>
   </div>
   <script>
   (function () {
@@ -1742,7 +1741,17 @@
 <audio id="prepBgmAudio" preload="none" src="assets/bgm-prep-bitworks.mp3"></audio>
 <audio id="resultBgmAudio" preload="none" src="assets/bgm-result.mp3"></audio>
 <div class="wrap">
-  <h1 class="title-logo"><img src="assets/title-logo-clear.webp" alt="NUMBER WAR" width="960" height="169"></h1>
+  <h1 class="reel-title" aria-label="NUMBER WAR">
+    <span class="rt-kicker" data-type="CARD BATTLE&nbsp;&nbsp;/&nbsp;&nbsp;1 VS 1">CARD BATTLE&nbsp;&nbsp;/&nbsp;&nbsp;1 VS 1</span>
+    <span class="rt-word" aria-hidden="true"><span>N</span><span>U</span><span>M</span><span>B</span><span>E</span><span>R</span>&nbsp;<span>W</span><span>A</span><span>R</span></span>
+    <span class="rt-sub" aria-hidden="true">BLUFF&nbsp;·&nbsp;BOOST&nbsp;·&nbsp;JACKPOT</span>
+    <svg class="rt-stamp" viewBox="0 0 100 100" aria-hidden="true">
+      <defs><path id="rtStampPath" d="M50,50 m-36,0 a36,36 0 1,1 72,0 a36,36 0 1,1 -72,0"/></defs>
+      <circle cx="50" cy="50" r="48"/>
+      <text><textPath href="#rtStampPath">NUMBER WAR · 1—8 · 2026 · REEL ·</textPath></text>
+      <path class="rt-star" d="M50 38v24M39.6 44l20.8 12M39.6 56l20.8-12"/>
+    </svg>
+  </h1>
 
   <div id="startScreen">
     <div class="start-panel online-panel">
@@ -1981,6 +1990,8 @@
         <button type="button" class="btn secondary" data-fx="spike">SPIKE演出</button>
         <button type="button" class="btn secondary" data-fx="hack">HACK演出</button>
         <button type="button" class="btn secondary" data-fx="cutin">カットイン（赤）</button>
+        <button type="button" class="btn secondary" data-fx="draw">DRAW演出</button>
+        <button type="button" class="btn secondary" data-fx="countdown">カウントダウン</button>
         <button type="button" class="btn secondary wide" data-fx="double">ダブルカットイン（赤）</button>
       </div>
       <div class="dbg-round">
@@ -2036,13 +2047,30 @@
 
 <div class="overlay result-screen" id="overlay">
   <div class="rs-inner">
-    <div class="rs-label">RESULT</div>
-    <div class="rs-outcome" id="rsOutcome">WIN</div>
+    <div class="rs-label"><span class="rs-idx">[05]</span><span class="rs-rule"></span><span class="rs-type" id="rsKicker">MATCH RESULT</span></div>
+    <div class="rs-head">
+      <div class="rs-outcome" id="rsOutcome">WIN</div>
+      <svg class="rs-stamp" viewBox="0 0 100 100" aria-hidden="true">
+        <defs><path id="rsStampPath" d="M50,50 m-36,0 a36,36 0 1,1 72,0 a36,36 0 1,1 -72,0"/></defs>
+        <circle cx="50" cy="50" r="48"/>
+        <text><textPath href="#rsStampPath" id="rsStampText">GAME SET · NUMBER WAR · 2026 ·</textPath></text>
+        <path class="rt-star" d="M50 38v24M39.6 44l20.8 12M39.6 56l20.8-12"/>
+      </svg>
+    </div>
+    <div class="rs-bar"></div>
     <div class="rs-sub" id="rsSub"></div>
     <div class="rs-score">
-      <div class="rs-side me" id="rsMe"><div class="rs-who">YOU</div><div class="rs-num" id="rsMyChips">0</div></div>
-      <div class="rs-vs">VS</div>
-      <div class="rs-side op" id="rsOp"><div class="rs-who" id="rsOpName">CPU</div><div class="rs-num" id="rsOpChips">0</div></div>
+      <div class="rs-side me" id="rsMe"><div class="rs-who">CHIPS · YOU</div><div class="rs-num" id="rsMyChips">0</div></div>
+      <div class="rs-ring" aria-hidden="true">
+        <svg viewBox="0 0 100 100">
+          <circle class="rr-track" cx="50" cy="50" r="42"/>
+          <circle class="rr-op" id="rsRingOp" cx="50" cy="50" r="42" pathLength="100"/>
+          <circle class="rr-me" id="rsRingMe" cx="50" cy="50" r="42" pathLength="100"/>
+          <circle class="rr-inner" cx="50" cy="50" r="30" pathLength="100"/>
+        </svg>
+        <div class="rr-val"><span id="rsRingPct">0</span><small>%</small><em>SHARE</em></div>
+      </div>
+      <div class="rs-side op" id="rsOp"><div class="rs-who"><span>CHIPS · </span><span id="rsOpName">CPU</span></div><div class="rs-num" id="rsOpChips">0</div></div>
     </div>
     <div class="rs-panel">
       <div class="rs-ptitle"><span>チップの推移</span><span class="rs-legend"><span><i class="me"></i>YOU</span><span><i class="op"></i><span id="rsLegendOp">CPU</span></span></span></div>
@@ -2052,6 +2080,7 @@
   </div>
 </div>
 
+<script src="reel-fx.js"></script>
 <script src="vendor/peerjs.min.js"></script>
 <script src="net-shim.js"></script>
 <script>
@@ -2803,6 +2832,7 @@
     document.getElementById('overlay').classList.remove('show');
     showScreen('game');
     startBgm('battle');
+    if (window.ReelFX && !(pv.log && pv.log.length)) ReelFX.countdown(playTickSound); // 再開時は出さない
     const R = m.round;
     const my = net.mySeat || {};
     const op = oppSeatC() || {};
@@ -3266,6 +3296,7 @@
   // kind: 'jackpot'(総取りで派手に) / 'grow'(ポッドへ流入、やや強め) / 未指定(通常のポップ)
   // バトル画面の巨大表示(#podValue)と、手札選択画面のコンパクト表示(#podValueMini)を両方更新する
   function updatePodDisplay(kind) {
+    if (window.ReelFX) ReelFX.hud({ round: currentRoundNo(), pod: state.pod });
     const podText = String(state.pod).padStart(2, '0');
 
     const el = document.getElementById('podValue');
@@ -3485,6 +3516,7 @@
     document.getElementById('prepScreen').classList.toggle('hidden', name !== 'prep');
     document.getElementById('gameScreen').classList.toggle('hidden', name !== 'game');
     document.querySelector('.wrap').classList.toggle('in-game', name === 'game');
+    if (window.ReelFX) ReelFX.screen(name); // 画面切り替えのワイプ演出・HUD表示
   }
 
   function pickTwoRandomColors() {
@@ -3802,10 +3834,12 @@
     showScreen('game');
     newGame(prepMyColors, prepOpColors, prepMyEffects, prepOpEffects);
     startBgm('battle');
+    if (window.ReelFX) ReelFX.countdown(playTickSound); // 対戦開始の 3・2・1
   }
 
   function backToStart() {
     gameToken++; // 進行中の演出タイマーを無効化
+    if (window.ReelFX) ReelFX.clear();
     openRoleWho = null;
     document.getElementById('overlay').classList.remove('show');
     if (net.active) leaveOnline();
@@ -5062,6 +5096,13 @@
     if (res.roundPodKind === 'jackpot') playSe('jackpot');
     else if (res.outcome === 'me') playSe('win');    // 自分が勝った時（JACKPOTはJACKPOTの音だけ）
     else playSe('lose'); // 自分の負け（LOSE・ブーストしての負け）と引き分け。JACKPOTで負けた時はJACKPOTの音だけ
+    if (window.ReelFX) {
+      // 勝敗のスタンプ演出（盤面中央の帯）
+      const stamp = res.roundPodKind === 'jackpot'
+        ? (res.jackpotWinner === 'my' ? 'jackpot' : 'jackpot-op')
+        : (outcome === 'me' ? 'win' : outcome === 'op' ? 'lose' : 'draw');
+      ReelFX.stamp(stamp, { diff: Math.abs(myEffective - opEffective), pod: state.pod, hack: res.hack });
+    }
     updateHandBadges();
     const hpId = who => (who === 'my' ? 'myHP' : 'opHP');
     if (res.jackpotWinner) flashNum(hpId(res.jackpotWinner), 'gain-flash');
@@ -5322,6 +5363,7 @@
     if (net.active) stopTurnTimer();
     overlay.classList.add('show');
     startBgm('result');
+    if (window.ReelFX) ReelFX.result({ outcome: w, my: state.myChips, op: state.opChips, rounds: log.length });
   }
 
   function renderResultChart(log) {
@@ -5336,33 +5378,37 @@
     const max = Math.max(30, Math.ceil(Math.max(...me, ...op) / 10) * 10);
     const X = i => L + (n > 1 ? i * (W - L - R) / (n - 1) : (W - L - R) / 2);
     const Y = v => B - Math.max(0, v) * (B - T) / max;
-    let s = '<defs><linearGradient id="rsFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e8bff" stop-opacity=".35"/><stop offset="1" stop-color="#1e8bff" stop-opacity="0"/></linearGradient></defs>';
+    // 配色はリザルト画面（紙色の背景）に合わせる：自分＝オレンジ、相手＝バイオレット
+    const C_ME = '#ff4b2b', C_OP = '#6b4dff', C_INK = '#14131a', C_DIM = '#8a8578';
+    let s = `<defs><linearGradient id="rsFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${C_ME}" stop-opacity=".28"/><stop offset="1" stop-color="${C_ME}" stop-opacity="0"/></linearGradient></defs>`;
     for (let v = 0; v <= max; v += 10) {
       const y = Y(v);
-      s += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="${v ? '#1f2a44' : '#8fa0c4'}"${v ? ' stroke-dasharray="3 3"' : ''}/>`;
-      s += `<text x="${L - 6}" y="${y + 3.5}" fill="#8fa0c4" font-size="9" text-anchor="end">${v}</text>`;
+      s += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="${v ? 'rgba(20,19,26,.12)' : C_INK}"${v ? ' stroke-dasharray="2 4"' : ''}/>`;
+      s += `<text x="${L - 6}" y="${y + 3.5}" fill="${C_DIM}" font-size="9" text-anchor="end">${v}</text>`;
     }
     // 負けた時の支払いが増える区間（LATE_ROUND を超えたラウンド）
     if (n - 1 > LATE_ROUND) {
       const x0 = X(LATE_ROUND);
-      s += `<rect x="${x0}" y="${T}" width="${X(n - 1) - x0}" height="${B - T}" fill="rgba(255,176,32,.07)"/>`;
-      s += `<text x="${x0 + 4}" y="${T + 10}" fill="#ffb020" font-size="8.5" font-weight="700">SPIKE</text>`;
+      s += `<rect x="${x0}" y="${T}" width="${X(n - 1) - x0}" height="${B - T}" fill="rgba(255,75,43,.08)"/>`;
+      s += `<text x="${x0 + 4}" y="${T + 10}" fill="${C_ME}" font-size="8.5" font-weight="700">SPIKE</text>`;
     }
     const path = a => a.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
-    if (n > 1) s += `<path d="${path(me)} L${X(n - 1)},${B} L${X(0)},${B} Z" fill="url(#rsFill)"/>`;
-    s += `<path d="${path(op)}" fill="none" stroke="#ff2b4f" stroke-width="2.2" stroke-linejoin="round" style="filter:drop-shadow(0 0 4px #ff2b4f)"/>`;
-    s += `<path d="${path(me)}" fill="none" stroke="#1e8bff" stroke-width="2.8" stroke-linejoin="round" style="filter:drop-shadow(0 0 5px #1e8bff)"/>`;
+    if (n > 1) s += `<path class="rs-area" d="${path(me)} L${X(n - 1)},${B} L${X(0)},${B} Z" fill="url(#rsFill)"/>`;
+    s += `<path class="rs-line" pathLength="1" d="${path(op)}" fill="none" stroke="${C_OP}" stroke-width="2" stroke-linejoin="round"/>`;
+    s += `<path class="rs-line" pathLength="1" d="${path(me)}" fill="none" stroke="${C_ME}" stroke-width="2.6" stroke-linejoin="round"/>`;
     // 点はラウンド数が多いと潰れるので少ない時だけ
     if (n <= 21) {
-      op.forEach((v, i) => { s += `<circle cx="${X(i)}" cy="${Y(v)}" r="2.5" fill="#05070f" stroke="#ff2b4f" stroke-width="1.8"/>`; });
-      me.forEach((v, i) => { s += `<circle cx="${X(i)}" cy="${Y(v)}" r="3" fill="#05070f" stroke="#1e8bff" stroke-width="2"/>`; });
+      op.forEach((v, i) => { s += `<circle class="rs-dot" style="--i:${i}" cx="${X(i)}" cy="${Y(v)}" r="2.3" fill="#efebe3" stroke="${C_OP}" stroke-width="1.6"/>`; });
+      me.forEach((v, i) => { s += `<circle class="rs-dot" style="--i:${i}" cx="${X(i)}" cy="${Y(v)}" r="2.8" fill="#efebe3" stroke="${C_ME}" stroke-width="1.8"/>`; });
     }
+    // 最後の点：線の先端で光る
+    if (n > 1) s += `<circle class="rs-tip" cx="${X(n - 1)}" cy="${Y(me[n - 1])}" r="4.5" fill="${C_ME}"/>`;
     // 横軸ラベル：最大でおよそ13個まで間引く（最終ラウンドは必ず表示）
     const step = Math.max(1, Math.ceil((n - 1) / 12));
     for (let i = 0; i < n; i++) {
       if (i % step && i !== n - 1) continue;
       if (i !== n - 1 && n - 1 - i < step) continue; // 最終ラベルと重なるものは省く
-      s += `<text x="${X(i)}" y="${B + 20}" fill="#8fa0c4" font-size="8.5" text-anchor="middle">${i ? 'R' + i : '開始'}</text>`;
+      s += `<text x="${X(i)}" y="${B + 20}" fill="#8a8578" font-size="8.5" text-anchor="middle">${i ? 'R' + i : '開始'}</text>`;
     }
     svg.innerHTML = s;
   }
@@ -5774,9 +5820,11 @@
 
   // デバッグ：実際のチップ・ポッドを動かさずに、演出だけを単独再生する（盤面左のボタン→中央のパネルから選ぶ）
   const DEBUG_FX = {
-    win: () => { updatePodDisplay('through'); playSe('win'); },
-    lose: () => { updatePodDisplay('grow'); playSe('lose'); flashNum('myHP', 'pay-flash'); },
-    jackpot: () => { updatePodDisplay('jackpot'); playSe('jackpot'); flashNum('myHP', 'gain-flash'); },
+    win: () => { updatePodDisplay('through'); playSe('win'); if (window.ReelFX) ReelFX.stamp('win', { diff: 3, pod: state.pod }); },
+    lose: () => { updatePodDisplay('grow'); playSe('lose'); flashNum('myHP', 'pay-flash'); if (window.ReelFX) ReelFX.stamp('lose', { diff: 3, pod: state.pod }); },
+    jackpot: () => { updatePodDisplay('jackpot'); playSe('jackpot'); flashNum('myHP', 'gain-flash'); if (window.ReelFX) ReelFX.stamp('jackpot', { diff: 1, pod: state.pod }); },
+    draw: () => { if (window.ReelFX) ReelFX.stamp('draw', { diff: 0, pod: state.pod }); },
+    countdown: () => { if (window.ReelFX) ReelFX.countdown(playTickSound); },
     spike: () => playSpikeAlert(),
     hack: () => playHackGlitch('HACK!!', gameToken),
     cutin: () => { playRoleUpSound(); playRoleCutins([{ who: 'my', color: 'red', lv: 1 }]); },
@@ -5866,11 +5914,11 @@
 </script>
 
 <style>
-  #logBtn { position: fixed; right: 10px; bottom: 10px; z-index: 900; padding: 8px 14px; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.1em; border-radius: 20px; border: 1px solid #19d3ff; background: rgba(11, 16, 32, 0.9); color: #19d3ff; cursor: pointer; opacity: 0.9; }
+  #logBtn { position: fixed; right: 10px; bottom: 10px; z-index: 900; padding: 8px 14px; font-family: var(--f-num); font-size: 0.72rem; font-weight: 900; letter-spacing: 0.1em; border-radius: 20px; border: 1px solid #19d3ff; background: rgba(11, 16, 32, 0.9); color: #19d3ff; cursor: pointer; opacity: 0.9; }
   #logPanel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 950; background: #0b1020; color: #eef3ff; border-top: 2px solid #19d3ff; box-shadow: 0 -4px 16px rgba(0,0,0,0.3); display: none; }
   #logPanel.show { display: block; animation: panelIn 0.18s ease; }
   .lp-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px 10px; border-bottom: 1px solid rgba(25, 211, 255, 0.25); }
-  .lp-head .t { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; letter-spacing: 0.14em; font-size: 0.8rem; color: var(--cy-cyan); }
+  .lp-head .t { font-family: var(--f-num); font-weight: 900; letter-spacing: 0.14em; font-size: 0.8rem; color: var(--cy-cyan); }
   .lp-head button { font: inherit; font-size: 1rem; line-height: 1; color: var(--text-dim); background: none; border: none; cursor: pointer; padding: 4px; }
   /* 縦幅は2ラウンド分まで。上下にスクロールして遡る */
   #logBody { padding: 8px 12px 12px; display: grid; gap: 8px; overflow-y: auto; overscroll-behavior: contain; scroll-snap-type: y proximity; max-height: 60vh; }
@@ -5880,23 +5928,23 @@
   .mlp.lose { border-color: rgba(30, 139, 255, 0.55); }
   .mlp.jp { border-color: var(--gold); box-shadow: 0 0 10px rgba(255, 218, 77, 0.3); }
   .mlp-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .mlp-r { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.72rem; letter-spacing: 0.1em; color: var(--text-dim); }
-  .mlp-kind { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-size: 0.58rem; font-weight: 900; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 999px; background: #1f2a44; color: var(--text-dim); }
+  .mlp-r { font-family: var(--f-num); font-weight: 900; font-size: 0.72rem; letter-spacing: 0.1em; color: var(--text-dim); }
+  .mlp-kind { font-family: var(--f-num); font-size: 0.58rem; font-weight: 900; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 999px; background: #1f2a44; color: var(--text-dim); }
   .mlp-kind.jp { background: var(--gold); color: #2a1f00; }
   .mlp-kind.sd { background: linear-gradient(90deg, #ff2b4f, #7a3cff, #1e8bff); color: #fff; }
   .mlp-vs { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
   .mlp-side { display: flex; align-items: center; gap: 8px; }
   .mlp-side.op { justify-content: flex-end; }
-  .mlp-res { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.72rem; letter-spacing: 0.06em; }
+  .mlp-res { font-family: var(--f-num); font-weight: 900; font-size: 0.72rem; letter-spacing: 0.06em; }
   .mlp-res.w { color: var(--win); } .mlp-res.l { color: var(--lose); } .mlp-res.d { color: var(--text-dim); }
-  .mlp-c { --hc: var(--card-border); position: relative; width: 34px; height: 46px; border-radius: 6px; border: 2px solid var(--hc); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 1.05rem; color: #fff; background: #0e1530; }
+  .mlp-c { --hc: var(--card-border); position: relative; width: 34px; height: 46px; border-radius: 6px; border: 2px solid var(--hc); display: flex; align-items: center; justify-content: center; font-family: var(--f-num); font-weight: 900; font-size: 1.05rem; color: #fff; background: #0e1530; }
   .mlp-c.red { --hc: var(--color-red); } .mlp-c.blue { --hc: var(--color-blue); } .mlp-c.yellow { --hc: var(--color-yellow); } .mlp-c.green { --hc: var(--color-green); } .mlp-c.pink { --hc: var(--color-pink); }
   .mlp-c .bst { position: absolute; top: -7px; right: -9px; font-size: 0.52rem; font-weight: 900; padding: 1px 4px; border-radius: 6px; background: var(--cy-cyan); color: #0b1020; }
-  .mlp-vsx { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.7rem; color: var(--text-dim); }
+  .mlp-vsx { font-family: var(--f-num); font-weight: 900; font-size: 0.7rem; color: var(--text-dim); }
   .mlp-chips { display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 10px; border-top: 1px solid #1f2a44; padding-top: 8px; text-align: center; }
   .mlp-chips > div + div { border-left: 1px solid #1f2a44; }
-  .mlp-chips .lb { font-size: 0.52rem; font-weight: 800; letter-spacing: 0.08em; color: var(--text-dim); font-family: 'Orbitron', "Hiragino Sans", sans-serif; }
-  .mlp-chips .v { font-family: 'Orbitron', "Hiragino Sans", sans-serif; font-weight: 900; font-size: 0.95rem; color: var(--text); }
+  .mlp-chips .lb { font-size: 0.52rem; font-weight: 800; letter-spacing: 0.08em; color: var(--text-dim); font-family: var(--f-num); }
+  .mlp-chips .v { font-family: var(--f-num); font-weight: 900; font-size: 0.95rem; color: var(--text); }
   .mlp-chips .me .v { color: var(--cy-red); } .mlp-chips .opp .v { color: var(--cy-blue); }
   .mlp-chips .d { font-size: 0.68rem; font-weight: 800; margin-left: 2px; }
   .mlp-chips .p { color: var(--win); } .mlp-chips .n { color: var(--lose); } .mlp-chips .z { color: var(--text-dim); }
