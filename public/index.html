@@ -3924,16 +3924,21 @@
       }
     }
     // ラウンド開始の演出（FX-02）。1ラウンド目は対戦開始の演出、SPIKEのラウンドはSPIKEの演出に任せる
-    if (!spikeMs && currentRoundNo() > 1 && window.ReelFX && ReelFX.round) ReelFX.round(currentRoundNo());
+    // 役のカットインは、ラウンド開始（またはSPIKE）の演出が終わってから流す
+    let roundFxMs = 0;
+    if (!spikeMs && currentRoundNo() > 1 && window.ReelFX && ReelFX.round) roundFxMs = (ReelFX.round(currentRoundNo()) || 0) + 100;
     prepareRoundIntel();
-    commitRoleGlow(['my', 'op'], true, spikeMs); // 次ラウンドの手札選択に入った時に、役の光り・成立音を反映
+    const roleFxMs = commitRoleGlow(['my', 'op'], true, spikeMs || roundFxMs); // 次ラウンドの手札選択に入った時に、役の光り・成立音を反映
+    // ラウンド開始・SPIKE・役のカットインが終わるまでは手札を選べない（演出が重ならないように）
+    const lockMs = Math.max(spikeMs, roundFxMs, roleFxMs || 0);
+    if (lockMs) state.locked = true;
     state.myHpShown = null;
     document.getElementById('myHP').textContent = state.myChips;
     document.getElementById('opHP').textContent = state.opChips;
     updatePodDisplay();
     render();
 
-    if (spikeMs) {
+    if (lockMs) {
       const myToken = gameToken;
       const roundNo = state.round;
       setTimeout(() => {
@@ -3941,7 +3946,7 @@
         state.locked = false;
         render();
         if (net.active && !state.over && state.netPhase === 'select') startTurnTimer();
-      }, spikeMs);
+      }, lockMs);
     }
 
     if (net.active) {
@@ -3952,7 +3957,7 @@
       setMode('select');
       refreshColorInfoHint();
       updateOpLabel();
-      if (!state.over && !spikeMs) startTurnTimer(); // SPIKE演出中は制限時間を止めておき、終わってから開始
+      if (!state.over && !lockMs) startTurnTimer(); // 演出中は制限時間を止めておき、終わってから開始
       gameNetTick();
       return;
     }
@@ -5108,12 +5113,13 @@
     if (res.roundPodKind === 'jackpot') playSe('jackpot');
     else if (res.outcome === 'me') playSe('win');    // 自分が勝った時（JACKPOTはJACKPOTの音だけ）
     else playSe('lose'); // 自分の負け（LOSE・ブーストしての負け）と引き分け。JACKPOTで負けた時はJACKPOTの音だけ
+    let resultFxMs = 0; // 勝敗演出の長さ。終わってから次（ラウンド開始の演出）へ進む
     if (window.ReelFX) {
       // 勝敗のスタンプ演出（盤面中央の帯）
       const stamp = res.roundPodKind === 'jackpot'
         ? (res.jackpotWinner === 'my' ? 'jackpot' : 'jackpot-op')
         : (outcome === 'me' ? 'win' : outcome === 'op' ? 'lose' : 'draw');
-      ReelFX.stamp(stamp, { diff: Math.abs(myEffective - opEffective), pod: state.pod, hack: res.hack, take: res.jackpotTake });
+      resultFxMs = ReelFX.stamp(stamp, { diff: Math.abs(myEffective - opEffective), pod: state.pod, hack: res.hack, take: res.jackpotTake }) || 0;
     }
     updateHandBadges();
     const hpId = who => (who === 'my' ? 'myHP' : 'opHP');
@@ -5135,7 +5141,7 @@
       setTimeout(() => {
         if (myToken !== gameToken) return;
         showGameOver();
-      }, RESULT_HOLD_MS);
+      }, Math.max(RESULT_HOLD_MS, resultFxMs + 150));
       return;
     }
 
@@ -5159,10 +5165,10 @@
       state.locked = false;
       startRound();
       });
-    }, RESULT_HOLD_MS);
+    }, Math.max(RESULT_HOLD_MS, resultFxMs + 150));
   }
-  // 勝敗の演出（WIN・LOSE・DRAW・JACKPOT）を見せてから次へ進むまでの時間
-  const RESULT_HOLD_MS = window.ReelFX ? 2000 : 1100;
+  // 勝敗の後に次へ進むまでの最短の時間（勝敗の演出がある時は、その演出が終わるまで待つ）
+  const RESULT_HOLD_MS = 1100;
 
   // 決着後・ドロー前の効果：仕込み（3B）→ 掘削（6B）→ 回収（1A）
   function postRoundEffects(myToken) {
@@ -5619,8 +5625,13 @@
       } else {
         fx();
       }
+      // 演出が終わるまでの時間（同じ側で複数ある時は 700ms ずつずれて流れる）
+      const perSide = Math.max(...['my', 'op'].map(w => cutins.filter(c => c.who === w).length));
+      return (fxDelay || 0) + ROLE_CUTIN_MS + 700 * (perSide - 1);
     }
+    return 0;
   }
+  const ROLE_CUTIN_MS = 1400; // 役のカットイン1本の長さ
 
   // 役の発動カットイン：その色のキャラ画像の帯が、相手は左から右へ（反転）、自分は右から左へ流れる
   function playRoleCutins(list) {
@@ -5649,7 +5660,7 @@
         const bandTop = solo ? pairMid - 30 : c.who === 'my' ? handTop - 44 - 8 : handTop - 44 * 2 - 8 - 4;
         wrap.firstChild.style.top = Math.max(0, bandTop) + 'px';
         document.body.appendChild(wrap);
-        setTimeout(() => wrap.remove(), 1400);
+        setTimeout(() => wrap.remove(), ROLE_CUTIN_MS);
       }, delay);
       delays[c.who] += 700;
     });

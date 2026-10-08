@@ -190,15 +190,22 @@
   }
 
   // ---------- FX-02 ラウンド開始 ----------
+  // 文字演出の時間配分：素早く出す → 文字がそろってから 1 秒キープ → 素早く消す
+  const IN_MS = 320, HOLD_MS = 1000, OUT_MS = 220;
+  const phase = (inMs = IN_MS, hold = HOLD_MS, out = OUT_MS) => { const T = inMs + hold + out; return { T, a: inMs / T, b: (inMs + hold) / T }; };
+  // 出る→キープ→消える の 4 点キーフレーム（from は出る前、to は消えた後）
+  const ioKf = (P, from, to, show = { opacity: 1, transform: 'none' }) => [from, { ...show, offset: P.a }, { ...show, offset: P.b }, to];
+
+  // ---------- FX-02 ラウンド開始（戻り値：演出の長さ ms） ----------
   function roundStart(n, opts) {
     opts = opts || {};
-    if (reduceMotion) return;
+    if (reduceMotion) return 0;
     const full = !!opts.full;
-    const T = full ? 2400 : 2200; // 表示の長さ（読める速さ）
+    const P = phase();
     document.querySelectorAll('.wfx-layer.stamp').forEach(x => x.remove());
-    const L = layerOver(full ? null : board(), T + 100, { block: full });
+    const L = layerOver(full ? null : board(), P.T + 50, { block: full });
     if (full) { L.style.background = 'rgba(2,4,12,.82)'; L.addEventListener('pointerdown', () => L.remove()); }
-    else dimIn(L, T, 0.8);
+    else dimIn(L, P.T, 0.8);
     const H = L.clientHeight || window.innerHeight;
     const cy = full ? H * 0.44 : boardMidY(L);
     const band = h(`<div class="wfx-band" style="top:${cy - 52}px;height:104px"></div>`);
@@ -209,18 +216,16 @@
     const c = h('<div class="wfx-cap" style="margin-top:8px;font-weight:400">SELECT YOUR CARD</div>');
     m.append(k, g, c);
     L.append(band, m);
-    warp.boost(2.2, 600);
-    if (full) flash(L, 0, 0.6, 400);
-    const out = [{ opacity: 1, offset: 0.82 }, { opacity: 0 }];
-    A(band, [{ transform: 'scaleX(0)', opacity: 0.4 }, { transform: 'scaleX(1)', opacity: 1, offset: 0.2 }, ...out], T, 0);
-    A(g, [{ opacity: 0, transform: 'translateX(-40px)' }, { opacity: 1, transform: 'none', offset: 0.16 }, { opacity: 1, offset: 0.82 }, { opacity: 0, transform: 'translateX(30px)' }], T, 100);
-    glitchIn(g, 600, 100, 16);
-    A(k, [{ opacity: 0 }, { opacity: 1, offset: 0.18 }, ...out], T - 100, 200);
-    A(c, [{ opacity: 0, letterSpacing: '.8em' }, { opacity: 1, letterSpacing: '.34em', offset: 0.25 }, ...out], T - 200, 300);
+    warp.boost(2.2, P.T * P.a + 200);
+    if (full) flash(L, 0, 0.6, 360);
+    A(band, ioKf(P, { transform: 'scaleX(0)', opacity: 0.4 }, { transform: 'scaleX(1)', opacity: 0 }, { transform: 'scaleX(1)', opacity: 1 }), P.T, 0, 'linear');
+    A(m, ioKf(P, { opacity: 0, transform: 'translateX(-30px)' }, { opacity: 0, transform: 'translateX(24px)' }), P.T, 0, 'linear');
+    glitchIn(g, IN_MS, 0, 16);
     if (opts.tick) { try { opts.tick(0); setTimeout(() => opts.tick(7), 200); } catch (e) { /* 音がなくても続ける */ } }
+    return P.T;
   }
   // 対戦開始（従来の 3・2・1 の呼び出し口）
-  function countdown(tick) { roundStart(1, { full: true, tick }); }
+  function countdown(tick) { return roundStart(1, { full: true, tick }); }
 
   // ---------- FX-03 カードオープン ----------
   function reveal() {
@@ -233,17 +238,17 @@
     shake(field, 0, 260, 3);
   }
 
-  // ---------- FX-04〜07 勝敗 ----------
+  // ---------- FX-04〜07 勝敗（戻り値：演出の長さ ms） ----------
   function stamp(kind, info) {
     const b = board();
-    if (!b || !b.offsetParent) return;
+    if (!b || !b.offsetParent) return 0;
     info = info || {};
-    if (reduceMotion) return;
+    if (reduceMotion) return 0;
     document.querySelectorAll('.wfx-layer.stamp').forEach(n => n.remove());
-    if (kind === 'jackpot' || kind === 'jackpot-op') { jackpot(kind === 'jackpot-op', info); return; }
-    const T = 2200; // 表示の長さ（読める速さ）
-    const L = layerOver(b, T + 100); L.classList.add('stamp');
-    dimIn(L, T, 0.85);
+    if (kind === 'jackpot' || kind === 'jackpot-op') return jackpot(kind === 'jackpot-op', info);
+    const P = phase();
+    const L = layerOver(b, P.T + 50); L.classList.add('stamp');
+    dimIn(L, P.T, 0.85);
     const cy = boardMidY(L);
     const word = { win: 'W<span class="p">I</span>N', lose: 'LOSE', draw: 'DRAW' }[kind] || '';
     const cap = kind === 'win' ? `ROUND TAKEN · Δ ${info.diff != null ? info.diff : ''}`
@@ -252,13 +257,14 @@
     const band = h(`<div class="wfx-band${kind === 'win' ? '' : ' grey'}" style="top:${cy - 56}px;height:112px"></div>`);
     const m = h(`<div class="wfx-mid" style="top:${cy - 50}px"></div>`);
     const sub = h(`<div class="wfx-cap" style="margin-top:6px">${(info.hack ? 'HACKED · ' : '') + cap}</div>`);
-    const out = [{ opacity: 1, offset: 0.84 }, { opacity: 0 }];
+    A(band, ioKf(P, { transform: 'scaleX(0)', opacity: 0.4 }, { transform: 'scaleX(1)', opacity: 0 }, { transform: 'scaleX(1)', opacity: 1 }), P.T, 0, 'linear');
     if (kind === 'draw') {
       const top = h('<div class="wfx-big" style="clip-path:inset(0 0 50% 0)">DRAW</div>');
       const bot = h('<div class="wfx-big" style="clip-path:inset(50% 0 0 0);position:absolute;left:0;right:0;top:0;color:var(--peri)">DRAW</div>');
       m.append(top, bot, sub); L.append(band, m);
-      A(top, [{ transform: 'translateX(-40%)', opacity: 0 }, { transform: 'none', opacity: 1, offset: 0.22 }, ...out], T, 0);
-      A(bot, [{ transform: 'translateX(40%)', opacity: 0 }, { transform: 'none', opacity: 1, offset: 0.22 }, ...out], T, 0);
+      A(top, ioKf(P, { transform: 'translateX(-40%)', opacity: 0 }, { transform: 'none', opacity: 0 }), P.T, 0, 'linear');
+      A(bot, ioKf(P, { transform: 'translateX(40%)', opacity: 0 }, { transform: 'none', opacity: 0 }), P.T, 0, 'linear');
+      A(sub, ioKf(P, { opacity: 0 }, { opacity: 0 }), P.T, 0, 'linear');
     } else {
       const g = glitchEl(word, 'wfx-big');
       g.style.display = 'block';
@@ -266,31 +272,31 @@
       m.append(g, sub); L.append(band, m);
       if (kind === 'win') {
         warp.boost(3, 700);
-        A(g, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'none', offset: 0.16 }, ...out], T, 60);
-        glitchIn(g, 600, 60, 14);
+        A(m, ioKf(P, { opacity: 0, transform: 'scale(1.3)' }, { opacity: 0, transform: 'scale(1)' }), P.T, 0, 'linear');
       } else {
-        warp.boost(0.04, 1800);
-        shake(b, 80, 380, 6);
-        A(g, [{ opacity: 0, transform: 'translateY(-24px)' }, { opacity: 1, transform: 'none', offset: 0.2 }, { opacity: 1, transform: 'translateY(6px)', offset: 0.84 }, { opacity: 0, transform: 'translateY(10px)' }], T, 60, 'ease-out');
-        glitchIn(g, 900, 60, 10);
+        warp.boost(0.04, P.T);
+        shake(b, IN_MS, 320, 6);
+        A(m, ioKf(P, { opacity: 0, transform: 'translateY(-24px)' }, { opacity: 0, transform: 'translateY(10px)' }), P.T, 0, 'linear');
       }
+      glitchIn(g, IN_MS, 0, kind === 'win' ? 14 : 10);
     }
-    A(band, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)', offset: 0.2 }, ...out], T, 0);
-    A(sub, [{ opacity: 0 }, { opacity: 1, offset: 0.25 }, ...out], T - 100, 100);
+    return P.T;
   }
 
-  // FX-07 JACKPOT：破裂（白フラッシュ・三重の衝撃波・光条・大きな揺れ・行き過ぎて戻る文字）
+  // FX-07 JACKPOT：破裂（白フラッシュ・三重の衝撃波・光条・大きな揺れ）→ 文字が膨らんで戻り、そろってから 1 秒キープ
   function jackpot(rival, info) {
     const b = board();
-    const L = layerOver(b, 2300); L.classList.add('stamp');
-    dimIn(L, 2250, 0.8);
+    const BURST = 500; // 破裂して文字がそろうまで
+    const P = phase(BURST, HOLD_MS + 300, OUT_MS); // 総取り枚数を数える分だけ少し長くキープ
+    const L = layerOver(b, P.T + 50); L.classList.add('stamp');
+    dimIn(L, P.T, 0.8);
     const cy = boardMidY(L);
     const hue = rival ? ['rgba(255,193,211,.95)', 'rgba(255,122,162,.85)', 'rgba(127,156,255,.7)'] : ['rgba(255,255,255,.95)', 'rgba(127,216,255,.85)', 'rgba(255,122,162,.8)'];
     flash(L, 0, rival ? 0.55 : 0.85, 380);
-    if (!rival) greyOut(1400);
+    if (!rival) greyOut(1300);
     warp.set(rival ? 3 : 6); warp.boost(rival ? 3 : 6, 900, warp.base);
     if (rival) warp.tintFor('255,170,200', 1200);
-    shake(b, 0, 650, rival ? 6 : 12);
+    shake(b, 0, 600, rival ? 6 : 12);
     const core = h(`<div class="wfx-core" style="top:${cy - 70}px"></div>`);
     L.append(core);
     A(core, [{ transform: 'scale(.2)', opacity: 1 }, { transform: 'scale(5)', opacity: 0 }], 520, 0, 'cubic-bezier(.1,.9,.2,1)');
@@ -309,22 +315,27 @@
     const g = glitchEl('JACKPOT', 'wfx-big');
     g.style.display = 'block'; g.style.fontSize = 'clamp(2.8rem, 15vw, 5rem)';
     if (rival) g.querySelector('.gs').style.color = '#ffd6e2';
-    const sub = h(`<div class="wfx-cap" style="margin-top:8px">${rival ? 'RIVAL TAKES' : 'POT'} <span class="v">00</span>${rival ? '' : ' を総取り'}</div>`);
+    const take = (info && info.take) || (info && info.pod) || 0;
+    const sub = h(`<div class="wfx-cap" style="margin-top:8px">${rival ? 'RIVAL TAKES' : 'POT'} <span class="v">${pad(take)}</span>${rival ? '' : ' を総取り'}</div>`);
     m.append(g, sub); L.append(m);
-    A(g, [{ opacity: 0, transform: 'scale(.05)' }, { opacity: 1, transform: 'scale(1.45)', offset: 0.15 }, { transform: 'scale(.92)', offset: 0.27 }, { transform: 'scale(1.06)', offset: 0.38 }, { opacity: 1, transform: 'scale(1)', offset: 0.85 }, { opacity: 0, transform: 'scale(1)' }], 2100, 0, 'ease-out');
-    glitchIn(g, 1200, 0, rival ? 14 : 26);
-    A(sub, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none', offset: 0.3 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], 1300, 900);
-    countTo(sub.querySelector('.v'), 0, (info && info.take) || (info && info.pod) || 0, 1000, 600);
+    // 点から膨らみ、行き過ぎて戻る（BURST の間に完了）→ キープ → 素早く消える
+    const a1 = P.a * 0.35, a2 = P.a * 0.65;
+    A(g, [{ opacity: 0, transform: 'scale(.05)' }, { opacity: 1, transform: 'scale(1.4)', offset: a1 }, { transform: 'scale(.94)', offset: a2 }, { opacity: 1, transform: 'scale(1)', offset: P.a }, { opacity: 1, transform: 'scale(1)', offset: P.b }, { opacity: 0, transform: 'scale(1)' }], P.T, 0, 'linear');
+    glitchIn(g, BURST, 0, rival ? 14 : 26);
+    A(sub, ioKf(P, { opacity: 0 }, { opacity: 0 }), P.T, 0, 'linear');
+    countTo(sub.querySelector('.v'), 0, take, BURST, 500);
+    return P.T;
   }
 
-  // ---------- FX-08 ハッキング（約1.1秒。終わったら resolve） ----------
+  // ---------- FX-08 ハッキング（約1.7秒。終わったら resolve） ----------
   function hack(text) {
     return new Promise(resolve => {
       const b = board();
       if (!b || reduceMotion) { setTimeout(resolve, reduceMotion ? 300 : 0); return; }
-      const L = layerOver(b, 1150);
+      const P = phase(500, HOLD_MS, OUT_MS); // ノイズが収まって文字がそろってから 1 秒キープ
+      const L = layerOver(b, P.T + 50);
       const H = L.clientHeight;
-      dimIn(L, 1150, 0.9);
+      dimIn(L, P.T, 0.9);
       for (let i = 0; i < 7; i++) {
         const y = rnd(0, 90), hh = rnd(3, 11);
         const sl = h(`<div style="position:absolute;inset:0;clip-path:inset(${y}% 0 ${100 - y - hh}% 0);background:linear-gradient(90deg,rgba(255,110,165,.4),rgba(110,185,255,.4));mix-blend-mode:screen"></div>`);
@@ -338,9 +349,9 @@
       L.append(m);
       shake(b, 0, 520, 9);
       warp.boost(2.6, 500); warp.tintFor('255,170,200', 900);
-      A(g, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], 1100, 0, 'steps(6, end)');
-      glitchIn(g, 1000, 0, 30);
-      setTimeout(resolve, 1100);
+      A(m, ioKf(P, { opacity: 0 }, { opacity: 0 }, { opacity: 1 }), P.T, 0, 'linear');
+      glitchIn(g, 500, 0, 30);
+      setTimeout(resolve, P.T);
     });
   }
 
