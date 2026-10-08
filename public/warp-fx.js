@@ -88,7 +88,8 @@
     return L;
   }
   // 盤面の上を一時的に暗くして文字を読みやすくする
-  const dimIn = (L, life, peak = 1) => { const d = h('<div class="wfx-dim"></div>'); L.insertBefore(d, L.firstChild); A(d, [{ opacity: 0 }, { opacity: peak, offset: 0.12 }, { opacity: peak, offset: 0.8 }, { opacity: 0 }], life, 0, 'linear'); return d; };
+  // P（出る→キープ→消える の配分）を渡すと、文字と同じタイミングで暗くなり、同時にサッと明るく戻る
+  const dimIn = (L, life, peak = 1, P) => { const d = h('<div class="wfx-dim"></div>'); L.insertBefore(d, L.firstChild); A(d, [{ opacity: 0 }, { opacity: peak, offset: P ? Math.min(P.a, 0.15) : 0.12 }, { opacity: peak, offset: P ? P.b : 0.8 }, { opacity: 0 }], life, 0, 'linear'); return d; };
   const flash = (L, delay, peak = 0.9, dur = 500) => { const f = L.querySelector('.wfx-flash'); if (f) A(f, [{ opacity: 0 }, { opacity: peak, offset: 0.12 }, { opacity: 0 }], dur, delay, 'ease-out'); };
   const shake = (el, delay, dur = 360, amp = 6) => AT(el, Array.from({ length: 8 }, (_, i) => ({ transform: i === 7 ? 'none' : `translate(${rnd(-amp, amp)}px, ${rnd(-amp, amp) * 0.5}px)` })), dur, delay, 'linear');
   // グリッチ文字：白＋ピンク・水色のずれ＋横スライス
@@ -191,7 +192,7 @@
 
   // ---------- FX-02 ラウンド開始 ----------
   // 文字演出の時間配分：素早く出す → 文字がそろってから 1 秒キープ → 素早く消す
-  const IN_MS = 320, HOLD_MS = 1000, OUT_MS = 220;
+  const IN_MS = 320, HOLD_MS = 1000, OUT_MS = 100;
   const phase = (inMs = IN_MS, hold = HOLD_MS, out = OUT_MS) => { const T = inMs + hold + out; return { T, a: inMs / T, b: (inMs + hold) / T }; };
   // 出る→キープ→消える の 4 点キーフレーム（from は出る前、to は消えた後）
   const ioKf = (P, from, to, show = { opacity: 1, transform: 'none' }) => [from, { ...show, offset: P.a }, { ...show, offset: P.b }, to];
@@ -205,7 +206,7 @@
     document.querySelectorAll('.wfx-layer.stamp').forEach(x => x.remove());
     const L = layerOver(full ? null : board(), P.T + 50, { block: full });
     if (full) { L.style.background = 'rgba(2,4,12,.82)'; L.addEventListener('pointerdown', () => L.remove()); }
-    else dimIn(L, P.T, 0.8);
+    else dimIn(L, P.T, 0.8, P);
     const H = L.clientHeight || window.innerHeight;
     const cy = full ? H * 0.44 : boardMidY(L);
     const band = h(`<div class="wfx-band" style="top:${cy - 52}px;height:104px"></div>`);
@@ -248,7 +249,7 @@
     if (kind === 'jackpot' || kind === 'jackpot-op') return jackpot(kind === 'jackpot-op', info);
     const P = phase();
     const L = layerOver(b, P.T + 50); L.classList.add('stamp');
-    dimIn(L, P.T, 0.85);
+    dimIn(L, P.T, 0.85, P);
     const cy = boardMidY(L);
     const word = { win: 'W<span class="p">I</span>N', lose: 'LOSE', draw: 'DRAW' }[kind] || '';
     const cap = kind === 'win' ? `ROUND TAKEN · Δ ${info.diff != null ? info.diff : ''}`
@@ -289,7 +290,7 @@
     const BURST = 500; // 破裂して文字がそろうまで
     const P = phase(BURST, HOLD_MS + 300, OUT_MS); // 総取り枚数を数える分だけ少し長くキープ
     const L = layerOver(b, P.T + 50); L.classList.add('stamp');
-    dimIn(L, P.T, 0.8);
+    dimIn(L, P.T, 0.8, P);
     const cy = boardMidY(L);
     const hue = rival ? ['rgba(255,193,211,.95)', 'rgba(255,122,162,.85)', 'rgba(127,156,255,.7)'] : ['rgba(255,255,255,.95)', 'rgba(127,216,255,.85)', 'rgba(255,122,162,.8)'];
     flash(L, 0, rival ? 0.55 : 0.85, 380);
@@ -335,7 +336,7 @@
       const P = phase(500, HOLD_MS, OUT_MS); // ノイズが収まって文字がそろってから 1 秒キープ
       const L = layerOver(b, P.T + 50);
       const H = L.clientHeight;
-      dimIn(L, P.T, 0.9);
+      dimIn(L, P.T, 0.9, P);
       for (let i = 0; i < 7; i++) {
         const y = rnd(0, 90), hh = rnd(3, 11);
         const sl = h(`<div style="position:absolute;inset:0;clip-path:inset(${y}% 0 ${100 - y - hh}% 0);background:linear-gradient(90deg,rgba(255,110,165,.4),rgba(110,185,255,.4));mix-blend-mode:screen"></div>`);
@@ -361,7 +362,7 @@
     if (!b || !b.offsetParent) return false;
     if (reduceMotion) return true;
     const L = layerOver(b, 2300);
-    dimIn(L, 2250, 0.8);
+    dimIn(L, 2250, 0.8, { a: 0.1, b: 0.95 });
     const H = L.clientHeight;
     const sv = h(`<svg viewBox="0 0 100 40" preserveAspectRatio="none" style="position:absolute;left:6%;width:88%;top:${H * 0.56}px;height:${H * 0.13}px;overflow:visible"><polyline class="c" fill="none" stroke="#7fd8ff" stroke-width=".7" vector-effect="non-scaling-stroke" points="0,24 8,22 14,25 20,21 26,24 32,22 38,25 44,23 50,24"/><polyline class="p" fill="none" stroke="#ff7aa2" stroke-width="2" vector-effect="non-scaling-stroke" points="50,24 53,-8 56,38 59,4 62,34 66,8 70,32 74,12 78,30 83,10 88,28 94,14 100,24"/></svg>`);
     const fr = h('<div class="wfx-alert"></div>');
@@ -375,13 +376,13 @@
     [c, p].forEach(n => { const len = n.getTotalLength(); n.style.strokeDasharray = len; n.style.strokeDashoffset = len; });
     A(c, [{ strokeDashoffset: c.getTotalLength() }, { strokeDashoffset: 0 }], 600, 0, 'linear');
     A(p, [{ strokeDashoffset: p.getTotalLength() }, { strokeDashoffset: 0 }], 380, 620, 'linear');
-    A(fr, [{ opacity: 0 }, { opacity: 1, offset: 0.1 }, { opacity: 0.3, offset: 0.2 }, { opacity: 1, offset: 0.3 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], 1650, 640, 'linear');
+    A(fr, [{ opacity: 0 }, { opacity: 1, offset: 0.1 }, { opacity: 0.3, offset: 0.2 }, { opacity: 1, offset: 0.3 }, { opacity: 1, offset: 0.94 }, { opacity: 0 }], 1650, 640, 'linear');
     shake(b, 640, 420, 7);
     warp.tintFor('255,150,180', 1800); warp.boost(2.8, 700, 1); setTimeout(() => { warp.target = warp.base; }, 2200);
-    A(g, [{ opacity: 0 }, { opacity: 1, offset: 0.1 }, { opacity: 1, offset: 0.88 }, { opacity: 0 }], 1600, 700, 'steps(3, end)');
+    A(g, [{ opacity: 0 }, { opacity: 1, offset: 0.1 }, { opacity: 1, offset: 0.94 }, { opacity: 0 }], 1600, 700, 'linear');
     glitchIn(g, 900, 700, 22);
-    A(sub, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], 900, 1350);
-    A(lb, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], 1600, 600);
+    A(sub, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.9 }, { opacity: 0 }], 950, 1350, 'linear');
+    A(lb, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.94 }, { opacity: 0 }], 1700, 600, 'linear');
     return true;
   }
 
@@ -419,7 +420,7 @@
     greyOut(700);
     warp.set(o.outcome === 'op' ? 1.4 : 3.2); warp.boost(warp.v, 600, 0.15);
     if (o.outcome === 'op') warp.tintFor('255,170,200', 2000);
-    A(lock, [{ opacity: 0, transform: 'scale(1.1)' }, { opacity: 1, transform: 'none', offset: 0.3 }, { opacity: 1, offset: 0.82 }, { opacity: 0, transform: 'scale(.98)' }], 1900, 120);
+    A(lock, [{ opacity: 0, transform: 'scale(1.1)' }, { opacity: 1, transform: 'none', offset: 0.2 }, { opacity: 1, offset: 0.95 }, { opacity: 0 }], 1900, 120, 'linear');
     glitchIn(g, 800, 120, 20);
     A(sub, [{ opacity: 0 }, { opacity: 1 }], 500, 800);
     setTimeout(() => { warp.target = warp.base = 0.3; }, 2600);

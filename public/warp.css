@@ -396,7 +396,7 @@ body .mlp-eff .op { color: var(--pink-hi); border-color: rgba(255, 122, 162, 0.5
 }
 .role-cutin.op .rc-lbl { left: 14%; }
 .role-cutin.my .rc-lbl { right: 14%; }
-@keyframes wfxLbl { 0%, 25% { opacity: 0; transform: translateY(6px); } 40%, 80% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+@keyframes wfxLbl { 0%, 25% { opacity: 0; transform: translateY(6px); } 35%, 93% { opacity: 1; transform: none; } 100% { opacity: 0; } }
 
 /* ===== 演出の共通部品（warp-fx.js が使う） ===== */
 .wfx-layer { position: fixed; z-index: 1090; pointer-events: none; overflow: hidden; border-radius: 8px; }
